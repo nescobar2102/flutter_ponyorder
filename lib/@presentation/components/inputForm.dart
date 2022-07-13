@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class InputForm extends StatefulWidget {
   final String hintText;
   final IconData icon;
-
+ 
   const InputForm({required this.hintText, required this.icon});
 
   @override
@@ -12,7 +12,8 @@ class InputForm extends StatefulWidget {
 
 class _InputFormState extends State<InputForm> {
   bool focus = false;
-
+  final myController = TextEditingController(); 
+  
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
@@ -25,7 +26,7 @@ class _InputFormState extends State<InputForm> {
           });
         },
         child: TextField(
-          // controller: user,
+          controller: myController,
           style: TextStyle(fontSize: 16.5),
           decoration: InputDecoration(
             hintText: widget.hintText,

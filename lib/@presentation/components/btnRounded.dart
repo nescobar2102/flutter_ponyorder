@@ -17,6 +17,7 @@ class BtnRounded extends StatelessWidget {
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(25.0), color: color),
       child: Material(
+       
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(25.0),
@@ -30,7 +31,8 @@ class BtnRounded extends StatelessWidget {
                   fontWeight: FontWeight.w700),
             ),
           ),
-          onTap: callback,
+         onTap: callback,
+         
         ),
       ),
     );
