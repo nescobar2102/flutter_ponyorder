@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MenuPage extends StatelessWidget {
   @override
@@ -72,7 +73,17 @@ class MenuPage extends StatelessWidget {
               width: _size.width,
               color: Color(0xff06538D),
               child: ListTile(
-                onTap: () => {Navigator.pushNamed(context, 'login')},
+                 onTap: () async {
+ 
+                               SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                       preferences.clear();
+                      preferences.setInt("value", 0);
+                        Navigator.pushNamed(context, 'login');
+                        Navigator.pushNamed(context, 'login');
+                        
+                        },
+               // onTap: () => {Navigator.pushNamed(context, 'login')},
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                 minLeadingWidth: 20.0,

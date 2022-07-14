@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'dart:convert';
+import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:app_pony_order/models/user.dart';
 import 'package:app_pony_order/services/login_request.dart';
 import 'package:app_pony_order/services/login_response.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -38,22 +39,18 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => new _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> implements LoginCallBack {
+class _LoginPageState extends State<LoginPage> {
   Duration get loginTime => Duration(milliseconds: 2250);
   LoginStatus _loginStatus = LoginStatus.notSignIn;
   final myControllerUsers = TextEditingController();
   final myControllerPassword = TextEditingController();
 
   late String _user, _password;
-  late LoginResponse _response;
-  String _errorMessage = '';
+
   bool focus = false;
+  bool isOnline = true;
   bool _isLoading = false;
   final String hintText = '';
-
-  _LoginPageState() {
-    _response = new LoginResponse(this);
-  }
 
   // Perform login
   void validateAndSubmit() {
@@ -62,68 +59,33 @@ class _LoginPageState extends State<LoginPage> implements LoginCallBack {
     _password = myControllerPassword.text;
 
     setState(() {
-      _errorMessage = "";
       _isLoading = true;
+      login();
     });
+  }
 
-    String userId = "";
+  Future<bool> hasNetwork() async {
     try {
-      if (_user != '' && _password != '') {
-        //  userId = await widget.auth.signIn(_email, _password);
-        print('doLogin : $_user  $_password');
-        setState(() {
-          _isLoading = true;
-          _response.doLogin(_user, _password);
-          login();
-        });
-      } else {
-        SnackBar(
-          content: Text('Yay! A SnackBar!'),
-          action: SnackBarAction(
-            label: 'Undo',
-            onPressed: () {
-              // Algo de código para ¡deshacer el cambio!
-            },
-          ),
-        );
-        _errorMessage = "Ingrese las credenciales";
-        /*showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: Text("Ingrese las credenciales"),
-            );
-               final snackBar = SnackBar(
-            content: Text('Yay! A SnackBar!'),
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () {
-                // Algo de código para ¡deshacer el cambio!
-              },
-            ),
-          );
-          },
-        );*/
-      }
-
-      if (userId.length > 0 && userId != null) {
-        //   widget.loginCallback();
-      }
-    } catch (e) {
-      print('Error: $e');
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Error de login';
-      });
+      final result = await InternetAddress.lookup('google.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } on SocketException catch (_) {
+      return false;
     }
   }
 
   var value;
   getPref() async {
+   //   bool isOnline = await hasNetwork();
+    print('isOnline : $isOnline');
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
       value = preferences.getInt("value");
       _loginStatus = value == 1 ? LoginStatus.signIn : LoginStatus.notSignIn;
+      print('_loginStatus body: $_loginStatus');
+
+      if (_loginStatus == LoginStatus.signIn) {
+        // Navigator.pushNamed(context, 'home');
+      }
     });
   }
 
@@ -144,22 +106,32 @@ class _LoginPageState extends State<LoginPage> implements LoginCallBack {
   Future<void> login() async {
     if (myControllerUsers.text.isNotEmpty &&
         myControllerPassword.text.isNotEmpty) {
-      var response = await http.post(Uri.parse("http://localhost:3000/login"),
+      final response = await http.post(Uri.parse("http://localhost:3000/login"),
           body: ({
             'username': myControllerUsers.text,
             'password': myControllerPassword.text
           }));
-      if (response.statusCode == 200) {
-        print("Correct $response");
+      var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var success = jsonResponse['success'];
+      var msg = jsonResponse['msg'];
+      if (response.statusCode == 200 && success) {
+        var data = jsonResponse['data'];
+        print('Number of books about http: $msg $success $data.');
+        savePref(1, myControllerUsers.text, myControllerPassword.text);
+        _loginStatus = LoginStatus.signIn;
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("$msg")));
+
         Navigator.pushNamed(context, 'home');
       } else {
-        print("Wronggooooooooooooooooooooooooooo");
+        print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Invalid credentials")));
+            .showSnackBar(SnackBar(content: Text("$msg")));
       }
     } else {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Blank field is not allowed")));
+          .showSnackBar(SnackBar(content: Text("Ingrese las credenciales")));
     }
   }
   //visual
@@ -321,10 +293,6 @@ class _LoginPageState extends State<LoginPage> implements LoginCallBack {
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 5.0),
-              /*  InputForm(
-                hintText: 'Ingrese su usuario',
-                icon: Icons.account_circle,
-              ),*/
               textFormField(
                 'Ingrese su usuario',
                 myControllerUsers,
@@ -337,11 +305,10 @@ class _LoginPageState extends State<LoginPage> implements LoginCallBack {
               ),
               SizedBox(height: 5.0),
               textFormField(
-                  '* * * * * * * *', myControllerPassword, Icons.password),
-              /* InputHintForm(
-                  hintText: '* * * * * * * *',
-                  icon: Icons.vpn_key,
-                  iconCallback: Icons.remove_red_eye),*/
+                '* * * * * * * *',
+                myControllerPassword,
+                Icons.vpn_key,
+              ),
               SizedBox(
                 height: 40.0,
               ),
@@ -359,30 +326,6 @@ class _LoginPageState extends State<LoginPage> implements LoginCallBack {
       prefs.setInt("value", value);
       prefs.setString("user", user);
       prefs.setString("pass", pass);
-      // prefs.commit();
     });
-  }
-
-  @override
-  void onLoginError(String error) {
-    //  _showSnackBar(error);
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
-  @override
-  void onLoginSuccess(User user) async {
-    if (user != null) {
-      savePref(1, user.username, user.password);
-      print("onLoginSuccess");
-      _loginStatus = LoginStatus.signIn;
-    } else {
-      print("onLoginelse");
-      //   _showSnackBar("Login Gagal, Silahkan Periksa Login Anda");
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 }
