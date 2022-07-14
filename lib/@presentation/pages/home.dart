@@ -8,7 +8,10 @@ import 'package:app_pony_order/@presentation/components/itemDocumentClient.dart'
 import 'package:app_pony_order/@presentation/components/itemProductOrder.dart';
 import 'package:app_pony_order/@presentation/components/itemProductOrderHistory.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+
+import 'dart:async';
+import 'dart:convert' as convert;
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   @override
@@ -26,9 +29,76 @@ class _HomePageState extends State<HomePage> {
   bool _checkedPedido = false;
   bool _checkedRecibo = false;
   bool? _checked = false;
+  bool isOnline = true;
+  bool _isLoading = false;
+  bool focus = false;
+  late String _search;
+  late int _count;
+  List<String> item = [
+    "Clients",
+    "Designer",
+    "Developer",
+    "Director",
+    "Employee",
+    "Manager",
+    "Worker",
+    "Owner"
+  ];
+
+  final myControllerSearch = TextEditingController();
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
+//api
 
+  Future<void> SearchClient(String _search) async {
+    print("SearchClient $_search");
+    if (_search.isNotEmpty) {
+      final response =
+          await http.post(Uri.parse("http://localhost:3000/clientes"),
+              body: ({
+                'nit': '900054835',
+                'nombre': _search,
+              }));
+      var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var success = jsonResponse['success'];
+      var msg = jsonResponse['msg'];
+      if (response.statusCode == 200 && success) {
+        var data = jsonResponse['data'];
+        _count = jsonResponse['count'];
+        print('response cliente http: $msg $success $data $_count.');
+
+        setState(() {
+          _clientShow = true;
+        });
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("$msg")));
+
+        //  Navigator.pushNamed(context, 'home');
+      } else {
+        print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("$msg")));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Ingrese el nombre del cliente!")));
+    }
+  }
+
+  // Perform login
+  void validateAndSubmit() {
+    print('Entrando a buscar clientes');
+    _search = myControllerSearch.text;
+    setState(() {
+      print("buscar cliente");
+      _isLoading = true;
+      SearchClient(_search);
+    });
+  }
+//fin api
+
+//visual
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -57,20 +127,19 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [
             GestureDetector(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 15.0),
-                child: Icon(
-                  Icons.shopping_cart_outlined,
-                  color: Color(0xff0090ce),
-                  size: 30,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 15.0),
+                  child: Icon(
+                    Icons.shopping_cart_outlined,
+                    color: Color(0xff0090ce),
+                    size: 30,
+                  ),
                 ),
-              ),
-              onTap: () => {
-                 _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                      ? Navigator.pop(context)
-                      : _drawerscaffoldkey.currentState!.openEndDrawer()
-              }
-            )
+                onTap: () => {
+                      _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                          ? Navigator.pop(context)
+                          : _drawerscaffoldkey.currentState!.openEndDrawer()
+                    })
           ],
           title: Text(
             'Clientes',
@@ -103,23 +172,66 @@ class _HomePageState extends State<HomePage> {
                           horizontal: 20.0, vertical: 10.0),
                       child: Column(
                         children: [
-                          _formShow || _formOrderShow || _formRecipeShow || _formHistoryShow || _formNewClientShow
+                          _formShow ||
+                                  _formOrderShow ||
+                                  _formRecipeShow ||
+                                  _formHistoryShow ||
+                                  _formNewClientShow
                               ? Container()
-                              : InputCallback(
-                                  hintText: 'Buscar cliente',
-                                  iconCallback: Icons.search,
-                                  callback: () => {
-                                        setState(() {
-                                          _clientShow = true;
-                                        })
-                                      }),
+                              : TextField(
+                                  controller: myControllerSearch,
+                                  decoration: InputDecoration(
+                                    hintText: 'Buscar cliente',
+                                    fillColor: Colors.white,
+                                    filled: true,
+                                    contentPadding: EdgeInsets.only(
+                                        top: 20, bottom: 0, left: 15.0),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      borderSide: BorderSide(
+                                        color: Color(0xff0f538d),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      borderSide: BorderSide(
+                                          color: Color(0xffc7c7c7), width: 1.2),
+                                    ),
+                                    suffixIcon: GestureDetector(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 17.0, right: 12.0),
+                                        child: Icon(
+                                          Icons.search,
+                                          color: focus
+                                              ? Color(0xff0f538d)
+                                              : Color(0xffc7c7c7),
+                                        ),
+                                      ),
+                                      onTap: validateAndSubmit,
+                                    ),
+                                    hintStyle: TextStyle(
+                                        fontSize: 16.0,
+                                        color: Color(0xffc7c7c7)),
+                                    labelStyle: TextStyle(
+                                        fontFamily: 'Roboto',
+                                        fontSize: 15,
+                                        color: Colors.black),
+                                    alignLabelWithHint: true,
+                                  ),
+                                ),
                           SizedBox(height: 10.0),
                           _clientShow ? _client(context) : Container(),
                           _formShow ? _form(context) : Container(),
                           _formOrderShow ? _formOrder(context) : Container(),
-                          _formRecipeShow ? _formRecipe(context) : Container(), 
-                          _formHistoryShow ? _formHistory(context) : Container(),
-                          _formNewClientShow ? _formNewClient(context) : Container(),
+                          _formRecipeShow ? _formRecipe(context) : Container(),
+                          _formHistoryShow
+                              ? _formHistory(context)
+                              : Container(),
+                          _formNewClientShow
+                              ? _formNewClient(context)
+                              : Container(),
                         ],
                       ),
                     ),
@@ -137,57 +249,86 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Se encontraron 3 resultados',
+        Text('Se encontraron $_count resultados',
             style: TextStyle(
                 color: Color(0xff0f538d),
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic)),
         SizedBox(height: 10.0),
-        ItemClient(callbackOrder: ()=>{setState(() {
-          _clientShow = false;
-          _formOrderShow = true;
-        })},callbackHistory:  ()=>{setState(() {
-          _clientShow = false;
-          _formHistoryShow = true;
-        })},callbackRecipe:()=>{
-          setState(() {
-          _clientShow = false;
-          _formRecipeShow = true;
-        })}),
+        for (var i = 0; i < _count; i++) Text('Item $_count'),
+        for (var i = 0; i < _count; i++) ...[
+          _ItemClient('asd'),
+        ],
+        /*  ItemClient( 
+            callbackOrder: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formOrderShow = true;
+                  })
+                },
+            callbackHistory: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formHistoryShow = true;
+                  })
+                },
+            callbackRecipe: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formRecipeShow = true;
+                  })
+                }),*/
         SizedBox(height: 10.0),
-        ItemClient(callbackOrder: ()=>{setState(() {
-          _clientShow = false;
-          _formOrderShow = true;
-        })},callbackHistory:  ()=>{setState(() {
-          _clientShow = false;
-          _formHistoryShow = true;
-        })},callbackRecipe:()=>{
-          setState(() {
-          _clientShow = false;
-          _formRecipeShow = true;
-        })}),
-        SizedBox(height: 10.0),
-        ItemClient(callbackOrder: ()=>{setState(() {
-          _clientShow = false;
-          _formOrderShow = true;
-        })},callbackHistory:  ()=>{setState(() {
-          _clientShow = false;
-          _formHistoryShow = true;
-        })},callbackRecipe:()=>{
-          setState(() {
-          _clientShow = false;
-          _formRecipeShow = true;
-        })}),
-        SizedBox(height: 30.0),BtnForm(
-          text: 'Crear cliente',
-          color: Color(0xff0894FD),
-          callback: () => {
-            setState(() {
-              _clientShow = false;
-              _formShow = true;
-            })
-        }),
+        /* ItemClient(
+            callbackOrder: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formOrderShow = true;
+                  })
+                },
+            callbackHistory: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formHistoryShow = true;
+                  })
+                },
+            callbackRecipe: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formRecipeShow = true;
+                  })
+                }),
+        SizedBox(height: 10.0),*/
+        /*  ItemClient(
+            callbackOrder: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formOrderShow = true;
+                  })
+                },
+            callbackHistory: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formHistoryShow = true;
+                  })
+                },
+            callbackRecipe: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formRecipeShow = true;
+                  })
+                }),*/
+        SizedBox(height: 30.0),
+        BtnForm(
+            text: 'Crear cliente',
+            color: Color(0xff0894FD),
+            callback: () => {
+                  setState(() {
+                    _clientShow = false;
+                    _formShow = true;
+                  })
+                }),
         SizedBox(height: 10.0),
       ],
     );
@@ -196,66 +337,68 @@ class _HomePageState extends State<HomePage> {
   Widget _shoppingCart(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return SafeArea(
-        child: Container(
-          width: _size.width,
-          height: _size.height,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          padding: EdgeInsets.symmetric(vertical: 20.0,horizontal: 20.0),
-          child: ListView(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Carrito de compras',
-                        style: TextStyle(
-                            color: Color(0xff0f538d),
-                            fontSize: 24.0,
-                            fontWeight: FontWeight.w700),
-                      ),
-                      Icon(
-                        Icons.disabled_by_default_outlined,
-                        color: Color(0xff0f538d),
-                        size: 30.0,
-                      )
-                    ],
-                  ),
-                  SizedBox(height: 12.0),
-                  Text('Juan Pablo Jimenez',
+      child: Container(
+        width: _size.width,
+        height: _size.height,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+        ),
+        padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+        child: ListView(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Carrito de compras',
+                      style: TextStyle(
+                          color: Color(0xff0f538d),
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Icon(
+                      Icons.disabled_by_default_outlined,
+                      color: Color(0xff0f538d),
+                      size: 30.0,
+                    )
+                  ],
+                ),
+                SizedBox(height: 12.0),
+                Text('Juan3 Pablo Jimenez',
+                    style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w600)),
+                SizedBox(
+                  height: 12.0,
+                ),
+                Text(
+                  'Búsqueda de productos en el carrito',
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600
-                  )),
-                  SizedBox(height: 12.0,),
-                  Text('Búsqueda de productos en el carrito',
-                  style: TextStyle(
-                    color: Color(0xff0f538d),
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w500
-                  ),),
-                  SizedBox(height: 10.0,),
-                  InputCallback(
+                      color: Color(0xff0f538d),
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
+                InputCallback(
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
-                    callback: () => {
-                 }),
-                 SizedBox(height: 15.0),
-                 Container(
+                    callback: () => {}),
+                SizedBox(height: 15.0),
+                Container(
                   width: 160.0,
                   height: 45.0,
                   decoration: BoxDecoration(
-                    color: Color(0xff06538D),
-                    borderRadius: BorderRadius.circular(5.0)
-                  ),
+                      color: Color(0xff06538D),
+                      borderRadius: BorderRadius.circular(5.0)),
                   child: Material(
                     borderRadius: BorderRadius.circular(5.0),
-                    color:  Color(0xff06538D),
+                    color: Color(0xff06538D),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(5.0),
                       onTap: () => {},
@@ -264,121 +407,128 @@ class _HomePageState extends State<HomePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: <Widget>[
-                            Icon(Icons.arrow_back, color: Colors.white,),
-                            SizedBox(width: 5.0),
-                            Text('Categorias',
-                            style: TextStyle(
+                            Icon(
+                              Icons.arrow_back,
                               color: Colors.white,
+                            ),
+                            SizedBox(width: 5.0),
+                            Text(
+                              'Categorias',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.w700),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 15.0,
+                ),
+                SizedBox(
+                  height: 310.0,
+                  child: ListView(
+                    children: [
+                      ItemCategoryOrderEdit(),
+                      SizedBox(height: 10.0),
+                      ItemCategoryOrderEdit(),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15.0),
+                Container(
+                  width: _size.width,
+                  height: 40.0,
+                  padding: EdgeInsets.symmetric(horizontal: 15.0),
+                  decoration: BoxDecoration(
+                      color: Color(0xffE8E8E8),
+                      borderRadius: BorderRadius.circular(5.0)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Text('Total',
+                          style: TextStyle(
                               fontSize: 18.0,
-                              fontWeight: FontWeight.w700
-                                  ),)
-                                ],
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff06538D))),
+                      Text(
+                        '\$ 0',
+                        style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xff06538D)),
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15.0),
+                Row(
+                  children: [
+                    Container(
+                        width: _size.width * 0.5 - 30,
+                        child: Container(
+                          width: _size.width,
+                          height: 41.0,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5.0),
+                              color: Color(0xffCB1B1B)),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(5.0),
+                              child: Center(
+                                child: Text(
+                                  'Cancelar',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700),
+                                ),
                               ),
+                              onTap: () {},
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 15.0,),
-                      SizedBox(
-                        height: 310.0,
-                        child: ListView(
-                          children: [
-                            ItemCategoryOrderEdit(),
-                            SizedBox(height: 10.0),
-                            ItemCategoryOrderEdit(),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15.0),
-                       Container(
-                        width: _size.width,
-                        height: 40.0,
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        decoration: BoxDecoration(
-                          color: Color(0xffE8E8E8),
-                          borderRadius: BorderRadius.circular(5.0)
-                        ),
-                        child: Row(
-                          mainAxisAlignment:MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Text('Total',
-                            style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D))),
-                            Text('\$ 0',
-                            style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),)
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15.0),
-                      Row(
-                        children: [
-                          Container(
-                          width: _size.width * 0.5 - 30,
-                          child: Container(
-                            width: _size.width,
-                            height: 41.0,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Color(0xffCB1B1B)),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: Center(
-                                  child: Text(
-                                    'Cancelar',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700),
-                                  ),
+                        )),
+                    SizedBox(width: 10.0),
+                    Container(
+                        width: _size.width * 0.5 - 30,
+                        child: Container(
+                          width: _size.width,
+                          height: 41.0,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5.0),
+                              color: Color(0xff0894FD)),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(5.0),
+                              child: Center(
+                                child: Text(
+                                  'Guardar',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700),
                                 ),
-                                onTap: () {},
                               ),
+                              onTap: () {},
                             ),
-                          )),
-                          SizedBox(width: 10.0),
-                          Container(
-                          width: _size.width * 0.5 - 30,
-                          child: Container(
-                            width: _size.width,
-                            height: 41.0,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Color(0xff0894FD)),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: Center(
-                                  child: Text(
-                                    'Guardar',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                onTap: () {},
-                              ),
-                            ),
-                          )),
-                        ],
-                      )
-                ],
-              ),
-            ],
-          ),
+                          ),
+                        )),
+                  ],
+                )
+              ],
+            ),
+          ],
         ),
+      ),
     );
   }
-  
+
   Widget _menu(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return SafeArea(
@@ -430,7 +580,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-             Container(
+              Container(
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
@@ -546,30 +696,32 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Visualice el historial del cliente',
             style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
-                 color: Color(0xff06538D)),
+                color: Color(0xff06538D)),
           ),
-          SizedBox(height: 15.0,),
+          SizedBox(
+            height: 15.0,
+          ),
           Text(
-            'Jiménez Pérez Juan Pablo',
+            'Jiménez Pérez Juan4 Pablo',
             style: TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
-                 color: Color(0xff0894FD)),
+                color: Color(0xff0894FD)),
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffC7C7C7),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffC7C7C7), width: 1.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -580,16 +732,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.assignment_ind_rounded, color: Color(0xff707070), size:20.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.assignment_ind_rounded,
+                              color: Color(0xff707070), size: 20.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Identificación',
-                              style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -598,15 +752,16 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('123456789',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -614,16 +769,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.location_on, color: Color(0xff707070), size:20.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.location_on,
+                              color: Color(0xff707070), size: 20.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Dirección',
-                              style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -632,15 +789,16 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('Cr 74 # 37 - 38',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -648,16 +806,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.phone, color: Color(0xff707070), size:20.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.phone,
+                              color: Color(0xff707070), size: 20.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Teléfono',
-                              style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -666,11 +826,10 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('7661231231',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
@@ -684,23 +843,31 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _btnHistory(context, 'Cartera', _checkedCartera ? Color(0xff06538D) : Color(0xff0894FD), (){
+                _btnHistory(context, 'Cartera',
+                    _checkedCartera ? Color(0xff06538D) : Color(0xff0894FD),
+                    () {
                   setState(() {
                     _checkedCartera = true;
                     _checkedPedido = false;
                     _checkedRecibo = false;
                   });
                 }),
-                SizedBox(width: 8.0,),
-                _btnHistory(context, 'Pedido', _checkedPedido ? Color(0xff06538D) : Color(0xff0894FD), (){
+                SizedBox(
+                  width: 8.0,
+                ),
+                _btnHistory(context, 'Pedido',
+                    _checkedPedido ? Color(0xff06538D) : Color(0xff0894FD), () {
                   setState(() {
                     _checkedCartera = false;
                     _checkedPedido = true;
                     _checkedRecibo = false;
                   });
                 }),
-                SizedBox(width: 8.0,),
-                _btnHistory(context, 'Recibo', _checkedRecibo ? Color(0xff06538D) : Color(0xff0894FD), (){
+                SizedBox(
+                  width: 8.0,
+                ),
+                _btnHistory(context, 'Recibo',
+                    _checkedRecibo ? Color(0xff06538D) : Color(0xff0894FD), () {
                   setState(() {
                     _checkedCartera = false;
                     _checkedPedido = false;
@@ -710,7 +877,9 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           _checkedCartera ? _totalHistoryCartera(context) : Container(),
           _checkedPedido ? _totalHistoryPedido(context) : Container(),
           _checkedRecibo ? _totalHistoryRecibo(context) : Container(),
@@ -727,52 +896,56 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 6.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffE8E8E8),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total de cartera',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),),
-                Text('\$ 347.281',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),)
+                Text(
+                  'Total de cartera',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '\$ 347.281',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                )
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
             width: _size.width,
             decoration: BoxDecoration(
-              border: Border.all(
-                width: 1.0,
-                color: Color(0xffE8E8E8),
-              ),
-              borderRadius: BorderRadius.circular(5.0)
-            ),
+                border: Border.all(
+                  width: 1.0,
+                  color: Color(0xffE8E8E8),
+                ),
+                borderRadius: BorderRadius.circular(5.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Datos de Cartera',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w700
-                ),),
-                SizedBox(height: 10.0,),
+                Text(
+                  'Datos de Cartera',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -780,16 +953,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.location_on, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.location_on,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('N° Documento',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -798,15 +973,16 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('Cr 74 # 37 - 38',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -814,16 +990,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.credit_card, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.credit_card,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Débito',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -832,15 +1010,16 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('\$ 347.281',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -848,16 +1027,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Días',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -866,50 +1047,52 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('3 Días',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
               ],
             ),
           ),
-          SizedBox(height: 190.0,),
+          SizedBox(
+            height: 190.0,
+          ),
           Container(
             width: _size.width,
             height: 50.0,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: Color(0xff0894FD)),
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      'Aceptar',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-                onTap: (){
-                  setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
-                    _formHistoryShow = false;
-                    _clientShow = false;
-                  });
-                }),
-              ),
+                  onTap: () {
+                    setState(() {
+                      _checkedCartera = true;
+                      _checkedPedido = false;
+                      _checkedRecibo = false;
+                      _formHistoryShow = false;
+                      _clientShow = false;
+                    });
+                  }),
             ),
+          ),
         ],
       ),
     );
@@ -923,52 +1106,56 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 6.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffE8E8E8),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total de Pedido',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),),
-                Text('\$ 347.281',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),)
+                Text(
+                  'Total de Pedido',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '\$ 347.281',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                )
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
             width: _size.width,
             decoration: BoxDecoration(
-              border: Border.all(
-                width: 1.0,
-                color: Color(0xffE8E8E8),
-              ),
-              borderRadius: BorderRadius.circular(5.0)
-            ),
+                border: Border.all(
+                  width: 1.0,
+                  color: Color(0xffE8E8E8),
+                ),
+                borderRadius: BorderRadius.circular(5.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Datos de pedido',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w700
-                ),),
-                SizedBox(height: 10.0,),
+                Text(
+                  'Datos de pedido',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -976,16 +1163,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.credit_card, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.credit_card,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('N° Factura',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -994,15 +1183,16 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('6243',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1010,16 +1200,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Fecha de factura',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1028,18 +1220,17 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('11/12/21',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
               ],
             ),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           Text(
             'Este pedido tiene 5 items',
             style: TextStyle(
@@ -1048,55 +1239,58 @@ class _HomePageState extends State<HomePage> {
                 fontStyle: FontStyle.italic,
                 color: Color(0xff06538D)),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           SizedBox(
             height: 160.0,
             child: ListView(
               scrollDirection: Axis.vertical,
               children: [
-                ItemProductOrderHistory(callback: (){}),
+                ItemProductOrderHistory(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: (){}),
+                ItemProductOrderHistory(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: (){}),
+                ItemProductOrderHistory(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: (){})
+                ItemProductOrderHistory(callback: () {})
               ],
             ),
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Container(
             width: _size.width,
             height: 50.0,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: Color(0xff0894FD)),
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      'Aceptar',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-                onTap: (){
-                  setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
-                    _formHistoryShow = false;
-                    _clientShow = false;
-                  });
-                }),
-              ),
+                  onTap: () {
+                    setState(() {
+                      _checkedCartera = true;
+                      _checkedPedido = false;
+                      _checkedRecibo = false;
+                      _formHistoryShow = false;
+                      _clientShow = false;
+                    });
+                  }),
             ),
+          ),
         ],
       ),
     );
@@ -1110,52 +1304,56 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 6.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffE8E8E8),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total de recibo',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),),
-                Text('\$ 347.281',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),)
+                Text(
+                  'Total de recibo',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '\$ 347.281',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                )
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
             width: _size.width,
             decoration: BoxDecoration(
-              border: Border.all(
-                width: 1.0,
-                color: Color(0xffE8E8E8),
-              ),
-              borderRadius: BorderRadius.circular(5.0)
-            ),
+                border: Border.all(
+                  width: 1.0,
+                  color: Color(0xffE8E8E8),
+                ),
+                borderRadius: BorderRadius.circular(5.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Datos de Recibo',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w700
-                ),),
-                SizedBox(height: 10.0,),
+                Text(
+                  'Datos de Recibo',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1163,16 +1361,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.credit_card, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.credit_card,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('N° Recibo',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1181,15 +1381,16 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('6243',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1197,16 +1398,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Fecha de recibo',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1215,15 +1418,16 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('12/21/21',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1231,16 +1435,18 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Días',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1249,18 +1455,17 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('3 Días',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
               ],
             ),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           Text(
             'Este pedido tiene 5 items',
             style: TextStyle(
@@ -1269,89 +1474,93 @@ class _HomePageState extends State<HomePage> {
                 fontStyle: FontStyle.italic,
                 color: Color(0xff06538D)),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           SizedBox(
             height: 160.0,
             child: ListView(
               scrollDirection: Axis.vertical,
               children: [
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
               ],
             ),
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Container(
             width: _size.width,
             height: 50.0,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: Color(0xff0894FD)),
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      'Aceptar',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-                onTap: (){
-                  setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
-                    _formHistoryShow = false;
-                    _clientShow = false;
-                  });
-                }),
-              ),
+                  onTap: () {
+                    setState(() {
+                      _checkedCartera = true;
+                      _checkedPedido = false;
+                      _checkedRecibo = false;
+                      _formHistoryShow = false;
+                      _clientShow = false;
+                    });
+                  }),
             ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _btnHistory(BuildContext context, String text, Color color, VoidCallback callback){
+  Widget _btnHistory(
+      BuildContext context, String text, Color color, VoidCallback callback) {
     final _size = MediaQuery.of(context).size;
     return Container(
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: color),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      text,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                onTap: callback,
+      height: 50.0,
+      decoration:
+          BoxDecoration(borderRadius: BorderRadius.circular(6.0), color: color),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6.0),
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15.0),
+              child: Text(
+                text,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17.0,
+                    fontWeight: FontWeight.w600),
               ),
             ),
-          );
+          ),
+          onTap: callback,
+        ),
+      ),
+    );
   }
 
-  Widget _formNewClient(BuildContext context){
+  Widget _formNewClient(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Container(
       // height: _size.height - AppBar().preferredSize.height - 70,
@@ -1366,34 +1575,43 @@ class _HomePageState extends State<HomePage> {
                 fontWeight: FontWeight.bold,
                 color: Color(0xff06538D)),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Jiménez Pérez Juan Pablo',
+                'Jiménez Pérez Juan5 Pablo',
                 style: TextStyle(
                     fontSize: 16.0,
                     fontWeight: FontWeight.w600,
                     color: Color(0xff0091CE)),
               ),
               Container(
-                height: 35.0,
-                width: 35.0,
-                decoration: BoxDecoration(
-                  color: Color(0xff0091CE),
-                  borderRadius: BorderRadius.circular(50.0)
-                ),
-                child: Icon(Icons.my_library_books_sharp, size: 20.0, color: Colors.white,))
+                  height: 35.0,
+                  width: 35.0,
+                  decoration: BoxDecoration(
+                      color: Color(0xff0091CE),
+                      borderRadius: BorderRadius.circular(50.0)),
+                  child: Icon(
+                    Icons.my_library_books_sharp,
+                    size: 20.0,
+                    color: Colors.white,
+                  ))
             ],
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Container(
             width: _size.width,
             height: 1.0,
             color: Color(0xff707070),
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: Column(
@@ -1407,40 +1625,62 @@ class _HomePageState extends State<HomePage> {
                       fontStyle: FontStyle.italic,
                       color: Color(0xff06538D)),
                 ),
-                SizedBox(height: 20.0,),
+                SizedBox(
+                  height: 20.0,
+                ),
                 Container(
                   width: _size.width,
                   height: 1.0,
                   color: Color(0xff707070),
                 ),
-                SizedBox(height: 20.0,),
-                ItemDocumentClient(callback: (){}),
-                SizedBox(height: 10.0,),
-                ItemDocumentClient(callback: (){}),
-                SizedBox(height: 10.0,),
-                ItemDocumentClient(callback: (){}),
-                SizedBox(height: 10.0,),
-                ItemDocumentClient(callback: (){}),
-                SizedBox(height: 20.0,),
+                SizedBox(
+                  height: 20.0,
+                ),
+                ItemDocumentClient(callback: () {}),
+                SizedBox(
+                  height: 10.0,
+                ),
+                ItemDocumentClient(callback: () {}),
+                SizedBox(
+                  height: 10.0,
+                ),
+                ItemDocumentClient(callback: () {}),
+                SizedBox(
+                  height: 10.0,
+                ),
+                ItemDocumentClient(callback: () {}),
+                SizedBox(
+                  height: 20.0,
+                ),
                 Row(
                   children: [
                     Container(
                       width: _size.width * 0.5 - 35,
-                      child: BtnSmall(text: 'Cancelar', color: Color(0xffCB1B1B), callback: (){
-                        setState(() {
-                          _clientShow = true;
-                          _formNewClientShow = false;
-                        });
-                      }),
+                      child: BtnSmall(
+                          text: 'Cancelar',
+                          color: Color(0xffCB1B1B),
+                          callback: () {
+                            setState(() {
+                              _clientShow = true;
+                              _formNewClientShow = false;
+                            });
+                          }),
                     ),
-                    SizedBox(width: 10.0,),
+                    SizedBox(
+                      width: 10.0,
+                    ),
                     Container(
                       width: _size.width * 0.5 - 35,
-                      child: BtnSmall(text: 'Descuentos', color: Color(0xff0894FD), callback: (){}),
+                      child: BtnSmall(
+                          text: 'Descuentos',
+                          color: Color(0xff0894FD),
+                          callback: () {}),
                     )
                   ],
                 ),
-                SizedBox(height: 20.0,),
+                SizedBox(
+                  height: 20.0,
+                ),
               ],
             ),
           ),
@@ -1468,19 +1708,15 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(height: 20.0),
               _itemForm(context, 'Recibo N°', '14408'),
-              _itemSelectForm(context, 'Fecha', '12/10/21',
-                  'Selecciona fecha'),
-              _itemForm(context, 'Nombre', 'Jiménez Pérez Juan Pablo'),
+              _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
+              _itemForm(context, 'Nombre', 'Jiménez Pérez Juan6 Pablo'),
               _itemForm(context, 'Total cartera', '22554'),
-              _itemSelectForm(context, 'Banco', 'Banco de occidente',
-                  'Selecciona fecha'),
-              _itemSelectForm(context, 'N° cheque', '',
-              'Selecciona fecha'),
+              _itemSelectForm(
+                  context, 'Banco', 'Banco de occidente', 'Selecciona fecha'),
+              _itemSelectForm(context, 'N° cheque', '', 'Selecciona fecha'),
               SizedBox(height: 30.0),
               Container(
-                width: _size.width,
-                height: 1.0,
-                color: Color(0xffC7C7C7)),
+                  width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
               SizedBox(height: 30.0),
             ],
           ),
@@ -1571,33 +1807,29 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(height: 20.0),
         _itemForm(context, 'Pedido', 'Automático'),
-        _itemSelectForm(context, 'Fecha', '12/10/21',
-            'Selecciona fecha'),
-        _itemForm(context, 'Nombre', 'Jiménez Pérez Juan Pablo'),
+        _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
+        _itemForm(context, 'Nombre', 'Jiménez Pérez Juan1 Pablo'),
         _itemSelectForm(context, 'Dir. envío factura', 'Cr 74 # 37 - 38',
             'Selecciona fecha'),
         _itemSelectForm(context, 'Dir. envío mercancía', 'Cr 74 # 37 - 38',
-        'Selecciona fecha'),
+            'Selecciona fecha'),
         _itemForm(context, 'Orden de compra', ''),
-        _itemSelectForm(context, 'Forma de pago', '7 días',
-        'Selecciona fecha'),
+        _itemSelectForm(context, 'Forma de pago', '7 días', 'Selecciona fecha'),
         SizedBox(height: 30.0),
-        Container(
-          width: _size.width,
-          height: 1.0,
-          color: Color(0xffC7C7C7)),
+        Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
         SizedBox(height: 30.0),
-        Text('Crédito',
-        style: TextStyle(
-          color: Color(0xff0091CE),
-          fontSize: 14,
-          fontStyle: FontStyle.italic,
-          fontWeight: FontWeight.w600
-        ),),
+        Text(
+          'Crédito',
+          style: TextStyle(
+              color: Color(0xff0091CE),
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w600),
+        ),
         SizedBox(height: 10.0),
         _itemForm(context, 'Cupo crédito', '1.200.000'),
-        _itemSelectForm(context, 'Total cartera', '347.281',
-            'Selecciona fecha'),
+        _itemSelectForm(
+            context, 'Total cartera', '347.281', 'Selecciona fecha'),
         SizedBox(height: 30.0),
         Row(
           children: [
@@ -1663,7 +1895,7 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
- 
+
   Widget _form(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Column(
@@ -1676,11 +1908,15 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 20.0),
-        _itemSelectForm(context, 'Tipo de documento', 'Cédula de identidad','Cédula de identidad'
-            'Seleccione su tipo de documento'),
+        _itemSelectForm(
+            context,
+            'Tipo de documento',
+            'Cédula de identidad',
+            'Cédula de identidad'
+                'Seleccione su tipo de documento'),
         _itemForm(context, 'N° de documento', '7213123'),
         _itemForm(context, 'DV.', 'PersonaNatural'),
-        _itemForm(context, 'Primer nombre', 'Juan'),
+        _itemForm(context, 'Primer nombre', 'Juan2'),
         _itemForm(context, 'Segundo nombre', 'Pablo'),
         _itemForm(context, 'Primer apellido', 'PersonaNatural'),
         _itemForm(context, 'Segundo apellido', 'Pérez'),
@@ -1986,6 +2222,264 @@ class _HomePageState extends State<HomePage> {
           ),
         )
       ],
+    );
+  }
+
+  // Widget _ItemClient(BuildContext context) {
+  Widget _ItemClient(hintText) {
+    final _size = MediaQuery.of(context).size;
+    return Container(
+      width: _size.width,
+      decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
+          borderRadius: BorderRadius.circular(5.0)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            child: Text(
+              'Jiménez Pérez Juan Pablo999',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w700,
+                color: Color(0xff0f538d),
+              ),
+            ),
+          ),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          Text(
+                            'Dirección',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('Cr 74 # 37 - 38',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          Text(
+                            'Teléfono',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('735312956',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.credit_card,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          Text(
+                            'Límite crediticio',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('735312956',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.location_city,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          Text(
+                            'Ciudad',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('Cali',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: _size.width / 2 - 60,
+                      height: 50.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          color: Colors.blue),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Center(
+                            child: Text(
+                              'Pedidos',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400),
+                            ),
+                          ),
+                          //  onTap: widget.callbackOrder,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Container(
+                      width: _size.width / 4 - 20,
+                      height: 50.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          color: Colors.grey[300]),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Center(
+                            child: Text(
+                              'Recibos de caja',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: Color(0xff0f538d),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          // onTap: widget.callbackRecipe,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Container(
+                      width: _size.width / 4 - 20,
+                      height: 50.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          color: Colors.grey[300]),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Center(
+                            child: Text(
+                              'Historial',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: Color(0xff0f538d),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          // onTap: widget.callbackHistory,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }

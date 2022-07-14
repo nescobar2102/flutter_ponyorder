@@ -5,8 +5,10 @@ class ItemClient extends StatefulWidget {
   final VoidCallback callbackRecipe;
   final VoidCallback callbackHistory;
 
-  const ItemClient({required this.callbackOrder, required this.callbackRecipe,
-  required this.callbackHistory});
+  const ItemClient(
+      {required this.callbackOrder,
+      required this.callbackRecipe,
+      required this.callbackHistory});
 
   @override
   State<ItemClient> createState() => _ItemClientState();
@@ -28,7 +30,7 @@ class _ItemClientState extends State<ItemClient> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: Text(
-              'Jiménez Pérez Juan Pablo',
+              'Jiménez Pérez Juan Pablo999',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
@@ -36,10 +38,6 @@ class _ItemClientState extends State<ItemClient> {
               ),
             ),
           ),
-          // Container(
-          //   height: 1.0,
-          //   color: Color(0xffc7c7c7),
-          // ),
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
