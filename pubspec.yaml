@@ -30,8 +30,11 @@ dependencies:
   path_provider: ^2.0.2 
   shared_preferences: ^2.0.15
   connectivity: ^3.0.6
- 
+  select_form_field: "^2.2.0" 
   http: ^0.13.4
+
+
+  
     #add RabbitMq
   dart_amqp: ^0.1.1
    #notifications

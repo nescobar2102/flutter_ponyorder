@@ -8,7 +8,7 @@ import 'package:app_pony_order/@presentation/components/itemDocumentClient.dart'
 import 'package:app_pony_order/@presentation/components/itemProductOrder.dart';
 import 'package:app_pony_order/@presentation/components/itemProductOrderHistory.dart';
 import 'package:flutter/material.dart';
-
+import 'package:select_form_field/select_form_field.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
@@ -31,27 +31,137 @@ class _HomePageState extends State<HomePage> {
   bool? _checked = false;
   bool isOnline = true;
   bool _isLoading = false;
+
+  //data
   bool focus = false;
   late String _search;
   late int _count;
-  List<String> item = [
-    "Clients",
-    "Designer",
-    "Developer",
-    "Director",
-    "Employee",
-    "Manager",
-    "Worker",
-    "Owner"
+  String _valueChanged = '';
+  String _valueToValidate = '';
+  String _valueSaved = '';
+
+  List<Map<String, dynamic>> _itemsTypeDoc = [
+    {"value": "", "label": "Seleccione"},
+    {"value": "13", "label": "Cédula de Ciudadanía"},
+    {"value": "31", "label": "Número de indentificación Tributaria - Nit"}
   ];
+  List<Map<String, dynamic>> _itemsDepartamento = [
+    {"value": "", "label": "Seleccione"},
+    {"value": "11", "label": "Bogota"},
+    {"value": "05", "label": "Antioquia"},
+    {"value": "76", "label": "Valle del Cauca"}
+  ];
+  List<Map<String, dynamic>> _itemsClasification = [
+    {"value": "", "label": "Seleccione"}
+  ];
+  List<Map<String, dynamic>> _itemsMedioContacto = [
+    {"value": "", "label": "Seleccione"},
+    {"value": "01", "label": "Página Web"},
+    {"value": "02", "label": "Email marketing"},
+    {"value": "03", "label": "Referido"}
+  ];
+  List<Map<String, dynamic>> _itemsZona = [
+    {"value": "", "label": "Seleccione"},
+    {"value": "01", "label": "ZONA NORTE"},
+    {"value": "02", "label": "ZONA PACIFICA"}
+  ];
+  List<Map<String, dynamic>> _itemsCiudad = [
+    {"value": "", "label": "Seleccione"},
+    {"value": "76001", "label": "Cali"},
+    {"value": "76016", "label": "Buenaventura"}
+  ];
+  List<Map<String, dynamic>> _itemsBarrio = [
+    {"value": "", "label": "Seleccione"},
+    {"value": "76001001", "label": "Las acacias"},
+    {"value": "76001002", "label": "Los Andes"}
+  ];
+  @override
+  void initState() {
+    super.initState();
+    // _getValue();
+  }
+
+  /// This implementation is just to simulate a load data behavior
+  /// from a data base sqlite or from a API
+  ///
+  /////api
+  Future getItemTypeIdentication() async {
+    final response = await http
+        .get(Uri.parse("http://localhost:3000/app_tipoidentificacion_all"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object object $data");
+
+      //  myList = data;
+      setState(() {
+        //_item_type_identification = data;
+      });
+    } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
+
+    /*  await Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        _controller_type_ident?.text = 'circleValue';
+      });
+    });*/
+  }
+//fin data
 
   final myControllerSearch = TextEditingController();
+  TextEditingController? _controller_type_ident;
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
-//api
+
 
   Future<void> SearchClient(String _search) async {
     print("SearchClient $_search");
+    if (_search.isNotEmpty) {
+      final response =
+          await http.post(Uri.parse("http://localhost:3000/clientes"),
+              body: ({
+                'nit': '900054835',
+                'nombre': _search,
+              }));
+      var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var success = jsonResponse['success'];
+      var msg = jsonResponse['msg'];
+      if (response.statusCode == 200 && success) {
+        var data = jsonResponse['data'];
+        _count = jsonResponse['count'];
+        print('response cliente http: $msg $success $data $_count.');
+
+        setState(() {
+          _clientShow = true;
+        });
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("$msg")));
+
+        //  Navigator.pushNamed(context, 'home');
+      } else {
+        print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("$msg")));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Ingrese el nombre del cliente!")));
+    }
+  }
+
+  
+
+  Future<void> _saveClient() async {
+    print("Save client");
     if (_search.isNotEmpty) {
       final response =
           await http.post(Uri.parse("http://localhost:3000/clientes"),
@@ -325,6 +435,8 @@ class _HomePageState extends State<HomePage> {
             color: Color(0xff0894FD),
             callback: () => {
                   setState(() {
+                    //_getValue();
+                    getItemTypeIdentication();
                     _clientShow = false;
                     _formShow = true;
                   })
@@ -1908,12 +2020,28 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 20.0),
-        _itemSelectForm(
+        SelectFormField(
+          controller: _controller_type_ident,
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          initialValue: 'circle',
+          icon: Icon(Icons.format_shapes),
+          labelText: 'Tipo de documento',
+          items: _itemsTypeDoc,
+          onChanged: (val) => setState(() => _valueChanged = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        /* _itemSelectForm(
             context,
             'Tipo de documento',
             'Cédula de identidad',
             'Cédula de identidad'
-                'Seleccione su tipo de documento'),
+                'Seleccione su tipo de documento'),*/
         _itemForm(context, 'N° de documento', '7213123'),
         _itemForm(context, 'DV.', 'PersonaNatural'),
         _itemForm(context, 'Primer nombre', 'Juan2'),
@@ -1924,17 +2052,113 @@ class _HomePageState extends State<HomePage> {
         _itemForm(context, 'Dirección', ''),
         _itemForm(context, 'Email', ''),
         _itemForm(context, 'Teléfono fijo', ''),
-        _itemSelectForm(context, 'Clasificación', 'Persona natural',
-            'Seleccione su medio de contacto'),
-        _itemSelectForm(context, 'Medio contacto', 'Tienda',
-            'Seleccione clasificación de persona'),
-        _itemSelectForm(
-            context, 'Zona', 'Cali', 'Seleccione la zona de residencia'),
-        _itemSelectForm(context, 'Departamento', 'Valle del cauca',
-            'Seleccione su departamento'),
-        _itemSelectForm(context, 'Ciudad', 'Cali', 'Seleccione su ciudad'),
-        _itemSelectForm(
-            context, 'Barrio', '7 de agosto', 'Seleccione su barrio'),
+        SelectFormField(
+          controller: _controller_type_ident,
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          initialValue: 'circle',
+          icon: Icon(Icons.format_shapes),
+          labelText: 'Clasificación',
+          items: _itemsClasification,
+          onChanged: (val) => setState(() => _valueChanged = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        // _itemSelectForm(context, 'Clasificación', 'Persona natural',
+        // 'Seleccione su medio de contacto'),
+        SelectFormField(
+          controller: _controller_type_ident,
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          initialValue: 'circle',
+          icon: Icon(Icons.format_shapes),
+          labelText: 'Medio contacto',
+          items: _itemsMedioContacto,
+          onChanged: (val) => setState(() => _valueChanged = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        // _itemSelectForm(context, 'Medio contacto', 'Tienda',
+        //    'Seleccione clasificación de persona'),
+        SelectFormField(
+          controller: _controller_type_ident,
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          initialValue: 'circle',
+          icon: Icon(Icons.format_shapes),
+          labelText: 'Zona',
+          items: _itemsZona,
+          onChanged: (val) => setState(() => _valueChanged = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        // _itemSelectForm(
+        //  context, 'Zona', 'Cali', 'Seleccione la zona de residencia'),
+        SelectFormField(
+          controller: _controller_type_ident,
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          initialValue: 'circle',
+          icon: Icon(Icons.format_shapes),
+          labelText: 'Departamento',
+          items: _itemsDepartamento,
+          onChanged: (val) => setState(() => _valueChanged = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        // _itemSelectForm(context, 'Departamento', 'Valle del cauca',
+        //   'Seleccione su departamento'),
+        SelectFormField(
+          controller: _controller_type_ident,
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          initialValue: 'circle',
+          icon: Icon(Icons.format_shapes),
+          labelText: 'Ciudad',
+          items: _itemsCiudad,
+          onChanged: (val) => setState(() => _valueChanged = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        // _itemSelectForm(context, 'Ciudad', 'Cali', 'Seleccione su ciudad'),
+        SelectFormField(
+          controller: _controller_type_ident,
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          initialValue: 'circle',
+          icon: Icon(Icons.format_shapes),
+          labelText: 'Barrio',
+          items: _itemsBarrio,
+          onChanged: (val) => setState(() => _valueChanged = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        // _itemSelectForm(
+        //  context, 'Barrio', '7 de agosto', 'Seleccione su barrio'),
         SizedBox(height: 30.0),
         Row(
           children: [
@@ -1991,6 +2215,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       onTap: () {
+                        setState(() {
+                          _saveClient();
+                          _clientShow = false;
+                          _formShow = false;
+                        });
                         showDialog<String>(
                           context: context,
                           builder: (BuildContext context) => Dialog(
