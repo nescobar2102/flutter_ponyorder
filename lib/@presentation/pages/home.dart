@@ -31,14 +31,35 @@ class _HomePageState extends State<HomePage> {
   bool? _checked = false;
   bool isOnline = true;
   bool _isLoading = false;
-
+  String _nit = '900054835';
   //data
   bool focus = false;
-  late String _search;
+  late String _search = '@';
   late int _count;
   String _valueChanged = '';
   String _valueToValidate = '';
   String _valueSaved = '';
+  String _value_itemsTypeDoc = '';
+  String _value_itemsDepartamento = '';
+  String _value_itemsClasification = '';
+  String _value_itemsMedioContacto = '';
+  String _value_itemsZona = '';
+  String _value_itemsCiudad = '';
+  String _value_itemsBarrio = '';
+  late Object _body;
+
+  List<dynamic> _datClient = [];
+
+  final myControllerNroDoc = TextEditingController();
+  final myControllerDv = TextEditingController();
+  final myControllerPrimerNombre = TextEditingController();
+  final myControllerSegundoNombre = TextEditingController();
+  final myControllerPrimerApellido = TextEditingController();
+  final myControllerSegundoApellido = TextEditingController();
+  final myControllerRazonSocial = TextEditingController();
+  final myControllerDireccion = TextEditingController();
+  final myControllerEmail = TextEditingController();
+  final myControllerTelefono = TextEditingController();
 
   List<Map<String, dynamic>> _itemsTypeDoc = [
     {"value": "", "label": "Seleccione"},
@@ -75,10 +96,12 @@ class _HomePageState extends State<HomePage> {
     {"value": "76001001", "label": "Las acacias"},
     {"value": "76001002", "label": "Los Andes"}
   ];
+
   @override
   void initState() {
     super.initState();
-    // _getValue();
+    print("----------iniciando");
+    searchClient();
   }
 
   /// This implementation is just to simulate a load data behavior
@@ -97,8 +120,26 @@ class _HomePageState extends State<HomePage> {
       var data = jsonResponse['data'];
 
       print("object object $data");
+    } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
+  }
 
-      //  myList = data;
+  Future getItemDepartamento() async {
+    final response =
+        await http.get(Uri.parse("http://localhost:3000/app_depto/$_nit"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object app_depto $data");
+
       setState(() {
         //_item_type_identification = data;
       });
@@ -107,93 +148,275 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("$msg")));
     }
+  }
 
-    /*  await Future.delayed(const Duration(seconds: 3), () {
+  Future getItemClasification() async {
+    final response = await http
+        .get(Uri.parse("http://localhost:3000/app_tipoidentificacion_all"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object object $data");
+
       setState(() {
-        _controller_type_ident?.text = 'circleValue';
+        //_item_type_identification = data;
       });
-    });*/
+    } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
+  }
+
+  Future getItemMedioContacto() async {
+    final response = await http
+        .get(Uri.parse("http://localhost:3000/app_medioContacto/$_nit"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object app_medioContacto $data");
+
+      setState(() {
+        //_item_type_identification = data;
+      });
+    } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
+  }
+
+  Future getItemZona() async {
+    final response =
+        await http.get(Uri.parse("http://localhost:3000/app_zona/$_nit"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object app_zona $data");
+
+      setState(() {
+        //_item_type_identification = data;
+      });
+    } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
+  }
+
+  Future getItemCiudad() async {
+    final response =
+        await http.get(Uri.parse("http://localhost:3000/app_ciudades/$_nit"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object object $data");
+
+      setState(() {
+        //_item_type_identification = data;
+      });
+    } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
+  }
+
+  Future getItemBarrio() async {
+    final response =
+        await http.get(Uri.parse("http://localhost:3000/app_barrio/$_nit"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object app_barrio $data");
+
+      setState(() {
+        //_item_type_identification = data;
+      });
+    } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
   }
 //fin data
 
   final myControllerSearch = TextEditingController();
-  TextEditingController? _controller_type_ident;
+
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
 
-
-  Future<void> SearchClient(String _search) async {
-    print("SearchClient $_search");
-    if (_search.isNotEmpty) {
-      final response =
-          await http.post(Uri.parse("http://localhost:3000/clientes"),
-              body: ({
-                'nit': '900054835',
-                'nombre': _search,
-              }));
-      var jsonResponse =
-          convert.jsonDecode(response.body) as Map<String, dynamic>;
-      var success = jsonResponse['success'];
-      var msg = jsonResponse['msg'];
-      if (response.statusCode == 200 && success) {
-        var data = jsonResponse['data'];
-        _count = jsonResponse['count'];
-        print('response cliente http: $msg $success $data $_count.');
-
-        setState(() {
+  Future<void> searchClient() async {
+    print("searchClient------------------------------ $_search");
+    _body = {
+      'nit': _nit,
+      'nombre': (_search.isNotEmpty && _search != '') ? _search : null,
+    };
+    final response = await http
+        .post(Uri.parse("http://localhost:3000/clientes"), body: (_body));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      _datClient = jsonResponse['data'];
+      _count = jsonResponse['count'];
+      setState(() {
+        if (_count > 0) {
+          print("mosrtart el clienteeeeeeeeeeeeeeeeeee $_datClient");
           _clientShow = true;
-        });
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$msg")));
+          _clientShow ? _client(context, _datClient) : Container();
+        }
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
 
-        //  Navigator.pushNamed(context, 'home');
-      } else {
-        print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$msg")));
-      }
+      //  Navigator.pushNamed(context, 'home');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Ingrese el nombre del cliente!")));
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
     }
   }
 
-  
-
   Future<void> _saveClient() async {
     print("Save client");
-    if (_search.isNotEmpty) {
-      final response =
-          await http.post(Uri.parse("http://localhost:3000/clientes"),
-              body: ({
-                'nit': '900054835',
-                'nombre': _search,
-              }));
-      var jsonResponse =
-          convert.jsonDecode(response.body) as Map<String, dynamic>;
-      var success = jsonResponse['success'];
-      var msg = jsonResponse['msg'];
-      if (response.statusCode == 200 && success) {
-        var data = jsonResponse['data'];
-        _count = jsonResponse['count'];
-        print('response cliente http: $msg $success $data $_count.');
+    print('Entrando a save clientes $_value_itemsTypeDoc');
 
-        setState(() {
-          _clientShow = true;
-        });
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$msg")));
+    final response =
+        await http.post(Uri.parse("http://localhost:3000/nuevo_cliente_app"),
+            body: ({
+              "id_tercero": myControllerNroDoc.text,
+              "id_sucursal_tercero": "1",
+              "id_tipo_identificacion": _value_itemsTypeDoc,
+              "dv": myControllerDv.text,
+              "nombre": myControllerPrimerNombre.text,
+              "direccion": myControllerDireccion.text,
+              "id_pais": "57",
+              "id_depto": _value_itemsDepartamento,
+              "id_ciudad": _value_itemsCiudad,
+              "id_barrio": _value_itemsBarrio,
+              "telefono": myControllerTelefono.text,
+              "nombre_sucursal": myControllerRazonSocial.text,
+              "primer_apellido": myControllerPrimerApellido.text,
+              "segundo_apellido": myControllerSegundoApellido.text,
+              "primer_nombre": myControllerPrimerNombre.text,
+              "segundo_nombre": myControllerSegundoNombre.text,
+              "e_mail": myControllerEmail.text,
+              "telefono_celular": myControllerTelefono.text,
+              "id_forma_pago": "01",
+              "id_precio_item": "01",
+              "id_vendedor": "16499705",
+              "id_medio_contacto": _value_itemsMedioContacto,
+              "id_zona": _value_itemsZona,
+              "id_direccion": "1",
+              "tipo_direccion": "Factura",
+              "id_suc_vendedor": "1",
+              'nit': _nit,
+            }));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      print('response crear cliente http: $msg $success ');
+      showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => Dialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0))),
+            child: Container(
+              height: 283.0,
+              width: 100.0,
+              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 20.0),
+                  Image(
+                    height: 90.0,
+                    image: AssetImage('assets/images/icon-check.png'),
+                  ),
+                  SizedBox(height: 20.0),
+                  Text(
+                    'Creación de cliente exitosa',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Color(0xff06538D),
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 30.0),
+                  Container(
+                    // width: _size.width,
+                    width: 100.0,
+                    height: 41.0,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0),
+                        color: Color(0xff0894FD)),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(5.0),
+                        child: Center(
+                          child: Text(
+                            'Aceptar',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+      );
+      setState(() {
+        _clientShow = true;
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
 
-        //  Navigator.pushNamed(context, 'home');
-      } else {
-        print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$msg")));
-      }
+      //  Navigator.pushNamed(context, 'home');
     } else {
+      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));
+    }
+    /* } else {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Ingrese el nombre del cliente!")));
-    }
+    }*/
   }
 
   // Perform login
@@ -203,9 +426,10 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       print("buscar cliente");
       _isLoading = true;
-      SearchClient(_search);
+      searchClient();
     });
   }
+
 //fin api
 
 //visual
@@ -332,7 +556,9 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                           SizedBox(height: 10.0),
-                          _clientShow ? _client(context) : Container(),
+                          _clientShow
+                              ? _client(context, _datClient)
+                              : Container(),
                           _formShow ? _form(context) : Container(),
                           _formOrderShow ? _formOrder(context) : Container(),
                           _formRecipeShow ? _formRecipe(context) : Container(),
@@ -355,7 +581,28 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _client(BuildContext context) {
+  void callbackOrder() {
+    setState(() {
+      _clientShow = false;
+      _formOrderShow = true;
+    });
+  }
+
+  void callbackHistory() {
+    setState(() {
+      _clientShow = false;
+      _formOrderShow = true;
+    });
+  }
+
+  void callbackRecipe() {
+    setState(() {
+      _clientShow = false;
+      _formOrderShow = true;
+    });
+  }
+
+  Widget _client(BuildContext context, data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -366,69 +613,9 @@ class _HomePageState extends State<HomePage> {
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic)),
         SizedBox(height: 10.0),
-        for (var i = 0; i < _count; i++) Text('Item $_count'),
         for (var i = 0; i < _count; i++) ...[
-          _ItemClient('asd'),
+          _ItemClient('$_count', _datClient[i]),
         ],
-        /*  ItemClient( 
-            callbackOrder: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formOrderShow = true;
-                  })
-                },
-            callbackHistory: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formHistoryShow = true;
-                  })
-                },
-            callbackRecipe: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formRecipeShow = true;
-                  })
-                }),*/
-        SizedBox(height: 10.0),
-        /* ItemClient(
-            callbackOrder: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formOrderShow = true;
-                  })
-                },
-            callbackHistory: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formHistoryShow = true;
-                  })
-                },
-            callbackRecipe: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formRecipeShow = true;
-                  })
-                }),
-        SizedBox(height: 10.0),*/
-        /*  ItemClient(
-            callbackOrder: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formOrderShow = true;
-                  })
-                },
-            callbackHistory: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formHistoryShow = true;
-                  })
-                },
-            callbackRecipe: () => {
-                  setState(() {
-                    _clientShow = false;
-                    _formRecipeShow = true;
-                  })
-                }),*/
         SizedBox(height: 30.0),
         BtnForm(
             text: 'Crear cliente',
@@ -437,6 +624,12 @@ class _HomePageState extends State<HomePage> {
                   setState(() {
                     //_getValue();
                     getItemTypeIdentication();
+                    getItemDepartamento();
+                    getItemClasification();
+                    getItemMedioContacto();
+                    getItemZona();
+                    getItemCiudad();
+                    getItemBarrio();
                     _clientShow = false;
                     _formShow = true;
                   })
@@ -1819,10 +2012,15 @@ class _HomePageState extends State<HomePage> {
                     color: Color(0xff06538D)),
               ),
               SizedBox(height: 20.0),
-              _itemForm(context, 'Recibo N°', '14408'),
+              _itemForm(
+                context,
+                'Recibo N°',
+                '14408',
+                null,
+              ),
               _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
-              _itemForm(context, 'Nombre', 'Jiménez Pérez Juan6 Pablo'),
-              _itemForm(context, 'Total cartera', '22554'),
+              _itemForm(context, 'Nombre', 'Jiménez Pérez Juan6 Pablo', null),
+              _itemForm(context, 'Total cartera', '22554', null),
               _itemSelectForm(
                   context, 'Banco', 'Banco de occidente', 'Selecciona fecha'),
               _itemSelectForm(context, 'N° cheque', '', 'Selecciona fecha'),
@@ -1858,10 +2056,13 @@ class _HomePageState extends State<HomePage> {
                                 fontWeight: FontWeight.w700),
                           ),
                         ),
+                        // onTap: searchClient,
                         onTap: () {
                           setState(() {
                             _clientShow = false;
-                            _formRecipeShow = false;
+                            _formShow = false;
+                            _search = '@';
+                            searchClient();
                           });
                         },
                       ),
@@ -1918,14 +2119,14 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 20.0),
-        _itemForm(context, 'Pedido', 'Automático'),
+        _itemForm(context, 'Pedido', 'Automático', null),
         _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
-        _itemForm(context, 'Nombre', 'Jiménez Pérez Juan1 Pablo'),
+        _itemForm(context, 'Nombre', 'Jiménez Pérez Juan1 Pablo', null),
         _itemSelectForm(context, 'Dir. envío factura', 'Cr 74 # 37 - 38',
             'Selecciona fecha'),
         _itemSelectForm(context, 'Dir. envío mercancía', 'Cr 74 # 37 - 38',
             'Selecciona fecha'),
-        _itemForm(context, 'Orden de compra', ''),
+        _itemForm(context, 'Orden de compra', '', null),
         _itemSelectForm(context, 'Forma de pago', '7 días', 'Selecciona fecha'),
         SizedBox(height: 30.0),
         Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
@@ -1939,7 +2140,7 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 10.0),
-        _itemForm(context, 'Cupo crédito', '1.200.000'),
+        _itemForm(context, 'Cupo crédito', '1.200.000', null),
         _itemSelectForm(
             context, 'Total cartera', '347.281', 'Selecciona fecha'),
         SizedBox(height: 30.0),
@@ -1968,10 +2169,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
-                          _clientShow = false;
-                          _formOrderShow = false;
+                          validateAndSubmit();
+                          _clientShow = !_clientShow;
+                          _formOrderShow = !_formOrderShow;
                         });
                       },
+                      // onTap: validateAndSubmit,
                     ),
                   ),
                 )),
@@ -2021,45 +2224,37 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(height: 20.0),
         SelectFormField(
-          controller: _controller_type_ident,
           type: SelectFormFieldType.dropdown, // or can be dialog
           initialValue: 'circle',
           icon: Icon(Icons.format_shapes),
           labelText: 'Tipo de documento',
           items: _itemsTypeDoc,
-          onChanged: (val) => setState(() => _valueChanged = val),
-          //onChanged: (val) => print(val),
-          //onSaved: (val) => print(val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          onChanged: (val) => setState(() => _value_itemsTypeDoc = val),
+          // onChanged: (val) => print(val),
+          onSaved: (val) => print(val),
+          //  onSaved: (val) => setState(() => _valueSaved = val ?? ''),
           validator: (val) {
             setState(() => _valueToValidate = val ?? '');
             return null;
           },
         ),
-        /* _itemSelectForm(
-            context,
-            'Tipo de documento',
-            'Cédula de identidad',
-            'Cédula de identidad'
-                'Seleccione su tipo de documento'),*/
-        _itemForm(context, 'N° de documento', '7213123'),
-        _itemForm(context, 'DV.', 'PersonaNatural'),
-        _itemForm(context, 'Primer nombre', 'Juan2'),
-        _itemForm(context, 'Segundo nombre', 'Pablo'),
-        _itemForm(context, 'Primer apellido', 'PersonaNatural'),
-        _itemForm(context, 'Segundo apellido', 'Pérez'),
-        _itemForm(context, 'Razón social', ''),
-        _itemForm(context, 'Dirección', ''),
-        _itemForm(context, 'Email', ''),
-        _itemForm(context, 'Teléfono fijo', ''),
+        _itemForm(context, 'N° de documento', '', myControllerNroDoc),
+        _itemForm(context, 'DV.', 'PersonaNatural', myControllerDv),
+        _itemForm(context, 'Primer nombre', '', myControllerPrimerNombre),
+        _itemForm(context, 'Segundo nombre', '', myControllerSegundoNombre),
+        _itemForm(context, 'Primer apellido', '', myControllerPrimerApellido),
+        _itemForm(context, 'Segundo apellido', '', myControllerSegundoApellido),
+        _itemForm(context, 'Razón social', '', myControllerRazonSocial),
+        _itemForm(context, 'Dirección', '', myControllerDireccion),
+        _itemForm(context, 'Email', '', myControllerEmail),
+        _itemForm(context, 'Teléfono fijo', '', myControllerTelefono),
         SelectFormField(
-          controller: _controller_type_ident,
           type: SelectFormFieldType.dropdown, // or can be dialog
           initialValue: 'circle',
           icon: Icon(Icons.format_shapes),
           labelText: 'Clasificación',
           items: _itemsClasification,
-          onChanged: (val) => setState(() => _valueChanged = val),
+          onChanged: (val) => setState(() => _value_itemsClasification = val),
           //onChanged: (val) => print(val),
           //onSaved: (val) => print(val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
@@ -2068,16 +2263,13 @@ class _HomePageState extends State<HomePage> {
             return null;
           },
         ),
-        // _itemSelectForm(context, 'Clasificación', 'Persona natural',
-        // 'Seleccione su medio de contacto'),
         SelectFormField(
-          controller: _controller_type_ident,
           type: SelectFormFieldType.dropdown, // or can be dialog
           initialValue: 'circle',
           icon: Icon(Icons.format_shapes),
           labelText: 'Medio contacto',
           items: _itemsMedioContacto,
-          onChanged: (val) => setState(() => _valueChanged = val),
+          onChanged: (val) => setState(() => _value_itemsMedioContacto = val),
           //onChanged: (val) => print(val),
           //onSaved: (val) => print(val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
@@ -2086,16 +2278,13 @@ class _HomePageState extends State<HomePage> {
             return null;
           },
         ),
-        // _itemSelectForm(context, 'Medio contacto', 'Tienda',
-        //    'Seleccione clasificación de persona'),
         SelectFormField(
-          controller: _controller_type_ident,
           type: SelectFormFieldType.dropdown, // or can be dialog
           initialValue: 'circle',
           icon: Icon(Icons.format_shapes),
           labelText: 'Zona',
           items: _itemsZona,
-          onChanged: (val) => setState(() => _valueChanged = val),
+          onChanged: (val) => setState(() => _value_itemsZona = val),
           //onChanged: (val) => print(val),
           //onSaved: (val) => print(val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
@@ -2104,16 +2293,13 @@ class _HomePageState extends State<HomePage> {
             return null;
           },
         ),
-        // _itemSelectForm(
-        //  context, 'Zona', 'Cali', 'Seleccione la zona de residencia'),
         SelectFormField(
-          controller: _controller_type_ident,
           type: SelectFormFieldType.dropdown, // or can be dialog
           initialValue: 'circle',
           icon: Icon(Icons.format_shapes),
           labelText: 'Departamento',
           items: _itemsDepartamento,
-          onChanged: (val) => setState(() => _valueChanged = val),
+          onChanged: (val) => setState(() => _value_itemsDepartamento = val),
           //onChanged: (val) => print(val),
           //onSaved: (val) => print(val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
@@ -2122,16 +2308,13 @@ class _HomePageState extends State<HomePage> {
             return null;
           },
         ),
-        // _itemSelectForm(context, 'Departamento', 'Valle del cauca',
-        //   'Seleccione su departamento'),
         SelectFormField(
-          controller: _controller_type_ident,
           type: SelectFormFieldType.dropdown, // or can be dialog
           initialValue: 'circle',
           icon: Icon(Icons.format_shapes),
           labelText: 'Ciudad',
           items: _itemsCiudad,
-          onChanged: (val) => setState(() => _valueChanged = val),
+          onChanged: (val) => setState(() => _value_itemsCiudad = val),
           //onChanged: (val) => print(val),
           //onSaved: (val) => print(val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
@@ -2140,15 +2323,13 @@ class _HomePageState extends State<HomePage> {
             return null;
           },
         ),
-        // _itemSelectForm(context, 'Ciudad', 'Cali', 'Seleccione su ciudad'),
         SelectFormField(
-          controller: _controller_type_ident,
           type: SelectFormFieldType.dropdown, // or can be dialog
           initialValue: 'circle',
           icon: Icon(Icons.format_shapes),
           labelText: 'Barrio',
           items: _itemsBarrio,
-          onChanged: (val) => setState(() => _valueChanged = val),
+          onChanged: (val) => setState(() => _value_itemsBarrio = val),
           //onChanged: (val) => print(val),
           //onSaved: (val) => print(val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
@@ -2157,8 +2338,6 @@ class _HomePageState extends State<HomePage> {
             return null;
           },
         ),
-        // _itemSelectForm(
-        //  context, 'Barrio', '7 de agosto', 'Seleccione su barrio'),
         SizedBox(height: 30.0),
         Row(
           children: [
@@ -2187,6 +2366,7 @@ class _HomePageState extends State<HomePage> {
                         setState(() {
                           _clientShow = false;
                           _formShow = false;
+                          searchClient();
                         });
                       },
                     ),
@@ -2220,7 +2400,7 @@ class _HomePageState extends State<HomePage> {
                           _clientShow = false;
                           _formShow = false;
                         });
-                        showDialog<String>(
+                        /* showDialog<String>(
                           context: context,
                           builder: (BuildContext context) => Dialog(
                               shape: RoundedRectangleBorder(
@@ -2279,7 +2459,7 @@ class _HomePageState extends State<HomePage> {
                                   ],
                                 ),
                               )),
-                        );
+                        );*/
                       },
                     ),
                   ),
@@ -2291,7 +2471,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _itemForm(BuildContext context, String label, String hintText) {
+  Widget _itemForm(
+      BuildContext context, String label, String hintText, controller) {
     final _size = MediaQuery.of(context).size;
     return Row(
       children: [
@@ -2308,6 +2489,7 @@ class _HomePageState extends State<HomePage> {
         Container(
           width: _size.width * 0.5 - 20,
           child: TextField(
+            controller: controller,
             style: TextStyle(
               color: Color(0xff707070),
               fontSize: 14.0,
@@ -2455,7 +2637,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Widget _ItemClient(BuildContext context) {
-  Widget _ItemClient(hintText) {
+  Widget _ItemClient(hintText, data) {
+    print('-----------Howdy, ${data['nombre']}!');
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -2469,7 +2652,7 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: Text(
-              'Jiménez Pérez Juan Pablo999',
+              '${data['nombre_completo']} (${data['nombre_sucursal']})',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
@@ -2509,7 +2692,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('Cr 74 # 37 - 38',
+                      child: Text('${data['direccion']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -2545,7 +2728,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('735312956',
+                      child: Text('${data['telefono']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -2581,7 +2764,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('735312956',
+                      child: Text('${data['limite_credito']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -2617,7 +2800,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('Cali',
+                      child: Text('${data['ciudad']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -2648,7 +2831,7 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w400),
                             ),
                           ),
-                          //  onTap: widget.callbackOrder,
+                          onTap: callbackOrder,
                         ),
                       ),
                     ),
@@ -2673,7 +2856,7 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w500),
                             ),
                           ),
-                          // onTap: widget.callbackRecipe,
+                          onTap: callbackOrder,
                         ),
                       ),
                     ),
@@ -2698,7 +2881,7 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w500),
                             ),
                           ),
-                          // onTap: widget.callbackHistory,
+                          onTap: callbackOrder,
                         ),
                       ),
                     ),
