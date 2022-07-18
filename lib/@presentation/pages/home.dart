@@ -413,10 +413,6 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("$msg")));
     }
-    /* } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Ingrese el nombre del cliente!")));
-    }*/
   }
 
   // Perform login
@@ -582,23 +578,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   void callbackOrder() {
+    //pedido
     setState(() {
-      _clientShow = false;
       _formOrderShow = true;
+      _clientShow = false;
     });
   }
 
   void callbackHistory() {
+    //historial
     setState(() {
       _clientShow = false;
-      _formOrderShow = true;
+      _formHistoryShow = true;
     });
   }
 
   void callbackRecipe() {
+    //recibo
     setState(() {
       _clientShow = false;
-      _formOrderShow = true;
+      _formRecipeShow = true;
     });
   }
 
@@ -1966,7 +1965,7 @@ class _HomePageState extends State<HomePage> {
                           color: Color(0xffCB1B1B),
                           callback: () {
                             setState(() {
-                              _clientShow = true;
+                              _clientShow = false;
                               _formNewClientShow = false;
                             });
                           }),
@@ -2056,11 +2055,11 @@ class _HomePageState extends State<HomePage> {
                                 fontWeight: FontWeight.w700),
                           ),
                         ),
-                        // onTap: searchClient,
                         onTap: () {
                           setState(() {
                             _clientShow = false;
                             _formShow = false;
+                            _formNewClientShow = false;
                             _search = '@';
                             searchClient();
                           });
@@ -2170,8 +2169,8 @@ class _HomePageState extends State<HomePage> {
                       onTap: () {
                         setState(() {
                           validateAndSubmit();
-                          _clientShow = !_clientShow;
-                          _formOrderShow = !_formOrderShow;
+                          _clientShow = false;
+                          _formOrderShow = false;
                         });
                       },
                       // onTap: validateAndSubmit,
@@ -2366,6 +2365,7 @@ class _HomePageState extends State<HomePage> {
                         setState(() {
                           _clientShow = false;
                           _formShow = false;
+                          _formNewClientShow = false;
                           searchClient();
                         });
                       },
@@ -2856,7 +2856,7 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w500),
                             ),
                           ),
-                          onTap: callbackOrder,
+                          onTap: callbackRecipe,
                         ),
                       ),
                     ),
