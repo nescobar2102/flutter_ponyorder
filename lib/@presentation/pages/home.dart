@@ -12,6 +12,7 @@ import 'package:select_form_field/select_form_field.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -208,10 +209,6 @@ class _HomePageState extends State<HomePage> {
       var data = jsonResponse['data'];
 
       print("object app_zona $data");
-
-      setState(() {
-        //_item_type_identification = data;
-      });
     } else {
       print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
       ScaffoldMessenger.of(context)
@@ -231,10 +228,6 @@ class _HomePageState extends State<HomePage> {
       var data = jsonResponse['data'];
 
       print("object object $data");
-
-      setState(() {
-        //_item_type_identification = data;
-      });
     } else {
       print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
       ScaffoldMessenger.of(context)
@@ -426,9 +419,35 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-//fin api
+//fin api///////////////////////
 
 //visual
+
+  late DateTime _selectedDate = DateTime.now();
+
+  //Method for showing the date picker
+  void _pickDateDialog() {
+    showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            //which date will display when user open the picker
+            firstDate: DateTime(1950),
+            //what will be the previous supported year in picker
+            lastDate: DateTime
+                .now()) //what will be the up to supported date in picker
+        .then((pickedDate) {
+      //then usually do the future job
+      if (pickedDate == null) {
+        //if user tap cancel then this function will stop
+        return;
+      }
+      setState(() {
+        //for rebuilding the ui
+        _selectedDate = pickedDate;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -588,8 +607,8 @@ class _HomePageState extends State<HomePage> {
   void callbackHistory() {
     //historial
     setState(() {
-      _clientShow = false;
       _formHistoryShow = true;
+      _clientShow = false;
     });
   }
 
@@ -2004,7 +2023,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Clientes / Nuevo reciboo',
+                'Clientes / Nuevo recibo',
                 style: TextStyle(
                     fontSize: 22.0,
                     fontWeight: FontWeight.bold,
@@ -2017,12 +2036,21 @@ class _HomePageState extends State<HomePage> {
                 '14408',
                 null,
               ),
-              _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
+              ElevatedButton(onPressed: _pickDateDialog, child: Text('Fecha')),
+              SizedBox(height: 10),
+              _itemForm(
+                  context,
+                  '',
+                  _selectedDate ==
+                          null //ternary expression to check if date is null
+                      ? 'No date was chosen!'
+                      : '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                  null),
               _itemForm(context, 'Nombre', 'Jiménez Pérez Juan6 Pablo', null),
               _itemForm(context, 'Total cartera', '22554', null),
               _itemSelectForm(
-                  context, 'Banco', 'Banco de occidente', 'Selecciona fecha'),
-              _itemSelectForm(context, 'N° cheque', '', 'Selecciona fecha'),
+                  context, 'Banco', 'Banco de occidente', 'Selecciona'),
+              _itemSelectForm(context, 'N° cheque', '', 'Selecciona '),
               SizedBox(height: 30.0),
               Container(
                   width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
@@ -2058,8 +2086,7 @@ class _HomePageState extends State<HomePage> {
                         onTap: () {
                           setState(() {
                             _clientShow = false;
-                            _formShow = false;
-                            _formNewClientShow = false;
+                            _formRecipeShow = false;
                             _search = '@';
                             searchClient();
                           });
@@ -2168,12 +2195,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
-                          validateAndSubmit();
                           _clientShow = false;
                           _formOrderShow = false;
+                          _search = '@';
+                          searchClient();
                         });
                       },
-                      // onTap: validateAndSubmit,
                     ),
                   ),
                 )),
@@ -2366,6 +2393,7 @@ class _HomePageState extends State<HomePage> {
                           _clientShow = false;
                           _formShow = false;
                           _formNewClientShow = false;
+                          _search = '@';
                           searchClient();
                         });
                       },
@@ -2881,7 +2909,7 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w500),
                             ),
                           ),
-                          onTap: callbackOrder,
+                          onTap: callbackHistory,
                         ),
                       ),
                     ),
