@@ -12,7 +12,7 @@ import 'package:select_form_field/select_form_field.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+ 
 
 class HomePage extends StatefulWidget {
   @override
@@ -38,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   bool focus = false;
   late String _search = '@';
   late int _count;
+  //nuevo cliente
   String _valueChanged = '';
   String _valueToValidate = '';
   String _valueSaved = '';
@@ -49,7 +50,6 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsCiudad = '';
   String _value_itemsBarrio = '';
   late Object _body;
-
   List<dynamic> _datClient = [];
 
   final myControllerNroDoc = TextEditingController();
@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> {
   final myControllerDireccion = TextEditingController();
   final myControllerEmail = TextEditingController();
   final myControllerTelefono = TextEditingController();
-
+//nuevo cliente
   List<Map<String, dynamic>> _itemsTypeDoc = [
     {"value": "", "label": "Seleccione"},
     {"value": "13", "label": "Cédula de Ciudadanía"},
@@ -98,7 +98,16 @@ class _HomePageState extends State<HomePage> {
     {"value": "76001001", "label": "Las acacias"},
     {"value": "76001002", "label": "Los Andes"}
   ];
+//nuevo pedido
+  List<Map<String, dynamic>> _itemsFormaPago = [
+    {"value": "", "label": "Seleccione"},
+    {"value": "01", "label": "EFECTIVO"},
+    {"value": "02", "label": "CREDITO 8 DIAS"},
+    {"value": "03", "label": "CREDITO 30 DIAS"}
+  ];
+  String _value_itemsFormaPago = '';
 
+  
   @override
   void initState() {
     super.initState();
@@ -130,8 +139,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future getItemDepartamento() async {
-    final response =
-        await http.get(Uri.parse("$_url/app_depto/$_nit"));
+    final response = await http.get(Uri.parse("$_url/app_depto/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -153,8 +161,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future getItemClasification() async {
-    final response = await http
-        .get(Uri.parse("$_url/app_tipoidentificacion_all"));
+    final response =
+        await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -176,8 +184,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future getItemMedioContacto() async {
-    final response = await http
-        .get(Uri.parse("$_url/app_medioContacto/$_nit"));
+    final response = await http.get(Uri.parse("$_url/app_medioContacto/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -199,8 +206,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future getItemZona() async {
-    final response =
-        await http.get(Uri.parse("$_url/app_zona/$_nit"));
+    final response = await http.get(Uri.parse("$_url/app_zona/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -218,8 +224,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future getItemCiudad() async {
-    final response =
-        await http.get(Uri.parse("$_url/app_ciudades/$_nit"));
+    final response = await http.get(Uri.parse("$_url/app_ciudades/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -237,8 +242,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future getItemBarrio() async {
-    final response =
-        await http.get(Uri.parse("$_url/app_barrio/$_nit"));
+    final response = await http.get(Uri.parse("$_url/app_barrio/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -271,8 +275,8 @@ class _HomePageState extends State<HomePage> {
       'nit': _nit,
       'nombre': (_search.isNotEmpty && _search != '') ? _search : null,
     };
-    final response = await http
-        .post(Uri.parse("$_url/clientes"), body: (_body));
+    final response =
+        await http.post(Uri.parse("$_url/clientes"), body: (_body));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -302,37 +306,36 @@ class _HomePageState extends State<HomePage> {
     print("Save client");
     print('Entrando a save clientes $_value_itemsTypeDoc');
 
-    final response =
-        await http.post(Uri.parse("$_url/nuevo_cliente_app"),
-            body: ({
-              "id_tercero": myControllerNroDoc.text,
-              "id_sucursal_tercero": "1",
-              "id_tipo_identificacion": _value_itemsTypeDoc,
-              "dv": myControllerDv.text,
-              "nombre": myControllerPrimerNombre.text,
-              "direccion": myControllerDireccion.text,
-              "id_pais": "57",
-              "id_depto": _value_itemsDepartamento,
-              "id_ciudad": _value_itemsCiudad,
-              "id_barrio": _value_itemsBarrio,
-              "telefono": myControllerTelefono.text,
-              "nombre_sucursal": myControllerRazonSocial.text,
-              "primer_apellido": myControllerPrimerApellido.text,
-              "segundo_apellido": myControllerSegundoApellido.text,
-              "primer_nombre": myControllerPrimerNombre.text,
-              "segundo_nombre": myControllerSegundoNombre.text,
-              "e_mail": myControllerEmail.text,
-              "telefono_celular": myControllerTelefono.text,
-              "id_forma_pago": "01",
-              "id_precio_item": "01",
-              "id_vendedor": "16499705",
-              "id_medio_contacto": _value_itemsMedioContacto,
-              "id_zona": _value_itemsZona,
-              "id_direccion": "1",
-              "tipo_direccion": "Factura",
-              "id_suc_vendedor": "1",
-              'nit': _nit,
-            }));
+    final response = await http.post(Uri.parse("$_url/nuevo_cliente_app"),
+        body: ({
+          "id_tercero": myControllerNroDoc.text,
+          "id_sucursal_tercero": "1",
+          "id_tipo_identificacion": _value_itemsTypeDoc,
+          "dv": myControllerDv.text,
+          "nombre": myControllerPrimerNombre.text,
+          "direccion": myControllerDireccion.text,
+          "id_pais": "57",
+          "id_depto": _value_itemsDepartamento,
+          "id_ciudad": _value_itemsCiudad,
+          "id_barrio": _value_itemsBarrio,
+          "telefono": myControllerTelefono.text,
+          "nombre_sucursal": myControllerRazonSocial.text,
+          "primer_apellido": myControllerPrimerApellido.text,
+          "segundo_apellido": myControllerSegundoApellido.text,
+          "primer_nombre": myControllerPrimerNombre.text,
+          "segundo_nombre": myControllerSegundoNombre.text,
+          "e_mail": myControllerEmail.text,
+          "telefono_celular": myControllerTelefono.text,
+          "id_forma_pago": "01",
+          "id_precio_item": "01",
+          "id_vendedor": "16499705",
+          "id_medio_contacto": _value_itemsMedioContacto,
+          "id_zona": _value_itemsZona,
+          "id_direccion": "1",
+          "tipo_direccion": "Factura",
+          "id_suc_vendedor": "1",
+          'nit': _nit,
+        }));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -1987,6 +1990,8 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               _clientShow = false;
                               _formNewClientShow = false;
+                              _search = '@';
+                              searchClient();
                             });
                           }),
                     ),
@@ -2051,7 +2056,7 @@ class _HomePageState extends State<HomePage> {
               _itemForm(context, 'Total cartera', '22554', null),
               _itemSelectForm(
                   context, 'Banco', 'Banco de occidente', 'Selecciona'),
-              _itemSelectForm(context, 'N° cheque', '', 'Selecciona '),
+              _itemForm(context, 'N° cheque', '00000', null),
               SizedBox(height: 30.0),
               Container(
                   width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
@@ -2147,14 +2152,43 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(height: 20.0),
         _itemForm(context, 'Pedido', 'Automático', null),
-        _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
+        ElevatedButton(onPressed: _pickDateDialog, child: Text('Fecha')),
+        _itemForm(
+            context,
+            '',
+            _selectedDate == null //ternary expression to check if date is null
+                ? 'No date was chosen!'
+                : '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+            null),
+        //  ElevatedButton(onPressed: _pickDateDialog, child: Text('Fecha')),
+        //_itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
         _itemForm(context, 'Nombre', 'Jiménez Pérez Juan1 Pablo', null),
         _itemSelectForm(context, 'Dir. envío factura', 'Cr 74 # 37 - 38',
             'Selecciona fecha'),
         _itemSelectForm(context, 'Dir. envío mercancía', 'Cr 74 # 37 - 38',
             'Selecciona fecha'),
         _itemForm(context, 'Orden de compra', '', null),
-        _itemSelectForm(context, 'Forma de pago', '7 días', 'Selecciona fecha'),
+        SelectFormField(
+          style: TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+
+          type: SelectFormFieldType.dropdown, // or can be dialog
+          // initialValue: 'circle',
+          // icon: Icon(Icons.format_shapes),
+          labelText: 'Forma de pago',
+          items: _itemsFormaPago,
+          onChanged: (val) => setState(() => _value_itemsFormaPago = val),
+          //onChanged: (val) => print(val),
+          //onSaved: (val) => print(val),
+          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
+          validator: (val) {
+            setState(() => _valueToValidate = val ?? '');
+            return null;
+          },
+        ),
+        // _itemSelectForm(context, 'Forma de pago', '7 días', 'Selecciona fecha'),
         SizedBox(height: 30.0),
         Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
         SizedBox(height: 30.0),
@@ -2252,8 +2286,8 @@ class _HomePageState extends State<HomePage> {
         SizedBox(height: 20.0),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
-          initialValue: 'circle',
-          icon: Icon(Icons.format_shapes),
+          /*     initialValue: 'circle',
+          icon: Icon(Icons.format_shapes), */
           labelText: 'Tipo de documento',
           items: _itemsTypeDoc,
           onChanged: (val) => setState(() => _value_itemsTypeDoc = val),
@@ -2277,8 +2311,8 @@ class _HomePageState extends State<HomePage> {
         _itemForm(context, 'Teléfono fijo', '', myControllerTelefono),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
-          initialValue: 'circle',
-          icon: Icon(Icons.format_shapes),
+          /*    initialValue: 'circle',
+          icon: Icon(Icons.format_shapes), */
           labelText: 'Clasificación',
           items: _itemsClasification,
           onChanged: (val) => setState(() => _value_itemsClasification = val),
@@ -2292,8 +2326,8 @@ class _HomePageState extends State<HomePage> {
         ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
-          initialValue: 'circle',
-          icon: Icon(Icons.format_shapes),
+          /*   initialValue: 'circle',
+          icon: Icon(Icons.format_shapes), */
           labelText: 'Medio contacto',
           items: _itemsMedioContacto,
           onChanged: (val) => setState(() => _value_itemsMedioContacto = val),
@@ -2307,8 +2341,8 @@ class _HomePageState extends State<HomePage> {
         ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
-          initialValue: 'circle',
-          icon: Icon(Icons.format_shapes),
+          /*   initialValue: 'circle', 
+          icon: Icon(Icons.format_shapes), */
           labelText: 'Zona',
           items: _itemsZona,
           onChanged: (val) => setState(() => _value_itemsZona = val),
@@ -2322,8 +2356,8 @@ class _HomePageState extends State<HomePage> {
         ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
-          initialValue: 'circle',
-          icon: Icon(Icons.format_shapes),
+          /*   initialValue: 'circle',
+          icon: Icon(Icons.format_shapes), */
           labelText: 'Departamento',
           items: _itemsDepartamento,
           onChanged: (val) => setState(() => _value_itemsDepartamento = val),
@@ -2337,8 +2371,8 @@ class _HomePageState extends State<HomePage> {
         ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
-          initialValue: 'circle',
-          icon: Icon(Icons.format_shapes),
+          /*     initialValue: 'circle',
+          icon: Icon(Icons.format_shapes), */
           labelText: 'Ciudad',
           items: _itemsCiudad,
           onChanged: (val) => setState(() => _value_itemsCiudad = val),
@@ -2352,8 +2386,8 @@ class _HomePageState extends State<HomePage> {
         ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
-          initialValue: 'circle',
-          icon: Icon(Icons.format_shapes),
+          /*  initialValue: 'circle',
+          icon: Icon(Icons.format_shapes), */
           labelText: 'Barrio',
           items: _itemsBarrio,
           onChanged: (val) => setState(() => _value_itemsBarrio = val),
@@ -2559,7 +2593,7 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff707070),
               fontSize: 14.0,
             ),
-            readOnly: true,
+            readOnly: false,
             decoration: InputDecoration(
                 disabledBorder: UnderlineInputBorder(
                     borderSide:
