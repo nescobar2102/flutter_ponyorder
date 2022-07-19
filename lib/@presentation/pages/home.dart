@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   bool isOnline = true;
   bool _isLoading = false;
   String _nit = '900054835';
-  String _url = '$_url';
+  String _url = 'http://localhost:3000';
   //data
   bool focus = false;
   late String _search = '@';
