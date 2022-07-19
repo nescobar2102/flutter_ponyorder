@@ -33,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   bool isOnline = true;
   bool _isLoading = false;
   String _nit = '900054835';
+  String _url = '$_url';
   //data
   bool focus = false;
   late String _search = '@';
@@ -110,8 +111,8 @@ class _HomePageState extends State<HomePage> {
   ///
   /////api
   Future getItemTypeIdentication() async {
-    final response = await http
-        .get(Uri.parse("http://localhost:3000/app_tipoidentificacion_all"));
+    final response =
+        await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -130,7 +131,7 @@ class _HomePageState extends State<HomePage> {
 
   Future getItemDepartamento() async {
     final response =
-        await http.get(Uri.parse("http://localhost:3000/app_depto/$_nit"));
+        await http.get(Uri.parse("$_url/app_depto/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -153,7 +154,7 @@ class _HomePageState extends State<HomePage> {
 
   Future getItemClasification() async {
     final response = await http
-        .get(Uri.parse("http://localhost:3000/app_tipoidentificacion_all"));
+        .get(Uri.parse("$_url/app_tipoidentificacion_all"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -176,7 +177,7 @@ class _HomePageState extends State<HomePage> {
 
   Future getItemMedioContacto() async {
     final response = await http
-        .get(Uri.parse("http://localhost:3000/app_medioContacto/$_nit"));
+        .get(Uri.parse("$_url/app_medioContacto/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -199,7 +200,7 @@ class _HomePageState extends State<HomePage> {
 
   Future getItemZona() async {
     final response =
-        await http.get(Uri.parse("http://localhost:3000/app_zona/$_nit"));
+        await http.get(Uri.parse("$_url/app_zona/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -218,7 +219,7 @@ class _HomePageState extends State<HomePage> {
 
   Future getItemCiudad() async {
     final response =
-        await http.get(Uri.parse("http://localhost:3000/app_ciudades/$_nit"));
+        await http.get(Uri.parse("$_url/app_ciudades/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -237,7 +238,7 @@ class _HomePageState extends State<HomePage> {
 
   Future getItemBarrio() async {
     final response =
-        await http.get(Uri.parse("http://localhost:3000/app_barrio/$_nit"));
+        await http.get(Uri.parse("$_url/app_barrio/$_nit"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -271,7 +272,7 @@ class _HomePageState extends State<HomePage> {
       'nombre': (_search.isNotEmpty && _search != '') ? _search : null,
     };
     final response = await http
-        .post(Uri.parse("http://localhost:3000/clientes"), body: (_body));
+        .post(Uri.parse("$_url/clientes"), body: (_body));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -302,7 +303,7 @@ class _HomePageState extends State<HomePage> {
     print('Entrando a save clientes $_value_itemsTypeDoc');
 
     final response =
-        await http.post(Uri.parse("http://localhost:3000/nuevo_cliente_app"),
+        await http.post(Uri.parse("$_url/nuevo_cliente_app"),
             body: ({
               "id_tercero": myControllerNroDoc.text,
               "id_sucursal_tercero": "1",
