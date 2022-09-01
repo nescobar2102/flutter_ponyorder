@@ -9,6 +9,12 @@ import 'package:app_pony_order/@presentation/components/itemProductOrderHistory.
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/safe_area_values.dart';
+import 'package:top_snackbar_flutter/tap_bounce_container.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+
 import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
@@ -84,27 +90,30 @@ class _UnitsPageState extends State<UnitsPage> {
           searchProductos();
         }
       });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg")));
-
-      //  Navigator.pushNamed(context, 'home');
     } else {
-      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+         showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+   /*    print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg")));
-    }
+          .showSnackBar(SnackBar(content: Text("$msg")));*/
+    } 
   }
 
   Future<void> searchProductos() async {
     print("searchProductos------------------------------ $idClasificacion ");
     _body = {
       'nit': _nit,
-      'id_padre_clasificacion': '$idClasificacion',
+      'id_clasificacion': '$idClasificacion',
       'descripcion': (_searchProducto.isNotEmpty && _searchProducto != '')
           ? _searchProducto
           : '@',
     };
     final response = await http.post(Uri.parse("$_url/items"), body: (_body));
+
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -119,14 +128,17 @@ class _UnitsPageState extends State<UnitsPage> {
           _clientShow ? _client(context, _datProductos) : Container();
         }
       });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg")));
-
-      //  Navigator.pushNamed(context, 'home');
     } else {
-      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+   /*    print(
+          "Wronggooooooooooooooooooooooooooo Wronggooooooooooooooooooooooooooo");
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg")));
+          .showSnackBar(SnackBar(content: Text("$msg"))); */
+     showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
     }
   }
 
@@ -148,15 +160,21 @@ class _UnitsPageState extends State<UnitsPage> {
 
       print("object object $data");
     } else {
-      print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+       showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+   /*    print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg")));
+          .showSnackBar(SnackBar(content: Text("$msg"))); */
     }
   }
 
   // Perform login
   void validateAndSubmit() {
-    print('Entrando a buscar produxtos con la clasificacion $idClasificacion');
+    print('Entrando a buscar productos con la clasificacion $idClasificacion');
     _searchProducto = myControllerSearch.text;
     setState(() {
       print("buscar produxtos $_searchProducto");
@@ -296,7 +314,6 @@ class _UnitsPageState extends State<UnitsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          // color: Colors.blue,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(4.0),
@@ -419,12 +436,14 @@ class _UnitsPageState extends State<UnitsPage> {
                           ),
                         ),
                       ),
-                      onTap: () => {
-                    
-                        idClasificacion =
-                            '${_datClasificacionProductos[i]['id_clasificacion']}',
-                             validateAndSubmit,
-                            
+                      onTap: () {
+                        setState(() {
+                          idClasificacion =
+                              '${_datClasificacionProductos[i]['id_clasificacion']}';
+                          print(
+                              "----------filtrar por categoria $idClasificacion");
+                          validateAndSubmit();
+                        });
                       },
                     ),
                   ),
@@ -451,19 +470,10 @@ class _UnitsPageState extends State<UnitsPage> {
               context,
               '${_datProductos[i]['id_item']}',
               '${_datProductos[i]['descripcion']}',
-              '${_datProductos[i]['saldo_inventario']} - ${_datProductos[i]['id_unidad_compra']}'),
+              '${_datProductos[i]['saldo_inventario']} - UND '),
+
+          //   '${_datProductos[i]['saldo_inventario']} - UND ${_datProductos[i]['id_unidad_compra']}'),
         ],
-        /*     SizedBox(height: 10.0),
-        ItemUnits(callback: () {}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: () {}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: () {}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: () {}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: () {}),
-        SizedBox(height: 10.0), */
       ],
     );
   }

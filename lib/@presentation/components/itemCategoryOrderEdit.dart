@@ -26,7 +26,11 @@ class ItemCategoryOrderEdit extends StatelessWidget {
                     color: Colors.blue,
                   ),
                 ),
-                Icon(Icons.do_disturb_on, color: Color(0xffCB1B1B),size: 20.0,)
+                Icon(
+                  Icons.do_disturb_on,
+                  color: Color(0xffCB1B1B),
+                  size: 20.0,
+                )
               ],
             ),
           ),
@@ -117,70 +121,66 @@ class ItemCategoryOrderEdit extends StatelessWidget {
                     Container(
                       width: _size.width * 0.5 - 40,
                       child: Text(
-                              'Cantidad',
-                              style: TextStyle(
-                                  color: Color(0xff707070),
-                                  fontSize: 15.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
+                        'Cantidad',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w700),
+                      ),
                     ),
                     Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Container(
-                        width: _size.width,
-                        height: 30.0,
-                        child: Row(
-                          children: <Widget>[
-                            Container(
-                              width: 35.0,
-                              height: 30.0,
-                              decoration: BoxDecoration(
-                                color: Colors.blue,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(15.0),
-                                  bottomLeft: Radius.circular(15.0)
-                                )
-                              ),
-                              child: Icon(
-                                Icons.remove,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(width: 1.0, color: Color(0xffC7C7C7)),
-                                color: Colors.white,
-                              ),
-                              width: _size.width * 0.5 - 110,
-                              height: 30.0,
-                              child: Center(
-                                child: Text('001', 
-                                  style: TextStyle(
+                        width: _size.width * 0.5 - 40,
+                        child: Container(
+                          width: _size.width,
+                          height: 30.0,
+                          child: Row(
+                            children: <Widget>[
+                              Container(
+                                width: 35.0,
+                                height: 30.0,
+                                decoration: BoxDecoration(
                                     color: Colors.blue,
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.w300
-                                  ),)
+                                    borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(15.0),
+                                        bottomLeft: Radius.circular(15.0))),
+                                child: Icon(
+                                  Icons.remove,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                            Container(
-                              width: 35.0,
-                              height: 30.0,
-                              decoration: BoxDecoration(
-                                color: Colors.blue,
-                                borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(15.0),
-                                  bottomRight: Radius.circular(15.0)
-                                )
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      width: 1.0, color: Color(0xffC7C7C7)),
+                                  color: Colors.white,
+                                ),
+                                width: _size.width * 0.5 - 110,
+                                height: 30.0,
+                                child: Center(
+                                    child: Text(
+                                  '001',
+                                  style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.w300),
+                                )),
                               ),
-                              child: Icon(
-                                Icons.add,
-                                color: Colors.white,
-                              ),
-                            )
-                          ],
-                        ),
-                      )
-                    ),
+                              Container(
+                                width: 35.0,
+                                height: 30.0,
+                                decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(15.0),
+                                        bottomRight: Radius.circular(15.0))),
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                ),
+                              )
+                            ],
+                          ),
+                        )),
                   ],
                 ),
                 SizedBox(height: 10.0),
@@ -214,21 +214,21 @@ class ItemCategoryOrderEdit extends StatelessWidget {
   Widget _itemForm(BuildContext context, String hintText) {
     final _size = MediaQuery.of(context).size;
     return Container(
-          width: _size.width ,
-          child: TextField(
-            style: TextStyle(
-              color: Color(0xff707070),
-              fontSize: 14.0,
-            ),
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: TextStyle(
-                color: Color(0xff707070),
-                fontSize: 14.0,
-              ),
-              contentPadding: EdgeInsets.only(bottom: 0, top: 0),
-            ),
+      width: _size.width,
+      child: TextField(
+        style: TextStyle(
+          color: Color(0xff707070),
+          fontSize: 14.0,
+        ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(
+            color: Color(0xff707070),
+            fontSize: 14.0,
           ),
+          contentPadding: EdgeInsets.only(bottom: 0, top: 0),
+        ),
+      ),
     );
   }
 }

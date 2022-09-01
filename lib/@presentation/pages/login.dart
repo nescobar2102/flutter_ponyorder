@@ -4,6 +4,10 @@ import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/safe_area_values.dart';
+import 'package:top_snackbar_flutter/tap_bounce_container.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 import 'package:app_pony_order/models/user.dart';
 import 'package:app_pony_order/services/login_request.dart';
@@ -42,6 +46,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   Duration get loginTime => Duration(milliseconds: 2250);
   LoginStatus _loginStatus = LoginStatus.notSignIn;
+  String _url = 'http://localhost:3000';
+
   final myControllerUsers = TextEditingController();
   final myControllerPassword = TextEditingController();
 
@@ -75,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
 
   var value;
   getPref() async {
-   //   bool isOnline = await hasNetwork();
+    //   bool isOnline = await hasNetwork();
     print('isOnline : $isOnline');
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
@@ -106,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> login() async {
     if (myControllerUsers.text.isNotEmpty &&
         myControllerPassword.text.isNotEmpty) {
-      final response = await http.post(Uri.parse("http://localhost:3000/login"),
+      final response = await http.post(Uri.parse("$_url/login"),
           body: ({
             'username': myControllerUsers.text,
             'password': myControllerPassword.text
@@ -118,20 +124,27 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200 && success) {
         var data = jsonResponse['data'];
         print('Number of books about http: $msg $success $data.');
-        savePref(1, myControllerUsers.text, myControllerPassword.text);
+        savePref(1, myControllerUsers.text, data[0]['nit'],
+            data[0]['id_tipo_doc_pe'], data[0]['id_tipo_doc_rc']);
         _loginStatus = LoginStatus.signIn;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$msg")));
-
+        showTopSnackBar(
+          context,
+          CustomSnackBar.info(message: msg),
+        );
         Navigator.pushNamed(context, 'home');
       } else {
-        print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$msg")));
+        showTopSnackBar(
+          context,
+          CustomSnackBar.error(message: msg),
+        );
       }
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Ingrese las credenciales")));
+      showTopSnackBar(
+        context,
+        CustomSnackBar.info(
+          message: 'Ingrese las credenciales',
+        ),
+      );
     }
   }
   //visual
@@ -208,7 +221,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget textFormField(hintText, controller, icon) {
+  Widget textFormField(hintText, controller, icon, _isObscure) {
     final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
@@ -222,6 +235,7 @@ class _LoginPageState extends State<LoginPage> {
           controller: controller,
           autofocus: true,
           style: TextStyle(fontSize: 16.5),
+          obscureText: _isObscure,
           decoration: InputDecoration(
             hintText: hintText,
             fillColor: Colors.white,
@@ -293,11 +307,8 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 5.0),
-              textFormField(
-                'Ingrese su usuario',
-                myControllerUsers,
-                Icons.account_circle,
-              ),
+              textFormField('Ingrese su usuario', myControllerUsers,
+                  Icons.account_circle, false),
               SizedBox(height: 25.0),
               Text(
                 'Contraseña',
@@ -305,10 +316,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 5.0),
               textFormField(
-                '* * * * * * * *',
-                myControllerPassword,
-                Icons.vpn_key,
-              ),
+                  '* * * * * * * *', myControllerPassword, Icons.vpn_key, true),
               SizedBox(
                 height: 40.0,
               ),
@@ -320,12 +328,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  savePref(int value, String user, String pass) async {
+  savePref(int value, String user, String nit, String idPedidoUser,
+      String idReciboUser) async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       prefs.setInt("value", value);
       prefs.setString("user", user);
-      prefs.setString("pass", pass);
+      prefs.setString("nit", nit);
+      prefs.setString("idPedidoUser", idPedidoUser);
+      prefs.setString("idReciboUser", idReciboUser);
     });
   }
 }
