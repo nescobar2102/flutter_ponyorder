@@ -25,11 +25,16 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_calendar_carousel: ^2.1.0
-  syncfusion_flutter_charts: ^19.4.56
-  sqflite: ^2.0.0+3  
+  syncfusion_flutter_charts: ^19.4.56 
+  sqflite: ^2.0.2+1
   path_provider: ^2.0.2 
   shared_preferences: ^2.0.15
-  http: ^0.13.4
+  connectivity: ^3.0.6
+  select_form_field: "^2.2.0" 
+  http: ^0.13.4 
+  top_snackbar_flutter: ^2.1.1
+
+
     #add RabbitMq
   dart_amqp: ^0.1.1
    #notifications

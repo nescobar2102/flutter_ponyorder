@@ -11,7 +11,7 @@ class DatabaseHelper {
   static final DatabaseHelper _instance = new DatabaseHelper.internal();
   factory DatabaseHelper() => _instance;
 
-  late  Database _db;
+  late Database _db;
 
   Future<Database> get db async {
     if (_db != null) {
@@ -20,7 +20,7 @@ class DatabaseHelper {
     _db = await initDb();
     return _db;
   }
-
+  
   DatabaseHelper.internal();
 
   initDb() async {

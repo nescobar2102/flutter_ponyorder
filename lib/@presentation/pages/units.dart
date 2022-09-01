@@ -5,9 +5,20 @@ import 'package:app_pony_order/@presentation/components/itemCategoryOrderHistory
 import 'package:app_pony_order/@presentation/components/itemClient.dart';
 import 'package:app_pony_order/@presentation/components/itemProductOrder.dart';
 import 'package:app_pony_order/@presentation/components/itemProductOrderHistory.dart';
-import 'package:app_pony_order/@presentation/components/itemUnits.dart';
+//import 'package:app_pony_order/@presentation/components/itemUnits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+
+
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/safe_area_values.dart';
+import 'package:top_snackbar_flutter/tap_bounce_container.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+
+import 'dart:async';
+import 'dart:convert' as convert;
+import 'package:http/http.dart' as http;
+import 'dart:io';
 
 class UnitsPage extends StatefulWidget {
   @override
@@ -24,9 +35,155 @@ class _UnitsPageState extends State<UnitsPage> {
   bool _checkedPedido = false;
   bool _checkedRecibo = false;
   bool? _checked = false;
+
+  bool isOnline = true;
+  bool _isLoading = false;
+  String _nit = '900054835';
+  String _url = 'http://localhost:3000';
+  bool focus = false;
+
+  late int _countClasificacion;
+  late Object _body;
+  List<dynamic> _datClasificacionProductos = [];
+  late String _searchProducto = '@';
+  late int _countProductos = 0;
+  List<dynamic> _datProductos = [];
+  late String idClasificacion = '01';
+  final myControllerSearch = TextEditingController();
+
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
+  //api
 
+  @override
+  void initState() {
+    super.initState();
+    print("----------iniciando");
+    searchClasificacionProductos();
+  }
+
+  Future<void> searchClasificacionProductos() async {
+    print("searchClasificacionProductos------------------------------ ");
+    _body = {
+      'nit': _nit,
+      'nombre': '@',
+    };
+    final response = await http.post(Uri.parse("$_url/clasificacion_productos"),
+        body: (_body));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      _datClasificacionProductos = jsonResponse['data'];
+      _countClasificacion = jsonResponse['count'];
+      setState(() {
+        if (_countClasificacion > 0) {
+          print(
+              "mosrtart la clasificacion unidades $_datClasificacionProductos");
+          idClasificacion =
+              '${_datClasificacionProductos[0]['id_clasificacion']}';
+          _clientShow = true;
+          _clientShow
+              ? _client(context, _datClasificacionProductos)
+              : Container();
+          searchProductos();
+        }
+      });
+    } else {
+         showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+   /*    print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg")));*/
+    } 
+  }
+
+  Future<void> searchProductos() async {
+    print("searchProductos------------------------------ $idClasificacion ");
+    _body = {
+      'nit': _nit,
+      'id_clasificacion': '$idClasificacion',
+      'descripcion': (_searchProducto.isNotEmpty && _searchProducto != '')
+          ? _searchProducto
+          : '@',
+    };
+    final response = await http.post(Uri.parse("$_url/items"), body: (_body));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      _datProductos = jsonResponse['data'];
+      _countProductos = jsonResponse['count'];
+      setState(() {
+        if (_countProductos > 0) {
+          print("mosrtart los productos $_datProductos");
+          _clientShow = true;
+          _clientShow ? _client(context, _datProductos) : Container();
+        }
+      });
+    } else {
+   /*    print(
+          "Wronggooooooooooooooooooooooooooo Wronggooooooooooooooooooooooooooo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg"))); */
+     showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+    }
+  }
+
+  /// This implementation is just to simulate a load data behavior
+  /// from a data base sqlite or from a API
+  ///
+  /////api
+  Future getItemTypeIdentication() async {
+    //calisifacionde item
+    final response =
+        await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+
+      print("object object $data");
+    } else {
+       showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+   /*    print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("$msg"))); */
+    }
+  }
+
+  // Perform login
+  void validateAndSubmit() {
+    print('Entrando a buscar productos con la clasificacion $idClasificacion');
+    _searchProducto = myControllerSearch.text;
+    setState(() {
+      print("buscar produxtos $_searchProducto");
+      _isLoading = true;
+      searchProductos();
+    });
+  }
+
+  //vistas
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -55,20 +212,19 @@ class _UnitsPageState extends State<UnitsPage> {
           ),
           actions: [
             GestureDetector(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 15.0),
-                child: Icon(
-                  Icons.shopping_cart_outlined,
-                  color: Color(0xff0090ce),
-                  size: 30,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 15.0),
+                  child: Icon(
+                    Icons.shopping_cart_outlined,
+                    color: Color(0xff0090ce),
+                    size: 30,
+                  ),
                 ),
-              ),
-              onTap: () => {
-                 _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                      ? Navigator.pop(context)
-                      : _drawerscaffoldkey.currentState!.openEndDrawer()
-              }
-            )
+                onTap: () => {
+                      _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                          ? Navigator.pop(context)
+                          : _drawerscaffoldkey.currentState!.openEndDrawer()
+                    })
           ],
           title: Text(
             'Unidades',
@@ -101,32 +257,42 @@ class _UnitsPageState extends State<UnitsPage> {
                           horizontal: 20.0, vertical: 15.0),
                       child: Column(
                         children: [
-                          _formShow || _formOrderShow || _formRecipeShow || _formHistoryShow
+                          _formShow ||
+                                  _formOrderShow ||
+                                  _formRecipeShow ||
+                                  _formHistoryShow
                               ? Container()
                               : Column(
-                                crossAxisAlignment:CrossAxisAlignment.start,
-                                children: [
-                                  Text('Búsqueda de unidades de productos', style: TextStyle(
-                                    fontSize: 16.0, color: Color(0xff0f538d),
-                                    fontWeight: FontWeight.w600
-                                  ),),
-                                  SizedBox(height: 10.0,),
-                                  InputCallback(
-                                      hintText: 'Ingrese nombre de sección',
-                                      iconCallback: Icons.search,
-                                      callback: () => {
-                                            setState(() {
-                                              _clientShow = true;
-                                            })
-                                          }),
-                                ],
-                              ),
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Búsqueda de unidades de productos',
+                                      style: TextStyle(
+                                          fontSize: 16.0,
+                                          color: Color(0xff0f538d),
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    SizedBox(
+                                      height: 10.0,
+                                    ),
+                                    InputCallback(
+                                        hintText: 'Ingrese nombre de sección',
+                                        iconCallback: Icons.search,
+                                        callback: () => {
+                                              setState(() {
+                                                _clientShow = true;
+                                              })
+                                            }),
+                                  ],
+                                ),
                           SizedBox(height: 10.0),
-                          _clientShow ? _client(context) : Container(),
+                          _clientShow ? _client(context, null) : Container(),
                           _formShow ? _form(context) : Container(),
                           _formOrderShow ? _formOrder(context) : Container(),
-                          _formRecipeShow ? _formRecipe(context) : Container(), 
-                          _formHistoryShow ? _formHistory(context) : Container(),
+                          _formRecipeShow ? _formRecipe(context) : Container(),
+                          _formHistoryShow
+                              ? _formHistory(context)
+                              : Container(),
                         ],
                       ),
                     ),
@@ -140,7 +306,104 @@ class _UnitsPageState extends State<UnitsPage> {
     );
   }
 
-  Widget _client(BuildContext context) {
+  Widget itemUnits(BuildContext context, String idItem, String descripcion,
+      String inventario) {
+    final _size = MediaQuery.of(context).size;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(4.0),
+                  topRight: Radius.circular(4.0)),
+              color: Color(0xffF4F4F4)),
+          width: _size.width,
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                descripcion,
+                style: TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xff707070),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 5.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: _size.width * 0.5 - 40,
+                    child: Row(
+                      children: [
+                        Text(
+                          'Código',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: _size.width * 0.5 - 40,
+                    child: Text(idItem,
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w600)),
+                  )
+                ],
+              ),
+              SizedBox(height: 10.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: _size.width * 0.5 - 40,
+                    child: Row(
+                      children: [
+                        Text(
+                          'Cantidad',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: _size.width * 0.5 - 40,
+                    child: Text(inventario,
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w600)),
+                  )
+                ],
+              ),
+              SizedBox(height: 5.0),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _client(BuildContext context, data) {
     final _size = MediaQuery.of(context).size;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,38 +414,66 @@ class _UnitsPageState extends State<UnitsPage> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              _btnHistory(context, 'Abarrotes', Color(0xff06538D), () { }),
-              SizedBox(width: 10.0,),
-              _btnHistory(context, 'Congelado', Color(0xff0894FD), () { }),
-              SizedBox(width: 10.0,),
-              _btnHistory(context, 'Frutas y verduras', Color(0xff0894FD), () { }),
-              SizedBox(width: 10.0,),
-              _btnHistory(context, 'Lácteos y huevos', Color(0xff0894FD), () { }),
-              SizedBox(width: 10.0,),
-              _btnHistory(context, 'Pollo, carne y pescado', Color(0xff0894FD), () { }),
+              for (var i = 0; i < _countClasificacion; i++) ...[
+                Container(
+                  height: 40.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6.0),
+                      color: i == 0 ? Color(0xff06538D) : Color(0xff0894FD)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6.0),
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15.0),
+                          child: Text(
+                            '${_datClasificacionProductos[i]['descripcion']}',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17.0,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          idClasificacion =
+                              '${_datClasificacionProductos[i]['id_clasificacion']}';
+                          print(
+                              "----------filtrar por categoria $idClasificacion");
+                          validateAndSubmit();
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 10.0,
+                ),
+              ],
             ],
           ),
         ),
-        SizedBox(height: 10.0,),
-        Text('Se encontraron 7 productos',
+        SizedBox(
+          height: 10.0,
+        ),
+        Text('Se encontraron $_countProductos productos',
             style: TextStyle(
                 color: Color(0xff0f538d),
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic)),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: (){}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: (){}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: (){}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: (){}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: (){}),
-        SizedBox(height: 10.0),
-        ItemUnits(callback: (){}),
-        SizedBox(height: 10.0),
+        for (var i = 0; i < _countProductos; i++) ...[
+          SizedBox(height: 10.0),
+          itemUnits(
+              context,
+              '${_datProductos[i]['id_item']}',
+              '${_datProductos[i]['descripcion']}',
+              '${_datProductos[i]['saldo_inventario']} - UND '),
+
+          //   '${_datProductos[i]['saldo_inventario']} - UND ${_datProductos[i]['id_unidad_compra']}'),
+        ],
       ],
     );
   }
@@ -190,66 +481,107 @@ class _UnitsPageState extends State<UnitsPage> {
   Widget _shoppingCart(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return SafeArea(
-        child: Container(
-          width: _size.width,
-          height: _size.height,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          padding: EdgeInsets.symmetric(vertical: 20.0,horizontal: 20.0),
-          child: ListView(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Carrito de compras',
-                        style: TextStyle(
-                            color: Color(0xff0f538d),
-                            fontSize: 24.0,
-                            fontWeight: FontWeight.w700),
-                      ),
-                      Icon(
-                        Icons.disabled_by_default_outlined,
-                        color: Color(0xff0f538d),
-                        size: 30.0,
-                      )
-                    ],
-                  ),
-                  SizedBox(height: 12.0),
-                  Text('Juan Pablo Jimenez',
+      child: Container(
+        width: _size.width,
+        height: _size.height,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+        ),
+        padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+        child: ListView(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Carrito de compras',
+                      style: TextStyle(
+                          color: Color(0xff0f538d),
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Icon(
+                      Icons.disabled_by_default_outlined,
+                      color: Color(0xff0f538d),
+                      size: 30.0,
+                    )
+                  ],
+                ),
+                SizedBox(height: 12.0),
+                Text('Juan Pablo Jimenez',
+                    style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w600)),
+                SizedBox(
+                  height: 12.0,
+                ),
+                Text(
+                  'Búsqueda de productos en el carrito',
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600
-                  )),
-                  SizedBox(height: 12.0,),
-                  Text('Búsqueda de productos en el carrito',
-                  style: TextStyle(
-                    color: Color(0xff0f538d),
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w500
-                  ),),
-                  SizedBox(height: 10.0,),
-                  InputCallback(
+                      color: Color(0xff0f538d),
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
+                /*    InputCallback(
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
-                    callback: () => {
-                 }),
-                 SizedBox(height: 15.0),
-                 Container(
+                    callback: () => {}), */
+                TextField(
+                  controller: myControllerSearch,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar producto',
+                    fillColor: Colors.white,
+                    filled: true,
+                    contentPadding:
+                        EdgeInsets.only(top: 20, bottom: 0, left: 15.0),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                      borderSide: BorderSide(
+                        color: Color(0xff0f538d),
+                        width: 1.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                      borderSide:
+                          BorderSide(color: Color(0xffc7c7c7), width: 1.2),
+                    ),
+                    suffixIcon: GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 17.0, right: 12.0),
+                        child: Icon(
+                          Icons.search,
+                          color: focus ? Color(0xff0f538d) : Color(0xffc7c7c7),
+                        ),
+                      ),
+                      onTap: validateAndSubmit,
+                    ),
+                    hintStyle:
+                        TextStyle(fontSize: 16.0, color: Color(0xffc7c7c7)),
+                    labelStyle: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 15,
+                        color: Colors.black),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                SizedBox(height: 15.0),
+                Container(
                   width: 160.0,
                   height: 45.0,
                   decoration: BoxDecoration(
-                    color: Color(0xff06538D),
-                    borderRadius: BorderRadius.circular(5.0)
-                  ),
+                      color: Color(0xff06538D),
+                      borderRadius: BorderRadius.circular(5.0)),
                   child: Material(
                     borderRadius: BorderRadius.circular(5.0),
-                    color:  Color(0xff06538D),
+                    color: Color(0xff06538D),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(5.0),
                       onTap: () => {},
@@ -258,121 +590,128 @@ class _UnitsPageState extends State<UnitsPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: <Widget>[
-                            Icon(Icons.arrow_back, color: Colors.white,),
-                            SizedBox(width: 5.0),
-                            Text('Categorias',
-                            style: TextStyle(
+                            Icon(
+                              Icons.arrow_back,
                               color: Colors.white,
+                            ),
+                            SizedBox(width: 5.0),
+                            Text(
+                              'Categorias',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.w700),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 15.0,
+                ),
+                SizedBox(
+                  height: 310.0,
+                  child: ListView(
+                    children: [
+                      ItemCategoryOrderEdit(),
+                      SizedBox(height: 10.0),
+                      ItemCategoryOrderEdit(),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15.0),
+                Container(
+                  width: _size.width,
+                  height: 40.0,
+                  padding: EdgeInsets.symmetric(horizontal: 15.0),
+                  decoration: BoxDecoration(
+                      color: Color(0xffE8E8E8),
+                      borderRadius: BorderRadius.circular(5.0)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Text('Total',
+                          style: TextStyle(
                               fontSize: 18.0,
-                              fontWeight: FontWeight.w700
-                                  ),)
-                                ],
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff06538D))),
+                      Text(
+                        '\$ 0',
+                        style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xff06538D)),
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15.0),
+                Row(
+                  children: [
+                    Container(
+                        width: _size.width * 0.5 - 30,
+                        child: Container(
+                          width: _size.width,
+                          height: 41.0,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5.0),
+                              color: Color(0xffCB1B1B)),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(5.0),
+                              child: Center(
+                                child: Text(
+                                  'Cancelar',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700),
+                                ),
                               ),
+                              onTap: () {},
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 15.0,),
-                      SizedBox(
-                        height: 310.0,
-                        child: ListView(
-                          children: [
-                            ItemCategoryOrderEdit(),
-                            SizedBox(height: 10.0),
-                            ItemCategoryOrderEdit(),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15.0),
-                       Container(
-                        width: _size.width,
-                        height: 40.0,
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        decoration: BoxDecoration(
-                          color: Color(0xffE8E8E8),
-                          borderRadius: BorderRadius.circular(5.0)
-                        ),
-                        child: Row(
-                          mainAxisAlignment:MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Text('Total',
-                            style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D))),
-                            Text('\$ 0',
-                            style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),)
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15.0),
-                      Row(
-                        children: [
-                          Container(
-                          width: _size.width * 0.5 - 30,
-                          child: Container(
-                            width: _size.width,
-                            height: 41.0,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Color(0xffCB1B1B)),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: Center(
-                                  child: Text(
-                                    'Cancelar',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700),
-                                  ),
+                        )),
+                    SizedBox(width: 10.0),
+                    Container(
+                        width: _size.width * 0.5 - 30,
+                        child: Container(
+                          width: _size.width,
+                          height: 41.0,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5.0),
+                              color: Color(0xff0894FD)),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(5.0),
+                              child: Center(
+                                child: Text(
+                                  'Guardar',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700),
                                 ),
-                                onTap: () {},
                               ),
+                              onTap: () {},
                             ),
-                          )),
-                          SizedBox(width: 10.0),
-                          Container(
-                          width: _size.width * 0.5 - 30,
-                          child: Container(
-                            width: _size.width,
-                            height: 41.0,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Color(0xff0894FD)),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: Center(
-                                  child: Text(
-                                    'Guardar',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                onTap: () {},
-                              ),
-                            ),
-                          )),
-                        ],
-                      )
-                ],
-              ),
-            ],
-          ),
+                          ),
+                        )),
+                  ],
+                )
+              ],
+            ),
+          ],
         ),
+      ),
     );
   }
-  
+
   Widget _menu(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return SafeArea(
@@ -425,7 +764,7 @@ class _UnitsPageState extends State<UnitsPage> {
                   ),
                 ),
               ),
-             Container(
+              Container(
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
@@ -540,30 +879,32 @@ class _UnitsPageState extends State<UnitsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Visualice el historial del cliente',
             style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
-                 color: Color(0xff06538D)),
+                color: Color(0xff06538D)),
           ),
-          SizedBox(height: 15.0,),
+          SizedBox(
+            height: 15.0,
+          ),
           Text(
             'Jiménez Pérez Juan Pablo',
             style: TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
-                 color: Color(0xff0894FD)),
+                color: Color(0xff0894FD)),
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffC7C7C7),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffC7C7C7), width: 1.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -574,16 +915,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.assignment_ind_rounded, color: Color(0xff707070), size:20.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.assignment_ind_rounded,
+                              color: Color(0xff707070), size: 20.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Identificación',
-                              style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -592,15 +935,16 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('123456789',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -608,16 +952,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.location_on, color: Color(0xff707070), size:20.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.location_on,
+                              color: Color(0xff707070), size: 20.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Dirección',
-                              style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -626,15 +972,16 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('Cr 74 # 37 - 38',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -642,16 +989,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.phone, color: Color(0xff707070), size:20.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.phone,
+                              color: Color(0xff707070), size: 20.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Teléfono',
-                              style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -660,11 +1009,10 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('7661231231',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
@@ -678,23 +1026,31 @@ class _UnitsPageState extends State<UnitsPage> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _btnHistory(context, 'Cartera', _checkedCartera ? Color(0xff06538D) : Color(0xff0894FD), (){
+                _btnHistory(context, 'Cartera',
+                    _checkedCartera ? Color(0xff06538D) : Color(0xff0894FD),
+                    () {
                   setState(() {
                     _checkedCartera = true;
                     _checkedPedido = false;
                     _checkedRecibo = false;
                   });
                 }),
-                SizedBox(width: 8.0,),
-                _btnHistory(context, 'Pedido', _checkedPedido ? Color(0xff06538D) : Color(0xff0894FD), (){
+                SizedBox(
+                  width: 8.0,
+                ),
+                _btnHistory(context, 'Pedido',
+                    _checkedPedido ? Color(0xff06538D) : Color(0xff0894FD), () {
                   setState(() {
                     _checkedCartera = false;
                     _checkedPedido = true;
                     _checkedRecibo = false;
                   });
                 }),
-                SizedBox(width: 8.0,),
-                _btnHistory(context, 'Recibo', _checkedRecibo ? Color(0xff06538D) : Color(0xff0894FD), (){
+                SizedBox(
+                  width: 8.0,
+                ),
+                _btnHistory(context, 'Recibo',
+                    _checkedRecibo ? Color(0xff06538D) : Color(0xff0894FD), () {
                   setState(() {
                     _checkedCartera = false;
                     _checkedPedido = false;
@@ -704,7 +1060,9 @@ class _UnitsPageState extends State<UnitsPage> {
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           _checkedCartera ? _totalHistoryCartera(context) : Container(),
           _checkedPedido ? _totalHistoryPedido(context) : Container(),
           _checkedRecibo ? _totalHistoryRecibo(context) : Container(),
@@ -721,52 +1079,56 @@ class _UnitsPageState extends State<UnitsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 6.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffE8E8E8),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total de cartera',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),),
-                Text('\$ 347.281',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),)
+                Text(
+                  'Total de cartera',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '\$ 347.281',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                )
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
             width: _size.width,
             decoration: BoxDecoration(
-              border: Border.all(
-                width: 1.0,
-                color: Color(0xffE8E8E8),
-              ),
-              borderRadius: BorderRadius.circular(5.0)
-            ),
+                border: Border.all(
+                  width: 1.0,
+                  color: Color(0xffE8E8E8),
+                ),
+                borderRadius: BorderRadius.circular(5.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Datos de Cartera',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w700
-                ),),
-                SizedBox(height: 10.0,),
+                Text(
+                  'Datos de Cartera',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -774,16 +1136,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.location_on, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.location_on,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('N° Documento',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -792,15 +1156,16 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('Cr 74 # 37 - 38',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -808,16 +1173,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.credit_card, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.credit_card,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Débito',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -826,15 +1193,16 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('\$ 347.281',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -842,16 +1210,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Días',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -860,50 +1230,52 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('3 Días',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
               ],
             ),
           ),
-          SizedBox(height: 190.0,),
+          SizedBox(
+            height: 190.0,
+          ),
           Container(
             width: _size.width,
             height: 50.0,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: Color(0xff0894FD)),
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      'Aceptar',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-                onTap: (){
-                  setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
-                    _formHistoryShow = false;
-                    _clientShow = false;
-                  });
-                }),
-              ),
+                  onTap: () {
+                    setState(() {
+                      _checkedCartera = true;
+                      _checkedPedido = false;
+                      _checkedRecibo = false;
+                      _formHistoryShow = false;
+                      _clientShow = false;
+                    });
+                  }),
             ),
+          ),
         ],
       ),
     );
@@ -917,52 +1289,56 @@ class _UnitsPageState extends State<UnitsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 6.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffE8E8E8),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total de Pedido',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),),
-                Text('\$ 347.281',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),)
+                Text(
+                  'Total de Pedido',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '\$ 347.281',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                )
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
             width: _size.width,
             decoration: BoxDecoration(
-              border: Border.all(
-                width: 1.0,
-                color: Color(0xffE8E8E8),
-              ),
-              borderRadius: BorderRadius.circular(5.0)
-            ),
+                border: Border.all(
+                  width: 1.0,
+                  color: Color(0xffE8E8E8),
+                ),
+                borderRadius: BorderRadius.circular(5.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Datos de pedido',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w700
-                ),),
-                SizedBox(height: 10.0,),
+                Text(
+                  'Datos de pedido',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -970,16 +1346,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.credit_card, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.credit_card,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('N° Factura',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -988,15 +1366,16 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('6243',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1004,16 +1383,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Fecha de factura',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1022,18 +1403,17 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('11/12/21',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
               ],
             ),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           Text(
             'Este pedido tiene 5 items',
             style: TextStyle(
@@ -1042,55 +1422,58 @@ class _UnitsPageState extends State<UnitsPage> {
                 fontStyle: FontStyle.italic,
                 color: Color(0xff06538D)),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           SizedBox(
             height: 160.0,
             child: ListView(
               scrollDirection: Axis.vertical,
               children: [
-                ItemProductOrderHistory(callback: (){}),
+                ItemProductOrderHistory(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: (){}),
+                ItemProductOrderHistory(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: (){}),
+                ItemProductOrderHistory(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: (){})
+                ItemProductOrderHistory(callback: () {})
               ],
             ),
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Container(
             width: _size.width,
             height: 50.0,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: Color(0xff0894FD)),
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      'Aceptar',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-                onTap: (){
-                  setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
-                    _formHistoryShow = false;
-                    _clientShow = false;
-                  });
-                }),
-              ),
+                  onTap: () {
+                    setState(() {
+                      _checkedCartera = true;
+                      _checkedPedido = false;
+                      _checkedRecibo = false;
+                      _formHistoryShow = false;
+                      _clientShow = false;
+                    });
+                  }),
             ),
+          ),
         ],
       ),
     );
@@ -1104,52 +1487,56 @@ class _UnitsPageState extends State<UnitsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 6.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: Color(0xffE8E8E8),
-              borderRadius: BorderRadius.circular(5.0),
-              border: Border.all(color: Color(0xffE8E8E8),
-              width: 1.0)
-            ),
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total de recibo',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),),
-                Text('\$ 347.281',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500
-                ),)
+                Text(
+                  'Total de recibo',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '\$ 347.281',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.w500),
+                )
               ],
             ),
           ),
-          SizedBox(height: 10.0,),
+          SizedBox(
+            height: 10.0,
+          ),
           Container(
             padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
             width: _size.width,
             decoration: BoxDecoration(
-              border: Border.all(
-                width: 1.0,
-                color: Color(0xffE8E8E8),
-              ),
-              borderRadius: BorderRadius.circular(5.0)
-            ),
+                border: Border.all(
+                  width: 1.0,
+                  color: Color(0xffE8E8E8),
+                ),
+                borderRadius: BorderRadius.circular(5.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Datos de Recibo',
-                style: TextStyle(
-                  color: Color(0xff06538D),
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w700
-                ),),
-                SizedBox(height: 10.0,),
+                Text(
+                  'Datos de Recibo',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1157,16 +1544,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.credit_card, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.credit_card,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('N° Recibo',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1175,15 +1564,16 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('6243',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1191,16 +1581,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Fecha de recibo',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1209,15 +1601,16 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('12/21/21',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
-                SizedBox(height: 10.0,),
+                SizedBox(
+                  height: 10.0,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1225,16 +1618,18 @@ class _UnitsPageState extends State<UnitsPage> {
                       width: _size.width * 0.5 - 33,
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xff0894FD), size:18.0),
-                          SizedBox(width: 4.0,),
+                          Icon(Icons.calendar_today,
+                              color: Color(0xff0894FD), size: 18.0),
+                          SizedBox(
+                            width: 4.0,
+                          ),
                           SizedBox(
                             width: _size.width * 0.5 - 57,
                             child: Text('Días',
-                              style: TextStyle(
-                                color: Color(0xff0894FD),
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold
-                              )),
+                                style: TextStyle(
+                                    color: Color(0xff0894FD),
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.bold)),
                           )
                         ],
                       ),
@@ -1243,18 +1638,17 @@ class _UnitsPageState extends State<UnitsPage> {
                     SizedBox(
                       width: _size.width * 0.5 - 33,
                       child: Text('3 Días',
-                        style: TextStyle(
-                          color: Color(0xff707070),
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600
-                        )),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w600)),
                     )
                   ],
                 ),
               ],
             ),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           Text(
             'Este pedido tiene 5 items',
             style: TextStyle(
@@ -1263,86 +1657,90 @@ class _UnitsPageState extends State<UnitsPage> {
                 fontStyle: FontStyle.italic,
                 color: Color(0xff06538D)),
           ),
-          SizedBox(height:10.0),
+          SizedBox(height: 10.0),
           SizedBox(
             height: 160.0,
             child: ListView(
               scrollDirection: Axis.vertical,
               children: [
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
                 SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: (){}),
+                ItemProductOrderHistoryRecibo(callback: () {}),
               ],
             ),
           ),
-          SizedBox(height: 20.0,),
+          SizedBox(
+            height: 20.0,
+          ),
           Container(
             width: _size.width,
             height: 50.0,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: Color(0xff0894FD)),
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      'Aceptar',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-                onTap: (){
-                  setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
-                    _formHistoryShow = false;
-                    _clientShow = false;
-                  });
-                }),
-              ),
+                  onTap: () {
+                    setState(() {
+                      _checkedCartera = true;
+                      _checkedPedido = false;
+                      _checkedRecibo = false;
+                      _formHistoryShow = false;
+                      _clientShow = false;
+                    });
+                  }),
             ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _btnHistory(BuildContext context, String text, Color color, VoidCallback callback){
+  Widget _btnHistory(
+      BuildContext context, String text, Color color, VoidCallback callback) {
     final _size = MediaQuery.of(context).size;
     return Container(
-            height: 40.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0), color: color),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(6.0),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Text(
-                      text,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                onTap: callback,
+      height: 40.0,
+      decoration:
+          BoxDecoration(borderRadius: BorderRadius.circular(6.0), color: color),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6.0),
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15.0),
+              child: Text(
+                text,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17.0,
+                    fontWeight: FontWeight.w600),
               ),
             ),
-          );
+          ),
+          onTap: callback,
+        ),
+      ),
+    );
   }
 
   Widget _formRecipe(BuildContext context) {
@@ -1359,19 +1757,14 @@ class _UnitsPageState extends State<UnitsPage> {
         ),
         SizedBox(height: 20.0),
         _itemForm(context, 'Recibo N°', '14408'),
-        _itemSelectForm(context, 'Fecha', '12/10/21',
-            'Selecciona fecha'),
+        _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
         _itemForm(context, 'Nombre', 'Jiménez Pérez Juan Pablo'),
         _itemForm(context, 'Total cartera', '22554'),
-        _itemSelectForm(context, 'Banco', 'Banco de occidente',
-            'Selecciona fecha'),
-        _itemSelectForm(context, 'N° cheque', '',
-        'Selecciona fecha'),
+        _itemSelectForm(
+            context, 'Banco', 'Banco de occidente', 'Selecciona fecha'),
+        _itemSelectForm(context, 'N° cheque', '', 'Selecciona fecha'),
         SizedBox(height: 30.0),
-        Container(
-          width: _size.width,
-          height: 1.0,
-          color: Color(0xffC7C7C7)),
+        Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
         SizedBox(height: 30.0),
         Row(
           children: [
@@ -1452,33 +1845,29 @@ class _UnitsPageState extends State<UnitsPage> {
         ),
         SizedBox(height: 20.0),
         _itemForm(context, 'Pedido', 'Automático'),
-        _itemSelectForm(context, 'Fecha', '12/10/21',
-            'Selecciona fecha'),
+        _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
         _itemForm(context, 'Nombre', 'Jiménez Pérez Juan Pablo'),
         _itemSelectForm(context, 'Dir. envío factura', 'Cr 74 # 37 - 38',
             'Selecciona fecha'),
         _itemSelectForm(context, 'Dir. envío mercancía', 'Cr 74 # 37 - 38',
-        'Selecciona fecha'),
+            'Selecciona fecha'),
         _itemForm(context, 'Orden de compra', ''),
-        _itemSelectForm(context, 'Forma de pago', '7 días',
-        'Selecciona fecha'),
+        _itemSelectForm(context, 'Forma de pago', '7 días', 'Selecciona fecha'),
         SizedBox(height: 30.0),
-        Container(
-          width: _size.width,
-          height: 1.0,
-          color: Color(0xffC7C7C7)),
+        Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
         SizedBox(height: 30.0),
-        Text('Crédito',
-        style: TextStyle(
-          color: Color(0xff0091CE),
-          fontSize: 14,
-          fontStyle: FontStyle.italic,
-          fontWeight: FontWeight.w600
-        ),),
+        Text(
+          'Crédito',
+          style: TextStyle(
+              color: Color(0xff0091CE),
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w600),
+        ),
         SizedBox(height: 10.0),
         _itemForm(context, 'Cupo crédito', '1.200.000'),
-        _itemSelectForm(context, 'Total cartera', '347.281',
-            'Selecciona fecha'),
+        _itemSelectForm(
+            context, 'Total cartera', '347.281', 'Selecciona fecha'),
         SizedBox(height: 30.0),
         Row(
           children: [
@@ -1544,7 +1933,7 @@ class _UnitsPageState extends State<UnitsPage> {
       ],
     );
   }
- 
+
   Widget _form(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Column(
