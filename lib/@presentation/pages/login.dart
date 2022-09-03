@@ -9,9 +9,7 @@ import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
-import 'package:app_pony_order/models/user.dart';
-import 'package:app_pony_order/services/login_request.dart';
-import 'package:app_pony_order/services/login_response.dart';
+import '../../db/operationUsuario.dart';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -54,19 +52,22 @@ class _LoginPageState extends State<LoginPage> {
   late String _user, _password;
 
   bool focus = false;
-  bool isOnline = true;
+  bool isOnline = false;
   bool _isLoading = false;
   final String hintText = '';
+  bool _validate = false;
 
   // Perform login
   void validateAndSubmit() {
-    print('Entrando a validar');
     _user = myControllerUsers.text;
     _password = myControllerPassword.text;
 
     setState(() {
+      _user.isEmpty ? _validate = true : _validate = false;
+      _password.isEmpty ? _validate = true : _validate = false;
       _isLoading = true;
-      login();
+      !_validate && isOnline ? loginApi() : null;
+      !_validate && !isOnline ?  OperationUsuario.getLogin(_user,_password) : null;
     });
   }
 
@@ -81,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
 
   var value;
   getPref() async {
-    //   bool isOnline = await hasNetwork();
+  //  bool isOnline = await hasNetwork();
     print('isOnline : $isOnline');
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
@@ -109,7 +110,9 @@ class _LoginPageState extends State<LoginPage> {
     getPref();
   }
 
-  Future<void> login() async {
+  //Login desde apiRest
+  Future<void> loginApi() async {
+    print("busca en la APIREST y valida el usuario");
     if (myControllerUsers.text.isNotEmpty &&
         myControllerPassword.text.isNotEmpty) {
       final response = await http.post(Uri.parse("$_url/login"),
@@ -146,6 +149,12 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     }
+  }
+
+  //login desde la DB
+
+  loginDB() async {
+    print("busca en la BD y valida el usuario");
   }
   //visual
 
@@ -221,7 +230,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget textFormField(hintText, controller, icon, _isObscure) {
+  Widget textFormField(hintText, controller, icon, _isObscure, maxLength) {
     final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
@@ -233,10 +242,13 @@ class _LoginPageState extends State<LoginPage> {
         },
         child: TextField(
           controller: controller,
+          // maxLength: maxLength,
           autofocus: true,
           style: TextStyle(fontSize: 16.5),
           obscureText: _isObscure,
           decoration: InputDecoration(
+            errorText:
+                _validate && controller.text.isEmpty ? 'Es requerido' : null,
             hintText: hintText,
             fillColor: Colors.white,
             filled: true,
@@ -308,15 +320,15 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 5.0),
               textFormField('Ingrese su usuario', myControllerUsers,
-                  Icons.account_circle, false),
+                  Icons.account_circle, false, 20),
               SizedBox(height: 25.0),
               Text(
                 'Contraseña',
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 5.0),
-              textFormField(
-                  '* * * * * * * *', myControllerPassword, Icons.vpn_key, true),
+              textFormField('* * * * * * * *', myControllerPassword,
+                  Icons.vpn_key, true, 20),
               SizedBox(
                 height: 40.0,
               ),
