@@ -1,18 +1,31 @@
 import 'package:sqflite/sqflite.dart';
 import 'dart:async';
-import 'package:path/path.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/usuario.dart';
 
 class OperationUsuario {
   static Future<Database> _openDB() async {
+    //GET THE PATH TO THE DIRECTORY FOR IOS AND ANDROID TO STORE DB
+    Directory directory = await getApplicationDocumentsDirectory();
+    String path = directory.path + "ponyOrder.db";
+
     return openDatabase(
-      join(await getDatabasesPath(), 'ponyOrder.db'),
+      path,
       onCreate: (db, version) {
         // Run the CREATE TABLE statement on the database.
         return db.execute(
           'CREATE TABLE usuario(id INTEGER PRIMARY KEY, usuario TEXT, password INTEGER,nit TEXT,id_tipo_doc_pe TEXT,id_tipo_doc_rc TEXT)',
         );
+        /*       return db.execute(
+        'CREATE TABLE foods(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, cookingEffect TEXT, category TEXT, commonLocations list<TEXT>, heartsRecovered INTEGER);'
+            'CREATE TABLE nonfoods(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT,category TEXT, commonLocations list<TEXT>, drops list<TEXT>);'
+            'CREATE TABLE equipments(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, attack INTEGER, category TEXT, commonLocations list<TEXT>, defense INTEGER);'
+            'CREATE TABLE materials(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, cookingEffect TEXT, category TEXT, commonLocations list<TEXT>, heartsRecovered INTEGER);'
+            'CREATE TABLE monsters(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, category TEXT, commonLocations list<TEXT>, drops list<TEXT>);'
+            'CREATE TABLE treasure(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, category TEXT, commonLocations list<TEXT>, drops list<TEXT>)',
+      ); */
       },
       version: 1,
     );

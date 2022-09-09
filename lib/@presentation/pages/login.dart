@@ -9,6 +9,7 @@ import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
+import 'package:sqflite/sqflite.dart';
 import '../../db/operationUsuario.dart';
 
 class CurvePainter extends CustomPainter {
@@ -52,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
   late String _user, _password;
 
   bool focus = false;
-  bool isOnline = false;
+  bool isOnline = true;
   bool _isLoading = false;
   final String hintText = '';
   bool _validate = false;
@@ -67,7 +68,9 @@ class _LoginPageState extends State<LoginPage> {
       _password.isEmpty ? _validate = true : _validate = false;
       _isLoading = true;
       !_validate && isOnline ? loginApi() : null;
-      !_validate && !isOnline ?  OperationUsuario.getLogin(_user,_password) : null;
+      !_validate && !isOnline
+          ? OperationUsuario.getLogin(_user, _password)
+          : null;
     });
   }
 
@@ -82,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
 
   var value;
   getPref() async {
-  //  bool isOnline = await hasNetwork();
+    //  bool isOnline = await hasNetwork();
     print('isOnline : $isOnline');
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {

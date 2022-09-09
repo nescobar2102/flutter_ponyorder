@@ -33,6 +33,7 @@ dependencies:
   select_form_field: "^2.2.0" 
   http: ^0.13.4 
   top_snackbar_flutter: ^2.1.1
+  intl: ^0.17.0
 
 
     #add RabbitMq
