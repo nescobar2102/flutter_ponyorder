@@ -34,6 +34,8 @@ dependencies:
   http: ^0.13.4 
   top_snackbar_flutter: ^2.1.1
   intl: ^0.17.0
+  syncfusion_flutter_datepicker: ^19.4.56
+ 
 
 
     #add RabbitMq

@@ -43,7 +43,6 @@ class _HomePageState extends State<HomePage> {
   bool isCheckedDV = false;
   bool isReadOnly = true;
   bool isOnline = true;
-  bool _isLoading = false;
 
   String _url = 'http://localhost:3000';
   //data
@@ -57,6 +56,8 @@ class _HomePageState extends State<HomePage> {
   late String forma_pago_tercero = '';
   late String id_empresa = '';
   late String id_suc_vendedor = '';
+  late String id_sucursal_tercero = '';
+  late String limite_credito = '0';
   //usuario login
   String _user = '';
   String _nit = '';
@@ -94,12 +95,7 @@ class _HomePageState extends State<HomePage> {
     {"value": "13", "label": "Cédula de Ciudadanía"},
     {"value": "31", "label": "Número de indentificación Tributaria - Nit"}
   ];
-  List<Map<String, dynamic>> _itemsDepartamento = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "11", "label": "Bogota"},
-    {"value": "05", "label": "Antioquia"},
-    {"value": "76", "label": "Valle del Cauca"}
-  ];
+
   List<Map<String, dynamic>> _itemsClasification = [
     {"value": "", "label": "Seleccione"},
     {"value": "01", "label": "COMERCIAL"},
@@ -107,11 +103,6 @@ class _HomePageState extends State<HomePage> {
     {"value": "03", "label": "SERVICIOS"}
   ];
 
-  List<Map<String, dynamic>> _itemsZona = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "01", "label": "ZONA NORTE"},
-    {"value": "02", "label": "ZONA PACIFICA"}
-  ];
   List<Map<String, dynamic>> _itemsCiudad = [
     {"value": "", "label": "Seleccione"},
     {"value": "76001", "label": "Cali"},
@@ -135,7 +126,6 @@ class _HomePageState extends State<HomePage> {
   String _value_DireccionFactura = '';
   String _value_DireccionMercancia = '';
 
-  late int _count_direccion;
   late String forma_pago_pedido = '';
   List<dynamic> _datClasificacionProductos = [];
   late int _countClasificacion;
@@ -147,6 +137,7 @@ class _HomePageState extends State<HomePage> {
   late String totalPedido = '0.00';
   late String totalSubTotal = '0.00';
   late String totalDescuento = '0.00';
+  late String _saldoCartera = '0.00';
 
   //pantalla 2 de seleccion de productos para pedidos
   late String _searchProducto = '@';
@@ -182,7 +173,6 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsFormaPagoRecibo = '';
   String _value_itemsBanco = '';
   String _value_itemsTipoPago = '';
-  late String totalRecibo = '0.00';
 
   //nuevo pedido
   List<Map<String, dynamic>> _itemsBanco = [
@@ -206,6 +196,23 @@ class _HomePageState extends State<HomePage> {
 
   /// This implementation is just to simulate a load data behavior
   /// from a data base sqlite or from a API
+
+  Future<Null> _submitDialog(BuildContext context) async {
+    return await showDialog<Null>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            elevation: 0.0,
+            backgroundColor: Colors.transparent,
+            children: <Widget>[
+              Center(
+                child: CircularProgressIndicator(),
+              )
+            ],
+          );
+        });
+  }
 
   String expresionRegular(double numero) {
     NumberFormat f = new NumberFormat("###,###,###.00#", "es_US");
@@ -250,6 +257,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  late List<Map<String, dynamic>> _itemsDepartamento;
   Future getItemDepartamento() async {
     final response = await http.get(Uri.parse("$_url/app_depto/$_nit"));
 
@@ -258,12 +266,12 @@ class _HomePageState extends State<HomePage> {
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-
-      print("object app_depto $data");
-
       setState(() {
-        //_item_type_identification = data;
+        _itemsDepartamento = (convert.jsonDecode(response.body)["data"] as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+
+        print("object _itemsDepartamento   $_itemsDepartamento");
       });
     } else {
       showTopSnackBar(
@@ -325,6 +333,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  late List<Map<String, dynamic>> _itemsZona;
   Future getItemZona() async {
     final response = await http.get(Uri.parse("$_url/app_zona/$_nit"));
 
@@ -333,7 +342,13 @@ class _HomePageState extends State<HomePage> {
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
+      setState(() {
+        _itemsZona = (convert.jsonDecode(response.body)["data"] as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+
+        print("object _itemsZona   $_itemsZona");
+      });
     } else {
       showTopSnackBar(
         context,
@@ -372,9 +387,7 @@ class _HomePageState extends State<HomePage> {
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
-      setState(() {
-        //_item_type_identification = data;
-      });
+      setState(() {});
     } else {
       showTopSnackBar(
         context,
@@ -405,13 +418,40 @@ class _HomePageState extends State<HomePage> {
     if (response.statusCode == 200 && success) {
       _datClient = jsonResponse['data'];
       _count = jsonResponse['count'];
-      setState(() {
-        if (_count > 0) {
+      if (_count > 0) {
+        setState(() {
           _clientShow = true;
           _productosShow = false;
-        }
-      });
+        });
+      }
     } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+    }
+  }
+
+  Future<void> saldoCartera(bool pedido) async {
+    final response = await http
+        .get(Uri.parse("$_url/saldo_cartera/$id_tercero/$id_sucursal_tercero"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      setState(() {
+        _saldoCartera = data[0]['debito'].toString();
+      });
+      if (_value_automatico != '' && pedido) {
+        _direccionClient = [];
+        searchClientDireccion();
+      }
+    } else {
+      Navigator.pop(context);
       showTopSnackBar(
         context,
         CustomSnackBar.error(
@@ -493,7 +533,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   SizedBox(height: 30.0),
                   Container(
-                    // width: _size.width,
                     width: 100.0,
                     height: 41.0,
                     decoration: BoxDecoration(
@@ -553,21 +592,10 @@ class _HomePageState extends State<HomePage> {
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
-      print("object numero pedido o recibo consecutivo $data");
-      /*  pedido
-          ? _value_automatico = data[0]['consecutivo'].toString()
-          : _value_automaticoRecibo = data[0]['consecutivo'].toString(); */
       _value_automatico = data[0]['consecutivo'].toString();
-      if (_value_automatico != '' && pedido) {
-        _direccionClient = [];
-        searchClientDireccion();
-        setState(() {
-          _clientShow = false;
-          _formOrderShow = true;
-          _productosShow = false;
-        });
+      if (_value_automatico != '') {
+        saldoCartera(pedido);
       } else {
-        print("eeasdasdasd $_value_automatico");
         setState(() {
           _formRecipeShow = true;
         });
@@ -600,9 +628,13 @@ class _HomePageState extends State<HomePage> {
         _direccionClient = (convert.jsonDecode(response.body)["data"] as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-        _count_direccion = jsonResponse['count'];
+        Navigator.pop(context);
+        _clientShow = false;
+        _formOrderShow = true;
+        _productosShow = false;
       });
     } else {
+      Navigator.pop(context);
       showTopSnackBar(
         context,
         CustomSnackBar.error(
@@ -648,7 +680,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> selectProducto() async {
-    print("vs-------------selectProducto----------------- ");
     _body = {'nit': _nit, 'nombre': '@', 'nivel': '1', 'id_padre': '-'};
     final response = await http
         .post(Uri.parse("$_url/clasificacion_productos_nivel"), body: (_body));
@@ -684,7 +715,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> selectProductoNivel() async {
-    print("vs------------------------------ ");
     _body = {'nit': _nit, 'nombre': '@', 'nivel': '2', 'id_padre': _id_padre};
     final response = await http
         .post(Uri.parse("$_url/clasificacion_productos_nivel"), body: (_body));
@@ -712,7 +742,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> searchProductosPedido() async {
-    print("searchProductosPedido------------ $idClasificacion ");
     _body = {
       'nit': _nit,
       'id_clasificacion': idClasificacion,
@@ -768,7 +797,6 @@ class _HomePageState extends State<HomePage> {
   void validateAndSubmit() {
     _search = myControllerSearch.text;
     setState(() {
-      _isLoading = true;
       searchClient();
     });
   }
@@ -979,6 +1007,8 @@ class _HomePageState extends State<HomePage> {
       direccion_tercero = '${data['direccion']}';
       tlf_tercero = '${data['telefono']}';
       id_empresa = '${data['id_empresa']}';
+      id_sucursal_tercero = '${data['id_sucursal_tercero']}';
+      limite_credito = '${data['limite_credito']}';
       _formHistoryShow = true;
       _clientShow = false;
       _productosShow = false;
@@ -995,6 +1025,8 @@ class _HomePageState extends State<HomePage> {
       _value_itemsFormaPago = data['id_forma_pago'];
       id_empresa = '${data['id_empresa']}';
       id_suc_vendedor = '${data['id_suc_vendedor']}';
+      id_sucursal_tercero = '${data['id_sucursal_tercero']}';
+      limite_credito = '${data['limite_credito']}';
     });
   }
 
@@ -1024,6 +1056,7 @@ class _HomePageState extends State<HomePage> {
                     getItemClasification();
                     _itemsMedioContacto = [];
                     getItemMedioContacto();
+                    _itemsZona = [];
                     getItemZona();
                     getItemCiudad();
                     getItemBarrio();
@@ -2006,7 +2039,8 @@ class _HomePageState extends State<HomePage> {
                       fontWeight: FontWeight.w500),
                 ),
                 Text(
-                  '\$ 347.281',
+                  '\$ ' +
+                      expresionRegular(double.parse(_saldoCartera.toString())),
                   style: TextStyle(
                       color: Color(0xff06538D),
                       fontSize: 17.0,
@@ -2753,32 +2787,100 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: 15.0),
                 Container(
+                  height: 30.0,
                   width: _size.width,
-                  height: 40.0,
-                  padding: EdgeInsets.symmetric(horizontal: 15.0),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                   decoration: BoxDecoration(
                       color: Color(0xffE8E8E8),
-                      borderRadius: BorderRadius.circular(5.0)),
+                      borderRadius: BorderRadius.circular(5.0),
+                      border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Total',
-                          style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff06538D))),
+                    children: [
+                      Text(
+                        'Sub Total',
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        '\$ ' +
+                            expresionRegular(
+                                double.parse(totalRecibo.toString())),
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      )
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 30.0,
+                  width: _size.width,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                  decoration: BoxDecoration(
+                      color: Color(0xffE8E8E8),
+                      borderRadius: BorderRadius.circular(5.0),
+                      border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Descuentos',
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        '\$ ' +
+                            expresionRegular(
+                                double.parse(totalReciboDescuento.toString())),
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      )
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 30.0,
+                  width: _size.width,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                  decoration: BoxDecoration(
+                      color: Color(0xffE8E8E8),
+                      borderRadius: BorderRadius.circular(5.0),
+                      border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total',
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w700),
+                      ),
                       Text(
                         '\$ ' +
                             expresionRegular(
                                 double.parse(totalReciboPagado.toString())),
                         style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),
+                            color: Color(0xff06538D),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w500),
                       )
                     ],
                   ),
+                ),
+                SizedBox(
+                  height: 20.0,
                 ),
                 SizedBox(
                   height: 20.0,
@@ -2915,29 +3017,94 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: 15.0),
                 Container(
+                  height: 30.0,
                   width: _size.width,
-                  height: 40.0,
-                  padding: EdgeInsets.symmetric(horizontal: 15.0),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                   decoration: BoxDecoration(
                       color: Color(0xffE8E8E8),
-                      borderRadius: BorderRadius.circular(5.0)),
+                      borderRadius: BorderRadius.circular(5.0),
+                      border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Total',
-                          style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff06538D))),
+                    children: [
+                      Text(
+                        'Sub Total',
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        '\$ ' +
+                            expresionRegular(
+                                double.parse(totalRecibo.toString())),
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      )
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 30.0,
+                  width: _size.width,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                  decoration: BoxDecoration(
+                      color: Color(0xffE8E8E8),
+                      borderRadius: BorderRadius.circular(5.0),
+                      border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Descuentos',
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        '\$ ' +
+                            expresionRegular(
+                                double.parse(totalReciboDescuento.toString())),
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700),
+                      )
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 30.0,
+                  width: _size.width,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                  decoration: BoxDecoration(
+                      color: Color(0xffE8E8E8),
+                      borderRadius: BorderRadius.circular(5.0),
+                      border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total',
+                        style: TextStyle(
+                            color: Color(0xff06538D),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w700),
+                      ),
                       Text(
                         '\$ ' +
                             expresionRegular(
                                 double.parse(totalReciboPagado.toString())),
                         style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),
+                            color: Color(0xff06538D),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w500),
                       )
                     ],
                   ),
@@ -2950,16 +3117,12 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 35,
                       child: BtnSmall(
-                          text: 'Cancelar',
+                          text: 'Documentos',
                           color: Color(0xffCB1B1B),
                           callback: () {
                             setState(() {
-                              //_clientShow = false;
                               _formNewClientShow = true;
                               _formNewClientShowDescuento = false;
-                              /*          _search = '@';
-                              removeCarritoRecibo();
-                              searchClient(); */
                             });
                           }),
                     ),
@@ -2969,7 +3132,7 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 35,
                       child: BtnSmall(
-                          text: 'Guardar R',
+                          text: 'Guardar',
                           color: Color(0xff0894FD),
                           callback: () {
                             createRecibo();
@@ -3027,9 +3190,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
                       Text(
-                          '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'
-                          // DateFormat.dMMy().format(_selectedDate),
-                          ),
+                          '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
                       Icon(Icons.arrow_drop_down, color: Color(0xff06538D)),
                     ],
                   ),
@@ -3037,7 +3198,13 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(height: 10),
               _itemForm(context, 'Nombre', '$nombre_tercero', null, false),
-              _itemForm(context, 'Total cartera', '22554', null, false),
+              _itemForm(
+                  context,
+                  'Total cartera',
+                  '\$ ' +
+                      expresionRegular(double.parse(_saldoCartera.toString())),
+                  null,
+                  false),
               SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
@@ -3247,9 +3414,17 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 10.0),
-        _itemForm(context, 'Cupo crédito', '1.200.000', null, false),
+        _itemForm(
+            context,
+            'Cupo crédito',
+            expresionRegular(double.parse(limite_credito.toString())),
+            null,
+            false),
         _itemSelectForm(
-            context, 'Total cartera', '347.281', 'Selecciona fecha'),
+            context,
+            'Total cartera',
+            '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
+            'Selecciona'),
         SizedBox(height: 30.0),
         Row(
           children: [
@@ -3857,6 +4032,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           onTap: () {
                             setState(() {
+                              _submitDialog(context);
                               id_tercero = '${data['id_tercero']}';
                               nombre_tercero =
                                   '${data['nombre_completo'].toString()}  ${data['nombre_sucursal'].toString()} ';
@@ -3869,6 +4045,9 @@ class _HomePageState extends State<HomePage> {
                               _value_itemsFormaPago = data['id_forma_pago'];
                               id_empresa = '${data['id_empresa']}';
                               id_suc_vendedor = '${data['id_suc_vendedor']}';
+                              id_sucursal_tercero =
+                                  '${data['id_sucursal_tercero']}';
+                              limite_credito = '${data['limite_credito']}';
                               getConsecutivo(true);
                             });
                           },
@@ -3906,6 +4085,9 @@ class _HomePageState extends State<HomePage> {
                               _value_itemsFormaPago = data['id_forma_pago'];
                               id_empresa = '${data['id_empresa']}';
                               id_suc_vendedor = '${data['id_suc_vendedor']}';
+                              id_sucursal_tercero =
+                                  '${data['id_sucursal_tercero']}';
+                              limite_credito = '${data['limite_credito']}';
                             });
                             searchDocumentPend(data);
                           },
@@ -3934,6 +4116,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             onTap: () {
+                              getConsecutivo(false);
                               callbackHistory(data);
                             }),
                       ),
@@ -4927,7 +5110,7 @@ class _HomePageState extends State<HomePage> {
             'id_tercero': '$id_tercero',
             "id_empresa": '$id_empresa',
             "id_sucursal": "01",
-            "id_tipo_doc": "P01",
+            "id_tipo_doc": idPedidoUser,
             "numero": '$_value_automatico',
             "id_sucursal_tercero": "1",
             "id_vendedor": "16499705",
@@ -4966,7 +5149,6 @@ class _HomePageState extends State<HomePage> {
                   'id_tercero': '$id_tercero',
                   "id_empresa": '$id_empresa',
                   "id_sucursal": "01",
-                  //  "id_tipo_doc": "P01",
                   "id_tipo_doc": idPedidoUser,
                   "numero": '$_value_automatico',
                   "consecutivo": i + 1,
@@ -5103,6 +5285,7 @@ class _HomePageState extends State<HomePage> {
 
   List<dynamic> _dataDescuento = [];
   List<dynamic> _dataDescuentoAgregados = [];
+  late String totalRecibo = '0.00';
   late String totalReciboPagado = '0.00';
   late String totalReciboDescuento = '0.00';
   final myControllerValorPagoRecibo = TextEditingController();
@@ -5113,6 +5296,17 @@ class _HomePageState extends State<HomePage> {
   bool filterRestablece(id) {
     var flag = false;
     var val = _documentosPagados.singleWhere((obj) => obj["id"] == id,
+        orElse: () => null);
+    if (val != null) {
+      flag = true;
+    }
+
+    return flag;
+  }
+
+  bool filterRestableceDescuento(id) {
+    var flag = false;
+    var val = _dataDescuentoAgregados.singleWhere((obj) => obj["id"] == id,
         orElse: () => null);
     if (val != null) {
       flag = true;
@@ -5132,15 +5326,29 @@ class _HomePageState extends State<HomePage> {
     return monto;
   }
 
+  String filterAbonoDescuento(id) {
+    var monto = '0.00';
+    var val = _dataDescuentoAgregados.singleWhere((obj) => obj["id"] == id,
+        orElse: () => null);
+    if (val != null) {
+      var monto1 = val['monto_descontar'];
+      monto = monto1.toStringAsFixed(2);
+    }
+    return monto;
+  }
+
   Future<void> searchDocumentPend(data) async {
     final response =
-        await http.get(Uri.parse("$_url/cuentaportercero/$_nit/$id_tercero"));
+        //   await http.get(Uri.parse("$_url/cuentaportercero/$_nit/$id_tercero"));
+        await http.get(
+            Uri.parse("$_url/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       _dataDocumentPend = jsonResponse['data'];
+
       getConsecutivo(false);
       setState(() {
         _clientShow = false;
@@ -5205,7 +5413,7 @@ class _HomePageState extends State<HomePage> {
               SizedBox(
                 width: _size.width * 0.5 - 42,
                 child: Text(
-                  'F02 ${data['tipo_doc']}',
+                  '${data['tipo_doc']}',
                   style: TextStyle(
                     color: Color(0xff707070),
                     fontSize: 13.0,
@@ -5272,7 +5480,6 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             height: 10.0,
           ),
-          //  !_pay && !_confirm && i != _isPagar
           !filterRestablece(i) && i != _isPagar
               ? noPay(context, data, i)
               : Container(),
@@ -5280,7 +5487,6 @@ class _HomePageState extends State<HomePage> {
               ? pay(context, data)
               : Container(),
           filterRestablece(i) ? confirm(context, data, i) : Container()
-          // filterRestablece(i) && _confirm && i == _isPagar ? confirm(context, data, i) : Container()
         ],
       ),
     );
@@ -5730,10 +5936,11 @@ class _HomePageState extends State<HomePage> {
             children: [
               Row(
                 children: [
-                  i != _isPagarDescuento
+                  !filterRestableceDescuento(i) && i != _isPagarDescuento
                       ? _listDescuento(context, data, i)
                       : Container(),
-                  seeDescuento && i == _isPagarDescuento
+                  filterRestableceDescuento(i) ||
+                          seeDescuento && i == _isPagarDescuento
                       ? _seeDescuento(context, data, i)
                       : Container(),
                 ],
@@ -5810,7 +6017,8 @@ class _HomePageState extends State<HomePage> {
             IconButton(
                 onPressed: () {
                   print("eliminar producto del carrito");
-                  _showDialog(context, i);
+                  //  _showDialog(context, i);
+                  _showDialogDescuento(context, i);
                 },
                 icon: Icon(
                   Icons.do_disturb_on,
@@ -5825,90 +6033,212 @@ class _HomePageState extends State<HomePage> {
         SizedBox(
           height: 20.0,
         ),
-        Row(
-          children: [
-            SizedBox(
-              width: _size.width * 0.5 - 80,
-              child: Text(
-                'Valor:',
-                style: TextStyle(
-                    color: Color(0xff707070),
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(
-              width: _size.width * 0.5 - 60,
-              child: TextField(
-                readOnly: false,
-                controller: myControllerDescuentorec,
-                style: TextStyle(
-                  color: Color(0xff707070),
-                  fontSize: 13.0,
-                ),
-                decoration: InputDecoration(
-                  hintText: '',
-                  hintStyle: TextStyle(
-                    color: Color(0xff707070),
-                    fontSize: 13.0,
+        !filterRestableceDescuento(i)
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: _size.width * 0.5 - 80,
+                    child: Text(
+                      'Valor:',
+                      style: TextStyle(
+                          color: Color(0xff707070),
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  contentPadding: EdgeInsets.only(bottom: 0, top: 0),
-                ),
-              ),
-            ),
-            IconButton(
-                onPressed: () {
-                  setState(() {
-                    seeDescuento = false;
-                    _isPagarDescuento = 99999;
-                  });
+                  SizedBox(
+                    width: _size.width * 0.5 - 60,
+                    child: TextField(
+                      readOnly: false,
+                      controller: myControllerDescuentorec,
+                      style: TextStyle(
+                        color: Color(0xff707070),
+                        fontSize: 13.0,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '',
+                        hintStyle: TextStyle(
+                          color: Color(0xff707070),
+                          fontSize: 13.0,
+                        ),
+                        contentPadding: EdgeInsets.only(bottom: 0, top: 0),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                      onPressed: () {
+                        agregarDescuento();
+                        setState(() {
+                          seeDescuento = false;
+                          _isPagarDescuento = 99999;
+                        });
+                      },
+                      icon: Icon(
+                        Icons.save,
+                        color: Colors.blue,
+                        size: 20.0,
+                      )),
+                ],
+              )
+            : Row(
+                children: [
+                  SizedBox(
+                    width: _size.width * 0.5 - 80,
+                    child: Text(
+                      'Valor:',
+                      style: TextStyle(
+                          color: Color(0xff707070),
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(
+                    width: _size.width * 0.5 - 60,
+                    child: TextField(
+                      readOnly: false,
+                      controller: myControllerDescuentorec,
+                      style: TextStyle(
+                        color: Color(0xff707070),
+                        fontSize: 13.0,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '\$ ' +
+                            expresionRegular(double.parse(
+                                filterAbonoDescuento(i).toString())),
+                        hintStyle: TextStyle(
+                          color: Color(0xff707070),
+                          fontSize: 13.0,
+                        ),
+                        contentPadding: EdgeInsets.only(bottom: 0, top: 0),
+                      ),
+                    ),
+                  ),
+                ],
+              )
 
-                  agregarDescuento();
-                },
-                icon: Icon(
-                  Icons.save,
-                  color: Colors.blue,
-                  size: 20.0,
-                )),
-          ],
-        ),
-        SizedBox(
-          height: 20.0,
-        ),
-        /*  Row(
-          children: [
-            SizedBox(
-              width: _size.width * 0.5 - 65,
-              child: Text(
-                'Valor:',
-                style: TextStyle(
-                    color: Color(0xff707070),
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(
-              width: _size.width * 0.5 - 42,
-              child: TextField(
-                readOnly: false,
-                controller: myControllerDescuentos,
-                style: TextStyle(
-                  color: Color(0xff707070),
-                  fontSize: 14.0,
-                ),
-                decoration: InputDecoration(
-                  hintText: '',
-                  hintStyle: TextStyle(
-                    color: Color(0xff707070),
-                    fontSize: 14.0,
-                  ),
-                  contentPadding: EdgeInsets.only(bottom: 0, top: 0),
-                ),
-              ),
-            )
-          ],
-        ), */
+        /*      Row(
+              
+                children: [ 
+                  _itemForm(
+                      context,
+                      'Valor:',
+                      '\$ ' +
+                          expresionRegular(
+                              double.parse(filterAbonoDescuento(i).toString())),
+                      null,
+                      false),
+                ],
+              ), */
       ],
+    );
+  }
+
+  void _showDialogDescuento(BuildContext context, int index) {
+    final _size = MediaQuery.of(context).size;
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10.0))),
+          child: Container(
+            height: 210.0,
+            width: _size.width * 0.8,
+            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+            child: Column(
+              children: [
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.warning, color: Color(0xff06538D), size: 25.0),
+                    SizedBox(width: 10.0),
+                    Text(
+                      'Atención',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Color(0xff06538D),
+                          fontSize: 22.0,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20.0),
+                Text(
+                  '¿Desea eliminar el siguiente item?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                SizedBox(height: 30.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.35 - 10,
+                      height: 41.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5.0),
+                          color: Color(0xffCB1B1B)),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(5.0),
+                          child: Center(
+                            child: Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.35 - 10,
+                      height: 41.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5.0),
+                          color: Color(0xff0894FD)),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(5.0),
+                          child: Center(
+                            child: Text(
+                              'Eliminar',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          onTap: () {
+                            print("Aceptar $index");
+                            _dataDescuentoAgregados.removeAt(index);
+                            print("Aceptar $_dataDescuentoAgregados");
+                            setState(() {
+                              seeDescuento = false;
+                              _isPagarDescuento = 99999;
+                              totalReciboPagado =
+                                  valorTotalRecibo(_documentosPagados);
+                              //   numeroAletra(totalRecibo.toString());
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          )),
     );
   }
 
@@ -5931,6 +6261,8 @@ class _HomePageState extends State<HomePage> {
       "cuota": _dataDocumentPend[_isPagar]['cuota'],
       "dias": _dataDocumentPend[_isPagar]['dias'],
       "vencimiento": _dataDocumentPend[_isPagar]['vencimiento'],
+      "id_sucursal": _dataDocumentPend[_isPagar]['id_sucursal'],
+      "id_empresa": _dataDocumentPend[_isPagar]['id_empresa'],
       "monto_pagar": double.parse(abonoReciboUnico.toString()),
       "restante": restanteReciboUnico,
       "letras": _letras,
@@ -5942,7 +6274,6 @@ class _HomePageState extends State<HomePage> {
       restanteRecibo = restanteReciboUnico.toStringAsFixed(2);
       abonoRecibo = abonoReciboUnico.toStringAsFixed(2);
       totalReciboPagado = valorTotalRecibo(_documentosPagados);
-      _letras = '';
     });
   }
 
@@ -5952,6 +6283,7 @@ class _HomePageState extends State<HomePage> {
 
     _dataDescuentoAgregados.add({
       "id": _isPagarDescuento,
+      "id_concepto": _dataDescuento[_isPagarDescuento]['id_concepto'],
       "monto_descontar": double.parse(montoDescuento.toString())
     });
     print("----------- $_dataDescuentoAgregados");
@@ -5977,10 +6309,17 @@ class _HomePageState extends State<HomePage> {
     double descuento = 0.0;
     for (int i = 0; i < _documentosPagados.length; i++) {
       total = total + _documentosPagados[i]['monto_pagar'];
+      print(total);
     }
     for (int i = 0; i < _dataDescuentoAgregados.length; i++) {
-      descuento = total * (_dataDescuentoAgregados[i]['monto_descontar'] / 100);
+      descuento = descuento + _dataDescuentoAgregados[i]['monto_descontar'];
+      print(descuento);
     }
+    numeroAletra(totalRecibo);
+    setState(() {
+      totalRecibo = total.toStringAsFixed(2);
+      totalReciboDescuento = descuento.toStringAsFixed(2);
+    });
     total = total - descuento;
     print(total.toStringAsFixed(2));
     return total.toStringAsFixed(2);
@@ -5990,6 +6329,7 @@ class _HomePageState extends State<HomePage> {
     _documentosPagados = [];
     totalReciboPagado = '0.00';
     totalReciboDescuento = '0.00';
+    totalRecibo = '0.00';
     _dataDocumentPend = [];
   }
 
@@ -6013,16 +6353,23 @@ class _HomePageState extends State<HomePage> {
               "dias": _documentosPagados[i]['dias'].toString(),
               "id_tercero": id_tercero,
               "id_vendedor": "16499706",
-              "id_sucursal_tercero": "1",
+              "id_sucursal_tercero": id_sucursal_tercero,
               "fecha":
                   '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-              "vencimiento": _documentosPagados[i]['vencimiento'].toString(),
-              "credito": _documentosPagados[i]['credito'].toString(),
-              "dctomax": totalReciboDescuento,
-              "cuota_cruce": "0",
-              "debito": _documentosPagados[i]['debito'].toString(),
+              "vencimiento":
+                  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+              "credito": _documentosPagados[i]['monto_pagar'].toString(),
+              "dctomax": "0",
+              "debito": "0",
               "id_destino": "0",
-              "id_proyecto": "0"
+              "id_proyecto": "0",
+              "id_empresa_cruce":
+                  _documentosPagados[i]['id_empresa'].toString(),
+              "id_sucursal_cruce":
+                  _documentosPagados[i]['id_sucursal'].toString(),
+              "tipo_doc_cruce": _documentosPagados[i]['tipo_doc'].toString(),
+              "numero_cruce": _documentosPagados[i]['numero'].toString(),
+              "cuota_cruce": _documentosPagados[i]['cuota'].toString(),
             },
           ]
         ],
@@ -6045,10 +6392,13 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-  //
 
   Future createReciboCartera() async {
     print("createReciboCarteracreateReciboCarteracreateReciboCartera");
+    late int cuota_cruce_cpd = 0;
+    late int cuota = 1;
+    late int conse = 0;
+    numeroAletra(totalReciboPagado);
     final response = await http.post(
       Uri.parse('$_url/synchronization_carteraproveedores'),
       headers: <String, String>{
@@ -6056,37 +6406,78 @@ class _HomePageState extends State<HomePage> {
       },
       body: convert.jsonEncode(<String, dynamic>{
         'cartera_proveedores': [
-          for (var i = 0; i < _documentosPagados.length; i++) ...[
-            {
-              "nit": _nit,
-              "id_empresa": id_empresa,
-              "id_sucursal": "1",
-              "id_tipo_doc": idReciboUser,
-              "numero": _documentosPagados[i]['numero'].toString(),
-              "fecha":
-                  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-              "total": _documentosPagados[i]['monto_pagar'],
-              "vencimiento": _documentosPagados[i]['vencimiento'],
-              "letras": _documentosPagados[i]['letras'],
-              "id_moneda": "COLP",
-              "id_tercero": id_tercero,
-              "id_sucursal_tercero": "1",
-              "id_recaudador": "0",
-              "fecha_trm":
-                  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-              "trm": "1",
-              "observaciones": myControllerObservacion.text,
-              "usuario": _user,
-              "flag_enviado": "NO",
-              "cartera_proveedores_det": [
+          {
+            "nit": _nit,
+            "id_empresa": id_empresa,
+            "id_sucursal": "1",
+            "id_tipo_doc": idReciboUser,
+            "numero": _value_automatico,
+            "fecha":
+                '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+            "total": totalReciboPagado,
+            "vencimiento":
+                '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+            "letras": _letras,
+            "id_moneda": "COLP",
+            "id_tercero": id_tercero,
+            "id_sucursal_tercero": id_sucursal_tercero,
+            "id_recaudador": "0",
+            "fecha_trm":
+                '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+            "trm": "1",
+            "observaciones": myControllerObservacion.text,
+            "usuario": _user,
+            "flag_enviado": " ",
+            "cartera_proveedores_det": [
+              {
+                "consecutivo": conse = conse + 1,
+                "cuota": cuota = cuota + 1,
+                "id_tercero": id_tercero,
+                "id_sucursal_tercero": id_sucursal_tercero,
+                "id_empresa_cruce":
+                    _documentosPagados[0]['id_empresa'].toString(),
+                "id_sucursal_cruce":
+                    _documentosPagados[0]['id_sucursal'].toString(),
+                "id_tipo_doc_cruce": idReciboUser,
+                "numero_cruce": _value_automatico,
+                "fecha":
+                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                "vencimiento":
+                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                "debito": totalReciboPagado,
+                "credito": "0",
+                "descripcion": _value_itemsTipoPago == '01'
+                    ? 'Pago en Efectivo por el valor de $totalReciboPagado '
+                    : ' ',
+                "id_vendedor": "6220948",
+                "id_forma_pago": _value_itemsTipoPago,
+                "documento_forma_pago": "",
+                "distribucion": "FP",
+                "trm": "1",
+                "id_recaudador": "6220948",
+                "id_suc_recaudador": "1",
+                "fecha_trm":
+                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                "total_factura": "0",
+                "id_concepto": "",
+                "id_moneda": "COLP",
+                "id_destino": "",
+                "id_proyecto": "",
+                "cuota_cruce": cuota_cruce_cpd = cuota_cruce_cpd + 1,
+                "id_banco": _value_itemsBanco
+              },
+              for (var i = 0; i < _documentosPagados.length; i++) ...[
                 {
-                  "consecutivo": 1,
-                  "cuota": 1,
+                  "consecutivo": conse = conse + 1,
+                  "cuota": cuota =
+                      int.parse(_documentosPagados[i]['cuota'].toString()),
                   "id_tercero": id_tercero,
-                  "id_sucursal_tercero": "1",
-                  "id_empresa_cruce": "1",
-                  "id_sucursal_cruce": "1",
-                  "id_tipo_doc_cruce": idReciboUser,
+                  "id_sucursal_tercero": id_sucursal_tercero,
+                  "id_empresa_cruce":
+                      _documentosPagados[i]['id_empresa'].toString(),
+                  "id_sucursal_cruce":
+                      _documentosPagados[i]['id_sucursal'].toString(),
+                  "id_tipo_doc_cruce": _documentosPagados[i]['tipo_doc'],
                   "numero_cruce": _documentosPagados[i]['numero'],
                   "fecha":
                       '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
@@ -6095,7 +6486,7 @@ class _HomePageState extends State<HomePage> {
                   "credito": _documentosPagados[i]['monto_pagar'],
                   "descripcion": ' Abonó el documento',
                   "id_vendedor": "6220948",
-                  "id_forma_pago": _value_itemsTipoPago,
+                  "id_forma_pago": "",
                   "documento_forma_pago": "",
                   "distribucion": "DC",
                   "trm": "1",
@@ -6103,51 +6494,55 @@ class _HomePageState extends State<HomePage> {
                   "id_suc_recaudador": "1",
                   "fecha_trm":
                       '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                  "total_factura": _documentosPagados[i]['monto_pagar'],
+                  "total_factura": "0",
                   "id_concepto": "",
                   "id_moneda": "COLP",
                   "id_destino": "",
                   "id_proyecto": "",
-                  "cuota_cruce": 1,
+                  "cuota_cruce": cuota_cruce_cpd =
+                      int.parse(_documentosPagados[i]['cuota'].toString()),
                   "id_banco": _value_itemsBanco
                 },
-                {
-                  "consecutivo": 2,
-                  "cuota": 2,
-                  "id_tercero": id_tercero,
-                  "id_sucursal_tercero": "1",
-                  "id_empresa_cruce": "1",
-                  "id_sucursal_cruce": "1",
-                  "id_tipo_doc_cruce": idReciboUser,
-                  "numero_cruce": _documentosPagados[i]['numero'],
-                  "fecha":
-                      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                  "vencimiento": _documentosPagados[i]['vencimiento'],
-                  "debito": _documentosPagados[i]['monto_pagar'],
-                  "credito": _documentosPagados[i]['restante'],
-                  "descripcion": _value_itemsTipoPago == '01'
-                      ? 'Pago en Efectivo por el valor de ${_documentosPagados[i]['monto_pagar']} '
-                      : ' ',
-                  "id_vendedor": "6220948",
-                  "id_forma_pago": _value_itemsTipoPago,
-                  "documento_forma_pago": "",
-                  "distribucion": "FP",
-                  "trm": "1",
-                  "id_recaudador": "6220948",
-                  "id_suc_recaudador": "1",
-                  "fecha_trm":
-                      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                  "total_factura": _documentosPagados[i]['monto_pagar'],
-                  "id_concepto": "",
-                  "id_moneda": "COLP",
-                  "id_destino": "",
-                  "id_proyecto": "",
-                  "cuota_cruce": 2,
-                  "id_banco": _value_itemsBanco
-                }
+           
+                for (var i = 0; i < _dataDescuentoAgregados.length; i++) ...[
+                  {
+                    "consecutivo": conse = conse + 1,
+                    "cuota": 3,
+                    "id_tercero": id_tercero,
+                    "id_sucursal_tercero": id_sucursal_tercero,
+                    "id_empresa_cruce":
+                        _documentosPagados[i]['id_empresa'].toString(),
+                    "id_sucursal_cruce": "1",
+                    "id_tipo_doc_cruce": idReciboUser,
+                    "numero_cruce": _value_automatico,
+                    "fecha":
+                        '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                    "vencimiento": _documentosPagados[i]['vencimiento'],
+                    "debito": _dataDescuentoAgregados[i]['monto_descontar'],
+                    "credito": "0",
+                    "descripcion":
+                        'Pago de descuento ${_dataDescuentoAgregados[i]['monto_descontar']} ',
+                    "id_vendedor": "6220948",
+                    "id_forma_pago": '',
+                    "documento_forma_pago": "",
+                    "distribucion": "CN",
+                    "trm": "1",
+                    "id_recaudador": "6220948",
+                    "id_suc_recaudador": "1",
+                    "fecha_trm":
+                        '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                    "total_factura": "0",
+                    "id_concepto": _dataDescuentoAgregados[i]['id_concepto'],
+                    "id_moneda": "COLP",
+                    "id_destino": "",
+                    "id_proyecto": "",
+                    "cuota_cruce": cuota_cruce_cpd = cuota_cruce_cpd + 1,
+                    "id_banco": _value_itemsBanco
+                  }
+                ]
               ]
-            }
-          ]
+            ]
+          }
         ]
       }),
     );

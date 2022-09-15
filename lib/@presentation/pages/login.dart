@@ -58,6 +58,23 @@ class _LoginPageState extends State<LoginPage> {
   final String hintText = '';
   bool _validate = false;
 
+  Future<Null> _submitDialog(BuildContext context) async {
+    return await showDialog<Null>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            elevation: 0.0,
+            backgroundColor: Colors.transparent,
+            children: <Widget>[
+              Center(
+                child: CircularProgressIndicator(),
+              )
+            ],
+          );
+        });
+  }
+
   // Perform login
   void validateAndSubmit() {
     _user = myControllerUsers.text;
@@ -66,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _user.isEmpty ? _validate = true : _validate = false;
       _password.isEmpty ? _validate = true : _validate = false;
-      _isLoading = true;
+
       !_validate && isOnline ? loginApi() : null;
       !_validate && !isOnline
           ? OperationUsuario.getLogin(_user, _password)
@@ -115,6 +132,7 @@ class _LoginPageState extends State<LoginPage> {
 
   //Login desde apiRest
   Future<void> loginApi() async {
+    _submitDialog(context);
     print("busca en la APIREST y valida el usuario");
     if (myControllerUsers.text.isNotEmpty &&
         myControllerPassword.text.isNotEmpty) {
@@ -196,7 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                 borderRadius: new BorderRadius.circular(25.0)),
             color: Color(0xff0091CE),
             child: Center(
-              child: Text(
+              child: Text(            
                 'Iniciar Sesión',
                 style: TextStyle(
                     color: Colors.white,
