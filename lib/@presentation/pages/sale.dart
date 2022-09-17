@@ -3,37 +3,96 @@ import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:flutter/material.dart';
 
-class SalePage extends StatefulWidget{
+import 'package:intl/intl.dart' show DateFormat;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'dart:convert' as convert;
+import 'package:http/http.dart' as http;
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/safe_area_values.dart';
+import 'package:top_snackbar_flutter/tap_bounce_container.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
+class SalePage extends StatefulWidget {
   @override
   State<SalePage> createState() => _SalePageState();
 }
 
-class _SalePageState extends State<SalePage> {
-  bool _showItems = false;
-  bool _showItemsOrder = false;
+class _SalePageState extends State<SalePage> { 
+
+  String _url = 'http://localhost:3000';
+  late String id_vendedor; 
+  late int _count;
+  String _user = '';
+  String _nit = '';
+  List<dynamic> _datSale = [];
 
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
-  
+
   late TooltipBehavior _tooltip;
- 
+
   @override
   void initState() {
-    _tooltip = TooltipBehavior(enable: false, format: 'point.x : point.y%');
+    _tooltip = TooltipBehavior(enable: false, format: 'point.x : point.y%'); 
+    _count = 0;
+    super.initState();
+    _loadDataUserLogin();
     super.initState();
   }
 
-  List<DoughnutSeries<ChartSampleData, String>> _getDefaultDoughnutSeries(String radius) {
+  Future searchSale() async {
+    final response =
+        await http.get(Uri.parse("$_url//cuota_venta_app/$id_vendedor/$_nit'"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      setState(() {
+        _datSale = jsonResponse['data'];
+        print("*-------- $_datSale");
+        _count = jsonResponse['count'];
+       
+      });
+    } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+    }
+  }
+
+  _loadDataUserLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _user = (prefs.getString('user') ?? '');
+      _nit = (prefs.getString('nit') ?? '');
+      id_vendedor = '16499705';
+      print("el usuario es $_user $_nit");
+      if (_nit != '') {
+        searchSale();
+      }
+    });
+  }
+
+  List<DoughnutSeries<ChartSampleData, String>> _getDefaultDoughnutSeries(
+      String radius) {
     return <DoughnutSeries<ChartSampleData, String>>[
       DoughnutSeries<ChartSampleData, String>(
           radius: radius,
           explode: true,
           explodeOffset: '10%',
           dataSource: <ChartSampleData>[
-            ChartSampleData(x: 'Ventas', y: 55, text: '55%',pointColor: Color(0xff0894FD)),
-            ChartSampleData(x: 'Meta', y: 45, text: '45%',pointColor: Color(0xffBCBBBB)),
+            ChartSampleData(
+                x: 'Ventas', y: 55, text: '55%', pointColor: Color(0xff0894FD)),
+            ChartSampleData(
+                x: 'Meta', y: 45, text: '45%', pointColor: Color(0xffBCBBBB)),
           ],
+          name: 'Income',
           pointColorMapper: (ChartSampleData data, _) => data.pointColor,
           xValueMapper: (ChartSampleData data, _) => data.x as String,
           yValueMapper: (ChartSampleData data, _) => data.y,
@@ -43,98 +102,99 @@ class _SalePageState extends State<SalePage> {
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return WillPopScope(
-      onWillPop: () async => false,
-      child: Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 60,
-          automaticallyImplyLeading: false,
-          leadingWidth: 40.0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 15.0),
-            child: Builder(
-              builder: (context) => GestureDetector(
-                onTap: () => {  
-                  _drawerscaffoldkey.currentState!.isDrawerOpen
-                      ? Navigator.pop(context)
-                      : _drawerscaffoldkey.currentState!.openDrawer()
-                },
-                child: Icon(
-                  Icons.menu,
-                  color: Color(0xff0090ce),
-                  size: 30,
+        onWillPop: () async => false,
+        child: Scaffold(
+          appBar: AppBar(
+            toolbarHeight: 60,
+            automaticallyImplyLeading: false,
+            leadingWidth: 40.0,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 15.0),
+              child: Builder(
+                builder: (context) => GestureDetector(
+                  onTap: () => {
+                    _drawerscaffoldkey.currentState!.isDrawerOpen
+                        ? Navigator.pop(context)
+                        : _drawerscaffoldkey.currentState!.openDrawer()
+                  },
+                  child: Icon(
+                    Icons.menu,
+                    color: Color(0xff0090ce),
+                    size: 30,
+                  ),
                 ),
               ),
             ),
-          ),
-          actions: [
-            GestureDetector(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 15.0),
-                child: Icon(
-                  Icons.shopping_cart_outlined,
-                  color: Color(0xff0090ce),
-                  size: 30,
-                ),
-              ),
-              onTap: () => {
-                 _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                      ? Navigator.pop(context)
-                      : _drawerscaffoldkey.currentState!.openEndDrawer()
-              }
-            )
-          ],
-          title: Text(
-            'Cuota de venta',
-            style: TextStyle(
-                color: Color(0xff0f538d),
-                fontSize: 24.0,
-                fontWeight: FontWeight.w700),
-          ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          bottom: PreferredSize(
-              child: Container(
-                height: 2.0,
-                color: Color(0xff0090ce),
-              ),
-              preferredSize: Size(0.0, 0.0)),
-        ),
-        body: Scaffold(
-          key: _drawerscaffoldkey,
-          drawer: _menu(context),
-          endDrawer: _shoppingCart(context),
-          body: CustomScrollView(
-            slivers: [
-              SliverList(delegate: SliverChildListDelegate([
-                Column(
-                  children: [
-                    Container(
-                      width: _size.width,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 15.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _balance(context),
-                          SizedBox(height: 10.0,),
-                          _balanceDetail(context),
-                        ],
-                      ),
+            actions: [
+              GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 15.0),
+                    child: Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Color(0xff0090ce),
+                      size: 30,
                     ),
-                  ],
-                ),
-              ]))
+                  ),
+                  onTap: () => {
+                        _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                            ? Navigator.pop(context)
+                            : _drawerscaffoldkey.currentState!.openEndDrawer()
+                      })
             ],
+            title: Text(
+              'Cuota de venta',
+              style: TextStyle(
+                  color: Color(0xff0f538d),
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.w700),
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            bottom: PreferredSize(
+                child: Container(
+                  height: 2.0,
+                  color: Color(0xff0090ce),
+                ),
+                preferredSize: Size(0.0, 0.0)),
           ),
-        ),
-      )
-    );
+          body: Scaffold(
+            key: _drawerscaffoldkey,
+            drawer: _menu(context),
+            endDrawer: _shoppingCart(context),
+            body: CustomScrollView(
+              slivers: [
+                SliverList(
+                    delegate: SliverChildListDelegate([
+                  Column(
+                    children: [
+                      Container(
+                        width: _size.width,
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 15.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _balance(context),
+                            SizedBox(
+                              height: 10.0,
+                            ),
+                            _balanceDetail(context),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ]))
+              ],
+            ),
+          ),
+        ));
   }
 
-  Widget _balance(BuildContext context){
+  Widget _balance(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Column(
       children: [
@@ -142,20 +202,19 @@ class _SalePageState extends State<SalePage> {
           width: _size.width,
           padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Color(0xffC7C7C7),
-            ),
-            borderRadius: BorderRadius.circular(8.0)
-          ),
+              border: Border.all(
+                color: Color(0xffC7C7C7),
+              ),
+              borderRadius: BorderRadius.circular(8.0)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                    'Balance general',
-                    style: TextStyle(
-                      fontSize: 16.0, 
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff06538D)),
+                'Balance general',
+                style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xff06538D)),
               ),
               SfCircularChart(
                 // title: ChartTitle(text: 'Composition of ocean water'),
@@ -170,105 +229,135 @@ class _SalePageState extends State<SalePage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.account_box_rounded,color: Color(0xff0091CE),size: 13.0,),
-                      SizedBox(width: 5.0,),
+                      Icon(
+                        Icons.account_box_rounded,
+                        color: Color(0xff0091CE),
+                        size: 13.0,
+                      ),
+                      SizedBox(
+                        width: 5.0,
+                      ),
                       Text(
                         'Presupuesto',
                         style: TextStyle(
-                          fontSize: 13.0, 
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xff0091CE)),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff0091CE)),
                       ),
                     ],
                   ),
                   Text(
                     '\$ 722.669.129',
-                      style: TextStyle(
-                        fontSize: 13.0, 
+                    style: TextStyle(
+                        fontSize: 13.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xff707070)),
-                    ),
+                  ),
                 ],
               ),
-              SizedBox(height: 10.0,),
+              SizedBox(
+                height: 10.0,
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.account_box_rounded,color: Color(0xff0091CE),size: 13.0,),
-                      SizedBox(width: 5.0,),
+                      Icon(
+                        Icons.account_box_rounded,
+                        color: Color(0xff0091CE),
+                        size: 13.0,
+                      ),
+                      SizedBox(
+                        width: 5.0,
+                      ),
                       Text(
                         'Ventas del mes',
                         style: TextStyle(
-                          fontSize: 13.0, 
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xff0091CE)),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff0091CE)),
                       ),
                     ],
                   ),
                   Text(
                     '\$ 427.369.129',
-                      style: TextStyle(
-                        fontSize: 13.0, 
+                    style: TextStyle(
+                        fontSize: 13.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xff707070)),
-                    ),
+                  ),
                 ],
               ),
-              SizedBox(height: 10.0,),
+              SizedBox(
+                height: 10.0,
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.credit_card,color: Color(0xff0091CE),size: 13.0,),
-                      SizedBox(width: 5.0,),
+                      Icon(
+                        Icons.credit_card,
+                        color: Color(0xff0091CE),
+                        size: 13.0,
+                      ),
+                      SizedBox(
+                        width: 5.0,
+                      ),
                       Text(
                         'Ventas hoy',
                         style: TextStyle(
-                          fontSize: 13.0, 
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xff0091CE)),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff0091CE)),
                       ),
                     ],
                   ),
                   Text(
                     '\$ 247.281',
-                      style: TextStyle(
-                        fontSize: 13.0, 
+                    style: TextStyle(
+                        fontSize: 13.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xff707070)),
-                    ),
+                  ),
                 ],
               ),
-              SizedBox(height: 10.0,),
+              SizedBox(
+                height: 10.0,
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.calendar_view_month,color: Color(0xff0091CE),size: 13.0,),
-                      SizedBox(width: 5.0,),
+                      Icon(
+                        Icons.calendar_view_month,
+                        color: Color(0xff0091CE),
+                        size: 13.0,
+                      ),
+                      SizedBox(
+                        width: 5.0,
+                      ),
                       Text(
                         'Recaudado hoy',
                         style: TextStyle(
-                          fontSize: 13.0, 
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xff0091CE)),
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff0091CE)),
                       ),
                     ],
                   ),
                   Text(
                     '\$ 5.397.819',
-                      style: TextStyle(
-                        fontSize: 13.0, 
+                    style: TextStyle(
+                        fontSize: 13.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xff707070)),
-                    ),
+                  ),
                 ],
               )
             ],
@@ -278,7 +367,7 @@ class _SalePageState extends State<SalePage> {
     );
   }
 
-  Widget _balanceDetail(BuildContext context){
+  Widget _balanceDetail(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,29 +375,32 @@ class _SalePageState extends State<SalePage> {
         Text(
           'Detalles de balance de productos',
           style: TextStyle(
-            fontSize: 16.0, 
-            fontWeight: FontWeight.w700,
-            color: Color(0xff06538D)),
+              fontSize: 16.0,
+              fontWeight: FontWeight.w700,
+              color: Color(0xff06538D)),
         ),
-        SizedBox(height: 10.0,),
+        SizedBox(
+          height: 10.0,
+        ),
         Text(
           'Se encontró el detalle de 4 productos',
           style: TextStyle(
-            fontSize: 15.0, 
-            fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.italic,
-            color: Color(0xff06538D)),
+              fontSize: 15.0,
+              fontWeight: FontWeight.w400,
+              fontStyle: FontStyle.italic,
+              color: Color(0xff06538D)),
         ),
-        SizedBox(height: 10.0,),
+        SizedBox(
+          height: 10.0,
+        ),
         Container(
           width: _size.width,
           padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Color(0xffC7C7C7),
-            ),
-            borderRadius: BorderRadius.circular(8.0)
-          ),
+              border: Border.all(
+                color: Color(0xffC7C7C7),
+              ),
+              borderRadius: BorderRadius.circular(8.0)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -319,11 +411,13 @@ class _SalePageState extends State<SalePage> {
                   Text(
                     'Aceite',
                     style: TextStyle(
-                      fontSize: 16.0, 
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff06538D)),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff06538D)),
                   ),
-                  SizedBox(height: 12.0,),
+                  SizedBox(
+                    height: 12.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -331,23 +425,31 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff707070),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Meta',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('2.413.140',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Meta',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '2.413.140',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   ),
-                  SizedBox(height: 10.0,),
+                  SizedBox(
+                    height: 10.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -355,20 +457,26 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff0091CE),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Venta',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('1.903.140',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Venta',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '1.903.140',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   )
                 ],
@@ -384,16 +492,17 @@ class _SalePageState extends State<SalePage> {
             ],
           ),
         ),
-        SizedBox(height: 10.0,),
+        SizedBox(
+          height: 10.0,
+        ),
         Container(
           width: _size.width,
           padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Color(0xffC7C7C7),
-            ),
-            borderRadius: BorderRadius.circular(8.0)
-          ),
+              border: Border.all(
+                color: Color(0xffC7C7C7),
+              ),
+              borderRadius: BorderRadius.circular(8.0)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -404,11 +513,13 @@ class _SalePageState extends State<SalePage> {
                   Text(
                     'Aceite',
                     style: TextStyle(
-                      fontSize: 16.0, 
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff06538D)),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff06538D)),
                   ),
-                  SizedBox(height: 12.0,),
+                  SizedBox(
+                    height: 12.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -416,23 +527,31 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff707070),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Meta',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('2.413.140',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Meta',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '2.413.140',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   ),
-                  SizedBox(height: 10.0,),
+                  SizedBox(
+                    height: 10.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -440,20 +559,26 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff0091CE),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Venta',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('1.903.140',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Venta',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '1.903.140',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   )
                 ],
@@ -469,16 +594,17 @@ class _SalePageState extends State<SalePage> {
             ],
           ),
         ),
-        SizedBox(height: 10.0,),
+        SizedBox(
+          height: 10.0,
+        ),
         Container(
           width: _size.width,
           padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Color(0xffC7C7C7),
-            ),
-            borderRadius: BorderRadius.circular(8.0)
-          ),
+              border: Border.all(
+                color: Color(0xffC7C7C7),
+              ),
+              borderRadius: BorderRadius.circular(8.0)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -489,11 +615,13 @@ class _SalePageState extends State<SalePage> {
                   Text(
                     'Aceite',
                     style: TextStyle(
-                      fontSize: 16.0, 
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff06538D)),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff06538D)),
                   ),
-                  SizedBox(height: 12.0,),
+                  SizedBox(
+                    height: 12.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -501,23 +629,31 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff707070),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Meta',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('2.413.140',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Meta',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '2.413.140',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   ),
-                  SizedBox(height: 10.0,),
+                  SizedBox(
+                    height: 10.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -525,20 +661,26 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff0091CE),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Venta',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('1.903.140',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Venta',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '1.903.140',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   )
                 ],
@@ -554,16 +696,17 @@ class _SalePageState extends State<SalePage> {
             ],
           ),
         ),
-        SizedBox(height: 10.0,),
+        SizedBox(
+          height: 10.0,
+        ),
         Container(
           width: _size.width,
           padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Color(0xffC7C7C7),
-            ),
-            borderRadius: BorderRadius.circular(8.0)
-          ),
+              border: Border.all(
+                color: Color(0xffC7C7C7),
+              ),
+              borderRadius: BorderRadius.circular(8.0)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -574,11 +717,13 @@ class _SalePageState extends State<SalePage> {
                   Text(
                     'Aceite',
                     style: TextStyle(
-                      fontSize: 16.0, 
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff06538D)),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff06538D)),
                   ),
-                  SizedBox(height: 12.0,),
+                  SizedBox(
+                    height: 12.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -586,23 +731,31 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff707070),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Meta',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('2.413.140',
-                      style: TextStyle(
-                        color: Color(0xff707070),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Meta',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '2.413.140',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   ),
-                  SizedBox(height: 10.0,),
+                  SizedBox(
+                    height: 10.0,
+                  ),
                   Row(
                     children: [
                       Container(
@@ -610,20 +763,26 @@ class _SalePageState extends State<SalePage> {
                         height: 10.0,
                         color: Color(0xff0091CE),
                       ),
-                      SizedBox(width: 12.0,),
-                      Text('Venta',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.0
-                      ),),
-                      SizedBox(width: 15.0,),
-                      Text('1.903.140',
-                      style: TextStyle(
-                        color: Color(0xff0091CE),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0
-                      ),)
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      Text(
+                        'Venta',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.0),
+                      ),
+                      SizedBox(
+                        width: 15.0,
+                      ),
+                      Text(
+                        '1.903.140',
+                        style: TextStyle(
+                            color: Color(0xff0091CE),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.0),
+                      )
                     ],
                   )
                 ],
@@ -646,66 +805,68 @@ class _SalePageState extends State<SalePage> {
   Widget _shoppingCart(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return SafeArea(
-        child: Container(
-          width: _size.width,
-          height: _size.height,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          padding: EdgeInsets.symmetric(vertical: 20.0,horizontal: 20.0),
-          child: ListView(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Carrito de compras',
-                        style: TextStyle(
-                            color: Color(0xff0f538d),
-                            fontSize: 24.0,
-                            fontWeight: FontWeight.w700),
-                      ),
-                      Icon(
-                        Icons.disabled_by_default_outlined,
-                        color: Color(0xff0f538d),
-                        size: 30.0,
-                      )
-                    ],
-                  ),
-                  SizedBox(height: 12.0),
-                  Text('Juan Pablo Jimenez',
+      child: Container(
+        width: _size.width,
+        height: _size.height,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+        ),
+        padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+        child: ListView(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Carrito de compras',
+                      style: TextStyle(
+                          color: Color(0xff0f538d),
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Icon(
+                      Icons.disabled_by_default_outlined,
+                      color: Color(0xff0f538d),
+                      size: 30.0,
+                    )
+                  ],
+                ),
+                SizedBox(height: 12.0),
+                Text('Juan Pablo Jimenez',
+                    style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w600)),
+                SizedBox(
+                  height: 12.0,
+                ),
+                Text(
+                  'Búsqueda de productos en el carrito',
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600
-                  )),
-                  SizedBox(height: 12.0,),
-                  Text('Búsqueda de productos en el carrito',
-                  style: TextStyle(
-                    color: Color(0xff0f538d),
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w500
-                  ),),
-                  SizedBox(height: 10.0,),
-                  InputCallback(
+                      color: Color(0xff0f538d),
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
+                InputCallback(
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
-                    callback: () => {
-                 }),
-                 SizedBox(height: 15.0),
-                 Container(
+                    callback: () => {}),
+                SizedBox(height: 15.0),
+                Container(
                   width: 160.0,
                   height: 45.0,
                   decoration: BoxDecoration(
-                    color: Color(0xff06538D),
-                    borderRadius: BorderRadius.circular(5.0)
-                  ),
+                      color: Color(0xff06538D),
+                      borderRadius: BorderRadius.circular(5.0)),
                   child: Material(
                     borderRadius: BorderRadius.circular(5.0),
-                    color:  Color(0xff06538D),
+                    color: Color(0xff06538D),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(5.0),
                       onTap: () => {},
@@ -714,118 +875,125 @@ class _SalePageState extends State<SalePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: <Widget>[
-                            Icon(Icons.arrow_back, color: Colors.white,),
-                            SizedBox(width: 5.0),
-                            Text('Categorias',
-                            style: TextStyle(
+                            Icon(
+                              Icons.arrow_back,
                               color: Colors.white,
+                            ),
+                            SizedBox(width: 5.0),
+                            Text(
+                              'Categorias',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.w700),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 15.0,
+                ),
+                SizedBox(
+                  height: 310.0,
+                  child: ListView(
+                    children: [
+                      ItemCategoryOrderEdit(),
+                      SizedBox(height: 10.0),
+                      ItemCategoryOrderEdit(),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15.0),
+                Container(
+                  width: _size.width,
+                  height: 40.0,
+                  padding: EdgeInsets.symmetric(horizontal: 15.0),
+                  decoration: BoxDecoration(
+                      color: Color(0xffE8E8E8),
+                      borderRadius: BorderRadius.circular(5.0)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Text('Total',
+                          style: TextStyle(
                               fontSize: 18.0,
-                              fontWeight: FontWeight.w700
-                                  ),)
-                                ],
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff06538D))),
+                      Text(
+                        '\$ 0',
+                        style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xff06538D)),
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15.0),
+                Row(
+                  children: [
+                    Container(
+                        width: _size.width * 0.5 - 30,
+                        child: Container(
+                          width: _size.width,
+                          height: 41.0,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5.0),
+                              color: Color(0xffCB1B1B)),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(5.0),
+                              child: Center(
+                                child: Text(
+                                  'Cancelar',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700),
+                                ),
                               ),
+                              onTap: () {},
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 15.0,),
-                      SizedBox(
-                        height: 310.0,
-                        child: ListView(
-                          children: [
-                            ItemCategoryOrderEdit(),
-                            SizedBox(height: 10.0),
-                            ItemCategoryOrderEdit(),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15.0),
-                       Container(
-                        width: _size.width,
-                        height: 40.0,
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        decoration: BoxDecoration(
-                          color: Color(0xffE8E8E8),
-                          borderRadius: BorderRadius.circular(5.0)
-                        ),
-                        child: Row(
-                          mainAxisAlignment:MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Text('Total',
-                            style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D))),
-                            Text('\$ 0',
-                            style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),)
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15.0),
-                      Row(
-                        children: [
-                          Container(
-                          width: _size.width * 0.5 - 30,
-                          child: Container(
-                            width: _size.width,
-                            height: 41.0,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Color(0xffCB1B1B)),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: Center(
-                                  child: Text(
-                                    'Cancelar',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700),
-                                  ),
+                        )),
+                    SizedBox(width: 10.0),
+                    Container(
+                        width: _size.width * 0.5 - 30,
+                        child: Container(
+                          width: _size.width,
+                          height: 41.0,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5.0),
+                              color: Color(0xff0894FD)),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(5.0),
+                              child: Center(
+                                child: Text(
+                                  'Guardar',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700),
                                 ),
-                                onTap: () {},
                               ),
+                              onTap: () {},
                             ),
-                          )),
-                          SizedBox(width: 10.0),
-                          Container(
-                          width: _size.width * 0.5 - 30,
-                          child: Container(
-                            width: _size.width,
-                            height: 41.0,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Color(0xff0894FD)),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: Center(
-                                  child: Text(
-                                    'Guardar',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                onTap: () {},
-                              ),
-                            ),
-                          )),
-                        ],
-                      )
-                ],
-              ),
-            ],
-          ),
+                          ),
+                        )),
+                  ],
+                )
+              ],
+            ),
+          ],
         ),
+      ),
     );
   }
 

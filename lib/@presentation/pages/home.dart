@@ -5339,7 +5339,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> searchDocumentPend(data) async {
     final response =
-        //   await http.get(Uri.parse("$_url/cuentaportercero/$_nit/$id_tercero"));
         await http.get(
             Uri.parse("$_url/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
     var jsonResponse =
@@ -6263,6 +6262,7 @@ class _HomePageState extends State<HomePage> {
       "vencimiento": _dataDocumentPend[_isPagar]['vencimiento'],
       "id_sucursal": _dataDocumentPend[_isPagar]['id_sucursal'],
       "id_empresa": _dataDocumentPend[_isPagar]['id_empresa'],
+      "fecha":_dataDocumentPend[_isPagar]['fecha'],
       "monto_pagar": double.parse(abonoReciboUnico.toString()),
       "restante": restanteReciboUnico,
       "letras": _letras,
@@ -6440,8 +6440,9 @@ class _HomePageState extends State<HomePage> {
                     _documentosPagados[0]['id_sucursal'].toString(),
                 "id_tipo_doc_cruce": idReciboUser,
                 "numero_cruce": _value_automatico,
+                "fecha": _documentosPagados[0]['id_empresa'].toString(),
                 "fecha":
-                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
                 "vencimiento":
                     '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
                 "debito": totalReciboPagado,
@@ -6479,8 +6480,9 @@ class _HomePageState extends State<HomePage> {
                       _documentosPagados[i]['id_sucursal'].toString(),
                   "id_tipo_doc_cruce": _documentosPagados[i]['tipo_doc'],
                   "numero_cruce": _documentosPagados[i]['numero'],
-                  "fecha":
-                      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                  "fecha": _documentosPagados[i]['fecha'].toString(),
+                //  "fecha":
+                    //  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
                   "vencimiento": _documentosPagados[i]['vencimiento'],
                   "debito": '0',
                   "credito": _documentosPagados[i]['monto_pagar'],

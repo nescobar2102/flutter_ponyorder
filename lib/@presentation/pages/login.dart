@@ -209,10 +209,6 @@ class _LoginPageState extends State<LoginPage> {
           height: 50.0,
           width: _size.width,
           child: new ElevatedButton(
-          /*  elevation: 5.0,
-            shape: new RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(25.0)),
-            color: Color(0xff0091CE),*/
             child: Center(
               child: Text(            
                 'Iniciar Sesión',
