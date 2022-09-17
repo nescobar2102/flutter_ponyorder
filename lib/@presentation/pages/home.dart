@@ -3197,14 +3197,14 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: 10),
-              _itemForm(context, 'Nombre', '$nombre_tercero', null, false),
+              _itemForm(context, 'Nombre', '$nombre_tercero', null, true),
               _itemForm(
                   context,
                   'Total cartera',
                   '\$ ' +
                       expresionRegular(double.parse(_saldoCartera.toString())),
                   null,
-                  false),
+                  true),
               SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
