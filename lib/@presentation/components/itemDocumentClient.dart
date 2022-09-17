@@ -1,4 +1,4 @@
-import 'package:app_pony_order/@presentation/components/btnSmall.dart';
+import 'package:pony_order/@presentation/components/btnSmall.dart';
 import 'package:flutter/material.dart';
 
 class ItemDocumentClient extends StatefulWidget {

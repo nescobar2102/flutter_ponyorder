@@ -1,7 +1,7 @@
-import 'package:app_pony_order/@presentation/components/inputCallback.dart';
-import 'package:app_pony_order/@presentation/components/itemCategoryOrderEdit.dart';
-import 'package:app_pony_order/@presentation/components/itemOrder.dart';
-import 'package:app_pony_order/@presentation/components/itemReceipts.dart';
+import 'package:pony_order/@presentation/components/inputCallback.dart';
+import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
+import 'package:pony_order/@presentation/components/itemOrder.dart';
+import 'package:pony_order/@presentation/components/itemReceipts.dart';
 import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart' show DateFormat;
