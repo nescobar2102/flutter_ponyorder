@@ -39,7 +39,8 @@ class _UnitsPageState extends State<UnitsPage> {
   bool isOnline = true;
   bool _isLoading = false;
   String _nit = '900054835';
-  String _url = 'http://localhost:3000';
+  String _url = 'http://10.0.2.2:3000';
+ // String _url = 'http://localhost:3000';
   bool focus = false;
 
   late int _countClasificacion;

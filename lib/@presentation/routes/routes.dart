@@ -6,6 +6,7 @@ import 'package:pony_order/@presentation/pages/receipts.dart';
 import 'package:pony_order/@presentation/pages/sale.dart';
 import 'package:pony_order/@presentation/pages/units.dart';
 import 'package:pony_order/@presentation/pages/visiteds.dart';
+import 'package:pony_order/@presentation/pages/data.dart';
 import 'package:flutter/material.dart';
 
 Map<String, WidgetBuilder> getRoutes() {
@@ -17,6 +18,8 @@ Map<String, WidgetBuilder> getRoutes() {
     'receipts': (BuildContext context) => ReceiptsPage(),
     'units': (BuildContext context) => UnitsPage(),
     'visiteds': (BuildContext context) => VisitedsPage(),
-    'sale': (BuildContext context) => SalePage()
+    'sale': (BuildContext context) => SalePage(),
+    'data': (BuildContext context) => LoginPages(),
   };
+ 
 }

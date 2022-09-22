@@ -19,9 +19,10 @@ class SalePage extends StatefulWidget {
   State<SalePage> createState() => _SalePageState();
 }
 
-class _SalePageState extends State<SalePage> { 
-
-  String _url = 'http://localhost:3000';
+class _SalePageState extends State<SalePage> {
+ // String _url = 'http://173.212.208.69:3000';
+ String _url = 'http://10.0.2.2:3000';
+ //   String _url = 'http://localhost:3000';
   late String id_vendedor; 
   late int _count;
   String _user = '';

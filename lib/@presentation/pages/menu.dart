@@ -69,6 +69,8 @@ class MenuPage extends StatelessWidget {
             SizedBox(height: 1.0),
             _item(context, Icons.remove_red_eye, 'Visitados', () => {Navigator.pushNamed(context, 'visiteds')}),
             SizedBox(height: 1.0),
+            _item(context, Icons.backup, 'Sincronizacion', () => {Navigator.pushNamed(context, 'data')}),
+            SizedBox(height: 1.0),
             Container(
               width: _size.width,
               color: Color(0xff06538D),
@@ -82,8 +84,7 @@ class MenuPage extends StatelessWidget {
                         Navigator.pushNamed(context, 'login');
                         Navigator.pushNamed(context, 'login');
                         
-                        },
-               // onTap: () => {Navigator.pushNamed(context, 'login')},
+                        }, 
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                 minLeadingWidth: 20.0,

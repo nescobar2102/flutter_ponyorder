@@ -36,7 +36,9 @@ class _OrderPageState extends State<OrderPage> {
   String _nit = '';
   late String id_tercero = '';
   String idPedidoUser = '';
-  String _url = 'http://localhost:3000';
+ // String _url = 'http://173.212.208.69:3000';
+ String _url = 'http://10.0.2.2:3000';
+ // String _url = 'http://localhost:3000';
   late Object _body;
   List<dynamic> _datPedido = [];
   late int _count;
@@ -384,13 +386,14 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Widget itemOrder(data, i) {
+    final nombre =data['nombre'] !='' ? data['nombre']: data['nombre_sucursal'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
-      child: Column(
+      child: Column( 
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -406,7 +409,7 @@ class _OrderPageState extends State<OrderPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${data['nombre']}',
+                  '$nombre',
                   style: TextStyle(
                     fontSize: 16.0,
                     fontWeight: FontWeight.w700,

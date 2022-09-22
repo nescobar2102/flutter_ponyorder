@@ -127,7 +127,7 @@ void main() async {
 class Usuario {
   final int id;
   final String usuario;
-  final int password;
+  final String password;
   final String nit;
   final String id_tipo_doc_rc;
   final String id_tipo_doc_pe;

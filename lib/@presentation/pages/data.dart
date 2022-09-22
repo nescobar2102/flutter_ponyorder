@@ -39,17 +39,17 @@ class CurvePainter extends CustomPainter {
 
 enum LoginStatus { notSignIn, signIn }
 
-class LoginPage extends StatefulWidget {
+class LoginPages extends StatefulWidget {
   @override
   _LoginPageState createState() => new _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPages> {
   Duration get loginTime => Duration(milliseconds: 2250);
   LoginStatus _loginStatus = LoginStatus.notSignIn;
   //String _url = 'http://173.212.208.69:3000';
-  String _url = 'http://10.0.2.2:3000';
-  //String _url = 'http://localhost:3000';
+    String _url = 'http://10.0.2.2:3000';
+ // String _url = 'http://localhost:3000';
   final myControllerUsers = TextEditingController();
   final myControllerPassword = TextEditingController();
 
@@ -79,11 +79,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Perform login
-  void validateAndSubmit() async {
+  void validateAndSubmit() {
     _user = myControllerUsers.text;
     _password = myControllerPassword.text;
     //   OperationUsuario.insertUsuarios();
-  //  setState(() {
+    setState(() async {
       _user.isEmpty ? _validate = true : _validate = false;
       _password.isEmpty ? _validate = true : _validate = false;
 
@@ -92,16 +92,13 @@ class _LoginPageState extends State<LoginPage> {
         print("busca el usuario en BD");
         if (myControllerUsers.text.isNotEmpty &&
             myControllerPassword.text.isNotEmpty) {
-          final user =  await OperationUsuario.getLogin(
+          final user = await OperationUsuario.getLogin(
               myControllerUsers.text, myControllerPassword.text);
           if (user != null) {
             print("RESULTADO el usuario en BD $user");
-          setState(() {
-            /* savePref(1, myControllerUsers.text, user[0]['nit'],
-                user[0]['id_tipo_doc_pe'], user[0]['id_tipo_doc_rc']); */
-                
+            savePref(1, myControllerUsers.text, user[0]['nit'],
+                user[0]['id_tipo_doc_pe'], user[0]['id_tipo_doc_rc']);
             _loginStatus = LoginStatus.signIn;
-            });
             showTopSnackBar(
               context,
               CustomSnackBar.info(message: "Bienvenido, OFFLINE"),
@@ -122,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       }
-   // });
+    });
   }
 
   Future<bool> hasNetwork() async {
@@ -161,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    //getUsuariosSincronizacion();
+    getUsuariosSincronizacion();
     getPref();
   }
 
@@ -238,6 +235,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  //login desde la DB
+
+  loginDB() async {
+    print("busca en la BD y valida el usuario");
+  }
   //visual
 
   @override
@@ -270,6 +272,10 @@ class _LoginPageState extends State<LoginPage> {
           height: 50.0,
           width: _size.width,
           child: new ElevatedButton(
+            //   elevation: 5.0,
+            //  shape: new RoundedRectangleBorder(
+            //    borderRadius: new BorderRadius.circular(25.0)),
+            // color: Color(0xff0091CE),
             child: Center(
               child: Text(
                 'Iniciar Sesión',
@@ -320,6 +326,7 @@ class _LoginPageState extends State<LoginPage> {
         },
         child: TextField(
           controller: controller,
+          // maxLength: maxLength,
           autofocus: true,
           style: TextStyle(fontSize: 16.5),
           obscureText: _isObscure,
@@ -381,7 +388,7 @@ class _LoginPageState extends State<LoginPage> {
                     Image(
                         image: AssetImage('assets/images/Logo version 1.png')),
                     Text(
-                      'Versión D-18-11-2022',
+                      'Versión D-18-11-2021',
                       style: TextStyle(
                           color: Color(0xff06538D),
                           fontSize: 14.0,

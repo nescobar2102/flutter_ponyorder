@@ -20,6 +20,8 @@ import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:sqflite/sqflite.dart';
+import '../../db/operationCliente.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -43,12 +45,12 @@ class _HomePageState extends State<HomePage> {
   bool isCheckedDV = false;
   bool isReadOnly = true;
   bool isOnline = true;
-
-  String _url = 'http://localhost:3000';
+  String _url = 'http://10.0.2.2:3000';
+ // String _url = 'http://localhost:3000';
   //data
   bool focus = false;
   late String _search = '@';
-  late int _count;
+  late int _count=0;
   late String id_tercero = ''; //la cliente del dataClient para hacer el pedido
   late String nombre_tercero = '';
   late String direccion_tercero = '';
@@ -108,11 +110,11 @@ class _HomePageState extends State<HomePage> {
     {"value": "76001", "label": "Cali"},
     {"value": "76016", "label": "Buenaventura"}
   ];
-  List<Map<String, dynamic>> _itemsBarrio = [
+/*   List<Map<String, dynamic>> _itemsBarrio = [
     {"value": "", "label": "Seleccione"},
     {"value": "76001001", "label": "Las acacias"},
     {"value": "76001002", "label": "Los Andes"}
-  ];
+  ]; */
 //nuevo pedido
   List<Map<String, dynamic>> _itemsFormaPago = [
     {"value": "", "label": "Seleccione"},
@@ -257,7 +259,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  late List<Map<String, dynamic>> _itemsDepartamento;
+  late List<Map<String, dynamic>> _itemsDepartamento=[];
   Future getItemDepartamento() async {
     final response = await http.get(Uri.parse("$_url/app_depto/$_nit"));
 
@@ -272,6 +274,33 @@ class _HomePageState extends State<HomePage> {
             .toList();
 
         print("object _itemsDepartamento   $_itemsDepartamento");
+      });
+    } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+    }
+  }
+
+  
+  late List<Map<String, dynamic>> _itemsBarrio=[];
+  Future getItemBarrio() async {
+    final response = await http.get(Uri.parse("$_url/app_barrio/$_nit"));
+
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      setState(() {
+        _itemsBarrio = (convert.jsonDecode(response.body)["data"] as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+
+        print("object _itemsBarrio   $_itemsBarrio");
       });
     } else {
       showTopSnackBar(
@@ -306,7 +335,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  late List<Map<String, dynamic>> _itemsMedioContacto;
+  late List<Map<String, dynamic>> _itemsMedioContacto=[];
   Future getItemMedioContacto() async {
     final response = await http.get(Uri.parse("$_url/app_medioContacto/$_nit"));
 
@@ -333,7 +362,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  late List<Map<String, dynamic>> _itemsZona;
+  late List<Map<String, dynamic>> _itemsZona=[];
   Future getItemZona() async {
     final response = await http.get(Uri.parse("$_url/app_zona/$_nit"));
 
@@ -377,26 +406,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-
-  Future getItemBarrio() async {
-    final response = await http.get(Uri.parse("$_url/app_barrio/$_nit"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      setState(() {});
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
-    }
-  }
+ 
 //fin data
 
   final myControllerSearch = TextEditingController();
@@ -405,25 +415,29 @@ class _HomePageState extends State<HomePage> {
       new GlobalKey<ScaffoldState>();
 
   Future<void> searchClient() async {
+     try {
+    print("buscar el cliente");
     _body = {
       'nit': _nit,
       'nombre': (_search.isNotEmpty && _search != '') ? _search : null,
     };
+       print("buscar el cliente----------- $_body");
     final response =
         await http.post(Uri.parse("$_url/clientes"), body: (_body));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _datClient = jsonResponse['data'];
+    print("------response $success");
       _count = jsonResponse['count'];
-      if (_count > 0) {
+    if (response.statusCode == 200 && success) {
+      _datClient = jsonResponse['data']; 
+     // if (_count > 0) {
         setState(() {
           _clientShow = true;
           _productosShow = false;
         });
-      }
+     // }
     } else {
       showTopSnackBar(
         context,
@@ -432,6 +446,14 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+      } catch (e) {
+        print("aerorroroor");
+    //  print(e.toString());
+    }
+     setState(() {
+          _clientShow = true;
+          _productosShow = false;
+        });
   }
 
   Future<void> saldoCartera(bool pedido) async {
@@ -444,7 +466,7 @@ class _HomePageState extends State<HomePage> {
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       setState(() {
-        _saldoCartera = data[0]['debito'].toString();
+        _saldoCartera = data[0]['debito'] != null ? data[0]['debito'].toString() : '0';
       });
       if (_value_automatico != '' && pedido) {
         _direccionClient = [];
@@ -499,11 +521,12 @@ class _HomePageState extends State<HomePage> {
           'nit': _nit,
           "id_tipo_empresa": _value_itemsClasification
         }));
-
+ 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
+     print('response crear cliente antes http: $msg $success ');
     if (response.statusCode == 200 && success) {
       print('response crear cliente http: $msg $success ');
       showDialog<String>(
@@ -610,7 +633,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  late List<Map<String, dynamic>> _direccionClient;
+  late List<Map<String, dynamic>> _direccionClient=[];
   Future<void> searchClientDireccion() async {
     _body = {
       'nit': _nit,
@@ -790,6 +813,13 @@ class _HomePageState extends State<HomePage> {
         _descuento = double.parse(jsonResponse['data'][0]['descuento_maximo']);
         print("El de mierdad precio precio $_precio $_itemSelect $_descuento");
       });
+    }else{
+         showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
     }
   }
 
@@ -1041,12 +1071,12 @@ class _HomePageState extends State<HomePage> {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic)),
-        SizedBox(height: 10.0),
-        for (var i = 0; i < _count; i++) ...[
-          _ItemClient('$_count', _datClient[i]),
-        ],
-        SizedBox(height: 30.0),
-        BtnForm(
+                SizedBox(height: 10.0),
+                for (var i = 0; i < _count; i++) ...[
+                  _ItemClient('$_count', _datClient[i]),
+                ],
+              SizedBox(height: 30.0),
+                BtnForm(
             text: 'Crear cliente',
             color: Color(0xff0894FD),
             callback: () => {
@@ -3197,14 +3227,14 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: 10),
-              _itemForm(context, 'Nombre', '$nombre_tercero', null, true),
+              _itemForm(context, 'Nombre', '$nombre_tercero', null, false),
               _itemForm(
                   context,
                   'Total cartera',
                   '\$ ' +
                       expresionRegular(double.parse(_saldoCartera.toString())),
                   null,
-                  true),
+                  false),
               SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
@@ -3681,66 +3711,7 @@ class _HomePageState extends State<HomePage> {
                           _clientShow = false;
                           _formShow = false;
                         });
-                        /* showDialog<String>(
-                          context: context,
-                          builder: (BuildContext context) => Dialog(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10.0))),
-                              child: Container(
-                                height: 283.0,
-                                width: _size.width * 0.7,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 20.0, vertical: 15.0),
-                                child: Column(
-                                  children: [
-                                    SizedBox(height: 20.0),
-                                    Image(
-                                      height: 90.0,
-                                      image: AssetImage(
-                                          'assets/images/icon-check.png'),
-                                    ),
-                                    SizedBox(height: 20.0),
-                                    Text(
-                                      'Creación de cliente exitosa',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          color: Color(0xff06538D),
-                                          fontSize: 22.0,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    SizedBox(height: 30.0),
-                                    Container(
-                                      width: _size.width,
-                                      height: 41.0,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(5.0),
-                                          color: Color(0xff0894FD)),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          borderRadius:
-                                              BorderRadius.circular(5.0),
-                                          child: Center(
-                                            child: Text(
-                                              'Aceptar',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w700),
-                                            ),
-                                          ),
-                                          onTap: () {
-                                            Navigator.pop(context);
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )),
-                        );*/
+                     
                       },
                     ),
                   ),
@@ -4141,14 +4112,14 @@ class _HomePageState extends State<HomePage> {
       mainAxisSpacing: 10,
       crossAxisCount: 2,
       children: <Widget>[
-        for (var i = 0; i < _countClasificacion; i++) ...[
+         for (var i = 0; i < _countClasificacion; i++) ...[
           InkWell(
             child: Container(
               decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('images/${data[i]['imagen']}.png'),
-                  fit: BoxFit.cover,
-                ),
+                image: DecorationImage(                    
+                image: AssetImage('assets/images/${data[i]['imagen']}.png'),
+                    fit: BoxFit.cover,
+                  ),
                 borderRadius: BorderRadius.all(
                   Radius.circular(20.0),
                 ),
@@ -4156,9 +4127,9 @@ class _HomePageState extends State<HomePage> {
             ),
             onTap: () {
               setState(() {
-                print(
-                    "Tapped on id_clasificacion${data[i]['id_clasificacion']}");
-                idClasificacion = '${data[i]['id_clasificacion']}';
+               print(
+                   "Tapped on id_clasificacion${data[i]['id_clasificacion']}");
+                idClasificacion = '${data[i]['id_clasificacion']}'; 
                 _id_padre = idClasificacion;
                 selectProductoNivel();
               });
@@ -4282,7 +4253,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text(expresionRegular(data['saldo_inventario']),
+                      child: Text(expresionRegular(double.parse(data['saldo_inventario'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -4420,7 +4391,7 @@ class _HomePageState extends State<HomePage> {
                             width: _size.width * 0.5 - 60,
                             child: Text(
                               'Unidades disponibles        ' +
-                                  expresionRegular(cantidad),
+                                  expresionRegular(double.parse(cantidad.toString())),
                               style: TextStyle(
                                   color: Color(0xff707070),
                                   fontSize: 15.0,
@@ -4432,20 +4403,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10.0),
-                /*  TextField(
-                    controller: myControllerCantidad,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                    decoration: InputDecoration(
-                      disabledBorder: UnderlineInputBorder(
-                          borderSide:
-                              BorderSide(width: 0.8, color: Color(0xff707070))),
-                      labelText: 'Cantidad',
-                      hintText: 'Ingrese cantidad',
-                    )) */
+                SizedBox(height: 10.0),              
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -5339,6 +5297,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> searchDocumentPend(data) async {
     final response =
+        //   await http.get(Uri.parse("$_url/cuentaportercero/$_nit/$id_tercero"));
         await http.get(
             Uri.parse("$_url/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
     var jsonResponse =
@@ -6262,7 +6221,6 @@ class _HomePageState extends State<HomePage> {
       "vencimiento": _dataDocumentPend[_isPagar]['vencimiento'],
       "id_sucursal": _dataDocumentPend[_isPagar]['id_sucursal'],
       "id_empresa": _dataDocumentPend[_isPagar]['id_empresa'],
-      "fecha":_dataDocumentPend[_isPagar]['fecha'],
       "monto_pagar": double.parse(abonoReciboUnico.toString()),
       "restante": restanteReciboUnico,
       "letras": _letras,
@@ -6440,9 +6398,8 @@ class _HomePageState extends State<HomePage> {
                     _documentosPagados[0]['id_sucursal'].toString(),
                 "id_tipo_doc_cruce": idReciboUser,
                 "numero_cruce": _value_automatico,
-                "fecha": _documentosPagados[0]['id_empresa'].toString(),
                 "fecha":
-                  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
                 "vencimiento":
                     '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
                 "debito": totalReciboPagado,
@@ -6480,9 +6437,8 @@ class _HomePageState extends State<HomePage> {
                       _documentosPagados[i]['id_sucursal'].toString(),
                   "id_tipo_doc_cruce": _documentosPagados[i]['tipo_doc'],
                   "numero_cruce": _documentosPagados[i]['numero'],
-                  "fecha": _documentosPagados[i]['fecha'].toString(),
-                //  "fecha":
-                    //  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+                  "fecha":
+                      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
                   "vencimiento": _documentosPagados[i]['vencimiento'],
                   "debito": '0',
                   "credito": _documentosPagados[i]['monto_pagar'],

@@ -1,34 +1,16 @@
 import 'package:sqflite/sqflite.dart';
-import 'dart:async';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart';
+
 
 import '../models/usuario.dart';
 
 class OperationUsuario {
-  static Future<Database> _openDB() async {
-    //GET THE PATH TO THE DIRECTORY FOR IOS AND ANDROID TO STORE DB
-    Directory directory = await getApplicationDocumentsDirectory();
-    String path = directory.path + "ponyOrder.db";
 
-    return openDatabase(
-      path,
-      onCreate: (db, version) {
-        // Run the CREATE TABLE statement on the database.
-        return db.execute(
-          'CREATE TABLE usuario(id INTEGER PRIMARY KEY, usuario TEXT, password INTEGER,nit TEXT,id_tipo_doc_pe TEXT,id_tipo_doc_rc TEXT)',
-        );
-        /*       return db.execute(
-        'CREATE TABLE foods(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, cookingEffect TEXT, category TEXT, commonLocations list<TEXT>, heartsRecovered INTEGER);'
-            'CREATE TABLE nonfoods(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT,category TEXT, commonLocations list<TEXT>, drops list<TEXT>);'
-            'CREATE TABLE equipments(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, attack INTEGER, category TEXT, commonLocations list<TEXT>, defense INTEGER);'
-            'CREATE TABLE materials(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, cookingEffect TEXT, category TEXT, commonLocations list<TEXT>, heartsRecovered INTEGER);'
-            'CREATE TABLE monsters(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, category TEXT, commonLocations list<TEXT>, drops list<TEXT>);'
-            'CREATE TABLE treasure(id INTEGER PRIMARY KEY, name TEXT,image TEXT, description TEXT, category TEXT, commonLocations list<TEXT>, drops list<TEXT>)',
-      ); */
-      },
-      version: 1,
-    );
+  static Future<Database> _openDB() async {
+     return  openDatabase(join(await getDatabasesPath(),'pony.db'),onCreate: (db,version){
+       return db.execute("CREATE TABLE usuario(id INTEGER PRIMARY KEY, usuario TEXT, password TEXT,nit TEXT,id_tipo_doc_pe TEXT,id_tipo_doc_rc TEXT)",
+       );
+     }, version: 1);
   }
 
   //insertar los usuarios
@@ -66,10 +48,25 @@ class OperationUsuario {
     Database database = await _openDB();
     final res = await database.rawQuery(
         "SELECT * FROM usuario WHERE usuario = '$usuario' and password = '$password'");
-/*     final res = await database.query('usuario',
-        columns: ['id','usuario','nit','id_tipo_doc_pe','id_tipo_doc_rc','nit' ],
-        where: '$usuario=?',
-        whereArgs: [usuario]); */
-    return res;
+    print("resultado de sql $res[0]['nit']");
+    if(res.length>0){
+      return res;
+    }else{
+      return null;
+    }
   }
+  static Future<void> insertUsuarios(Usuario usuario ) async {
+    print("INSERTA a validar el usuario a la BD $usuario");
+    Database database = await _openDB();
+    int id1 = await database.rawInsert( "INSERT INTO usuario (usuario,password,nit,id_tipo_doc_pe,id_tipo_doc_rc)"
+    "VALUES ('${usuario.usuario}', '${usuario.password}', '${usuario.nit}', '${usuario.id_tipo_doc_pe}', '${usuario.id_tipo_doc_rc}')");
+
+  }
+
+  static Future<void> deleteData( ) async {
+    print("se borran todos los usuarios");
+    Database database = await _openDB();
+    await database.rawDelete('DELETE FROM usuario');
+  }
+
 }
