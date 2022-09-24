@@ -158,7 +158,7 @@ class _LoginPageState extends State<LoginPages> {
   @override
   void initState() {
     super.initState();
-    getUsuariosSincronizacion();
+  //  getUsuariosSincronizacion();
     getPref();
   }
 

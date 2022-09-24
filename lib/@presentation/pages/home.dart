@@ -156,7 +156,7 @@ class _HomePageState extends State<HomePage> {
   List<dynamic> _addProductos = [];
   bool selectItem = false;
   final myControllerNroPedido = TextEditingController();
-  final myControllerDescuentos = TextEditingController();
+  final myControllerDescuentos = TextEditingController(text: "0");
   final myControllerObservacion = TextEditingController();
   final myControllerCantidad = TextEditingController();
   final myControllerOrdenCompra = TextEditingController();
@@ -527,7 +527,7 @@ class _HomePageState extends State<HomePage> {
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
      print('response crear cliente antes http: $msg $success ');
-    if (response.statusCode == 200 && success) {
+    if (response.statusCode == 201 && success) {
       print('response crear cliente http: $msg $success ');
       showDialog<String>(
         context: context,
@@ -1820,6 +1820,23 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
                   ),
                   onTap: () => Navigator.pushNamed(context, 'visiteds'),
+                ),
+              ),
+                Container(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                color: Color(0xfff4f4f4),
+                child: ListTile(
+                  minLeadingWidth: 20,
+                  leading: const Icon(
+                    Icons.remove_red_eye,
+                    color: Color(0xff767676),
+                    size: 28.0,
+                  ),
+                  title: Text(
+                    'Sincronizacion',
+                    style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
+                  ),
+                  onTap: () => Navigator.pushNamed(context, 'data'),
                 ),
               ),
               Container(
@@ -3807,8 +3824,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _ItemClient(hintText, data) {
-    print('-----------Howdy, ${data['nombre_completo']}!');
+  Widget _ItemClient(hintText, data) { 
+    final nombre =data['nombre_completo']   != '' ? data['nombre_completo']:data['nombre_sucursal'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -3822,7 +3839,7 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: Text(
-              '${data['nombre_completo']} (${data['nombre_sucursal']})',
+              '$nombre',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
@@ -4503,7 +4520,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 TextField(
                     controller: myControllerDescuentos,
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.number,                    
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly
                     ],
@@ -4539,7 +4556,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Padding(
                       padding: const EdgeInsets.all(4.0),
-                      child: OutlinedButton(
+                      child: ElevatedButton(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -4550,7 +4567,10 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               Text("Continuar")
-                            ],
+                            ],                         
+                          ), 
+                           style:  ButtonStyle(
+                            //backgroundColor: Colors.blue,
                           ),
                           onPressed: () {
                             _addProductoPedido(descripcion, idItem);
@@ -4940,7 +4960,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _addProductoPedido(
+  _addProductoPedido(   
     String descripcion,
     String idItem,
   ) {
@@ -4948,7 +4968,7 @@ class _HomePageState extends State<HomePage> {
       "descripcion": descripcion,
       "id_item": idItem,
       "precio": _precio,
-      "cantidad": double.parse(myControllerCantidad.text),
+      "cantidad": _cantidadProducto ==1 ? _cantidadProducto :double.parse(myControllerCantidad.text),
       "total_dcto": double.parse(myControllerDescuentos.text),
       "dcto": double.parse(myControllerDescuentos.text),
       "id_precio_item": _value_itemsListPrecio != ''

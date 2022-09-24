@@ -157,6 +157,6 @@ class Usuario {
   // each dog when using the print statement.
   @override
   String toString() {
-    return 'Usuario{id: $id, usuario: $usuario, password: $password}';
+    return 'Usuario{id: $id, usuario: $usuario, password: $password,id_tipo_doc_pe: $id_tipo_doc_pe,id_tipo_doc_rc: $id_tipo_doc_rc}';
   }
 }

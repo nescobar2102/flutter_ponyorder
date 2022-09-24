@@ -160,8 +160,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    super.initState();
-    //getUsuariosSincronizacion();
+    super.initState(); 
+    getUsuariosSincronizacion();
     getPref();
   }
 
@@ -177,17 +177,16 @@ class _LoginPageState extends State<LoginPage> {
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       print("la data que se obtiene de la api $data");
-       await  OperationUsuario.deleteData();
+      await  OperationUsuario.deleteData();
       for (int i = 0; i < data.length; i++) {
         final user = Usuario(id:i+1,usuario: data[i]['usuario'],
               password:  data[i]['clave'],
               nit:  data[i]['nit'],
               id_tipo_doc_pe:  data[i]['id_tipo_doc_pe'],
               id_tipo_doc_rc:  data[i]['id_tipo_doc_rc']);
-          print("manda a inserta usuariosssss $user");
+            print("manda a inserta usuariosssss $user");
             await OperationUsuario.insertUser(user) ;
-      }
-
+      } 
     } else {
       showTopSnackBar(
         context,

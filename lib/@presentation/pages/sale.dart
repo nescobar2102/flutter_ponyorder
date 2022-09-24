@@ -2,8 +2,7 @@ import 'package:pony_order/@presentation/components/inputCallback.dart';
 import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:flutter/material.dart';
-
-import 'package:intl/intl.dart' show DateFormat;
+ 
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
@@ -12,8 +11,9 @@ import 'package:http/http.dart' as http;
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
-
+import 'package:top_snackbar_flutter/top_snack_bar.dart'; 
+import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
+ 
 class SalePage extends StatefulWidget {
   @override
   State<SalePage> createState() => _SalePageState();
@@ -38,15 +38,24 @@ class _SalePageState extends State<SalePage> {
 
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
-
+  
+   late ValueNotifier<double> _valueNotifier;
   late TooltipBehavior _tooltip;
+
+  final centerTextStyle = const TextStyle(
+    fontSize: 64,
+    color: Colors.lightBlue,
+    fontWeight: FontWeight.bold,
+  );
 
   @override
   void initState() {
     _tooltip = TooltipBehavior(enable: false, format: 'point.x : point.y%'); 
-    _count = 0;
+    _count = 0; 
+     _valueNotifier = ValueNotifier(0.0);
     _fecha = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
     _loadDataUserLogin();
+    
     super.initState();
   }
 
@@ -57,10 +66,10 @@ class _SalePageState extends State<SalePage> {
   }
   Future searchBalance() async {
     final response =
-    await http.get(Uri.parse("$_url/balance_general_app/$id_vendedor/$_nit/$_fecha"));
+          await http.get(Uri.parse("$_url/balance_general_app/$id_vendedor/$_nit/$_fecha"));
 
     var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
@@ -70,7 +79,10 @@ class _SalePageState extends State<SalePage> {
            if(_datBalance[i]['tipo'] == 'MES'){
              total_cuota =  _datBalance[i]['total_cuota']!=null ?_datBalance[i]['total_cuota'] : 0;
              total_venta =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
-             porcentaje =  _datBalance[i]['balance_general']!=null ?_datBalance[i]['balance_general'] : 0;
+             porcentaje =  _datBalance[i]['balance_general']!=null ?_datBalance[i]['balance_general'] : 0.0;
+             
+              print("------porcentaje------$porcentaje ");
+         
            }
            if(_datBalance[i]['tipo'] == 'DIA_RECIBO'){
              total_recibo =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
@@ -103,7 +115,7 @@ class _SalePageState extends State<SalePage> {
     if (response.statusCode == 200 && success) {
       setState(() {
         _datSale = jsonResponse['data'];
-    //    print("*-----_datSale--- $_datSale");
+    print("*-----_datSale--- $_datSale");
         _count = jsonResponse['count'];
 
       });
@@ -130,9 +142,10 @@ class _SalePageState extends State<SalePage> {
       }
     });
   }
-
+ 
   List<DoughnutSeries<ChartSampleData, String>> _getDefaultDoughnutSeries(
       String radius) {
+    
     return <DoughnutSeries<ChartSampleData, String>>[
       DoughnutSeries<ChartSampleData, String>(
           radius: radius,
@@ -151,7 +164,7 @@ class _SalePageState extends State<SalePage> {
           dataLabelMapper: (ChartSampleData data, _) => data.text,
           dataLabelSettings: const DataLabelSettings(isVisible: true))
     ];
-  }
+  }  
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +260,7 @@ class _SalePageState extends State<SalePage> {
   }
 
   Widget _balance(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
+    final _size = MediaQuery.of(context).size; 
     return Column(
       children: [
         Container(
@@ -268,13 +281,38 @@ class _SalePageState extends State<SalePage> {
                     fontWeight: FontWeight.w700,
                     color: Color(0xff06538D)),
               ),
-              SfCircularChart(
-                // title: ChartTitle(text: 'Composition of ocean water'),
-                legend: Legend(
-                    isVisible: true, overflowMode: LegendItemOverflowMode.wrap),
-                series: _getDefaultDoughnutSeries('100%'),
-                tooltipBehavior: _tooltip,
-              ),
+                DashedCircularProgressBar.aspectRatio(                      
+                      aspectRatio: 1.25, // width ÷ height
+                      valueNotifier: _valueNotifier,
+                      progress: porcentaje,
+                      startAngle: 225,
+                      sweepAngle: 270,
+                      foregroundColor: Colors.blue,
+                      backgroundColor: const Color(0xffeeeeee),
+                      foregroundStrokeWidth: 15,
+                      backgroundStrokeWidth: 15,
+                      animation: true,
+                      seekSize: 6,
+                      seekColor: const Color(0xffeeeeee),
+                      child: Center(
+                        child: ValueListenableBuilder(
+                           valueListenable: _valueNotifier,
+                          builder: (_, double value, __) => Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${value.toInt()}%',
+                                 style: TextStyle( 
+                                  color: Colors.blue,
+                                  fontSize: 26.0,
+                                  fontWeight: FontWeight.w600
+                                ),  
+                              ),                      
+                            ],
+                          )
+                        ),
+                      ),
+                    ),           
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -428,7 +466,7 @@ class _SalePageState extends State<SalePage> {
   }
 
   Widget _balanceDetail(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
+    final _size = MediaQuery.of(context).size;  
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -443,7 +481,7 @@ class _SalePageState extends State<SalePage> {
           height: 10.0,
         ),
         Text(
-          'Se encontró el detalle de 4 productos',
+          'Se encontró el detalle de $_count productos',
           style: TextStyle(
               fontSize: 15.0,
               fontWeight: FontWeight.w400,
@@ -453,6 +491,8 @@ class _SalePageState extends State<SalePage> {
         SizedBox(
           height: 10.0,
         ),
+        
+         for (var i = 0; i < _count; i++) ...[          
         Container(
           width: _size.width,
           padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
@@ -469,7 +509,7 @@ class _SalePageState extends State<SalePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Aceite',
+                   '${_datSale[i]['nombre']}',
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w700,
@@ -499,7 +539,7 @@ class _SalePageState extends State<SalePage> {
                         width: 15.0,
                       ),
                       Text(
-                        '2.413.140',
+                        '\$ ' + expresionRegular(double.parse(_datSale[i]['cuota'].toString())),
                         style: TextStyle(
                             color: Color(0xff707070),
                             fontWeight: FontWeight.w500,
@@ -531,7 +571,7 @@ class _SalePageState extends State<SalePage> {
                         width: 15.0,
                       ),
                       Text(
-                        '1.903.140',
+                        '\$ ' + expresionRegular(double.parse(_datSale[i]['venta'].toString())),
                         style: TextStyle(
                             color: Color(0xff0091CE),
                             fontWeight: FontWeight.w500,
@@ -543,321 +583,47 @@ class _SalePageState extends State<SalePage> {
               ),
               SizedBox(
                 width: 100.0,
-                height: 100.0,
-                child: SfCircularChart(
-                  series: _getDefaultDoughnutSeries('100%'),
-                  tooltipBehavior: _tooltip,
-                ),
+                height: 100.0, 
+             child :   DashedCircularProgressBar.aspectRatio(                      
+                      aspectRatio: 2, // width ÷ height
+                      valueNotifier: ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
+                      progress:20,
+                      startAngle: 225,
+                      sweepAngle: 270,
+                      foregroundColor: Colors.blue,
+                      backgroundColor: const Color(0xffeeeeee),
+                      foregroundStrokeWidth: 15,
+                      backgroundStrokeWidth: 15,
+                      animation: true,
+                      seekSize: 6,
+                      seekColor: const Color(0xffeeeeee),
+                      child: Center(
+                        child: ValueListenableBuilder(
+                          valueListenable:  ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
+                          builder: (_, double value, __) => Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${value.toInt()}%',
+                                 style: TextStyle( 
+                                  color: Colors.blue,
+                                  fontSize: 26.0,
+                                  fontWeight: FontWeight.w600
+                                ),  
+                              ),                      
+                            ],
+                          )
+                        ),
+                      ),
+                    ),  
               ),
             ],
           ),
         ),
+      ],
         SizedBox(
           height: 10.0,
-        ),
-        Container(
-          width: _size.width,
-          padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
-          decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(0xffC7C7C7),
-              ),
-              borderRadius: BorderRadius.circular(8.0)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Aceite',
-                    style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xff06538D)),
-                  ),
-                  SizedBox(
-                    height: 12.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff707070),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Meta',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '2.413.140',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff0091CE),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Venta',
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '1.903.140',
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(
-                width: 100.0,
-                height: 100.0,
-                child: SfCircularChart(
-                  series: _getDefaultDoughnutSeries('100%'),
-                  tooltipBehavior: _tooltip,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 10.0,
-        ),
-        Container(
-          width: _size.width,
-          padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
-          decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(0xffC7C7C7),
-              ),
-              borderRadius: BorderRadius.circular(8.0)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Aceite',
-                    style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xff06538D)),
-                  ),
-                  SizedBox(
-                    height: 12.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff707070),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Meta',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '2.413.140',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff0091CE),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Venta',
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '1.903.140',
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(
-                width: 100.0,
-                height: 100.0,
-                child: SfCircularChart(
-                  series: _getDefaultDoughnutSeries('100%'),
-                  tooltipBehavior: _tooltip,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 10.0,
-        ),
-        Container(
-          width: _size.width,
-          padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
-          decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(0xffC7C7C7),
-              ),
-              borderRadius: BorderRadius.circular(8.0)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Aceite',
-                    style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xff06538D)),
-                  ),
-                  SizedBox(
-                    height: 12.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff707070),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Meta',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '2.413.140',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff0091CE),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Venta',
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '1.903.140',
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(
-                width: 100.0,
-                height: 100.0,
-                child: SfCircularChart(
-                  series: _getDefaultDoughnutSeries('100%'),
-                  tooltipBehavior: _tooltip,
-                ),
-              ),
-            ],
-          ),
-        )
+        ),      
       ],
     );
   }
@@ -1190,6 +956,23 @@ class _SalePageState extends State<SalePage> {
                     style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
                   ),
                   onTap: () => Navigator.pushNamed(context, 'visiteds'),
+                ),
+              ),
+                  Container(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                color: Color(0xfff4f4f4),
+                child: ListTile(
+                  minLeadingWidth: 20,
+                  leading: const Icon(
+                    Icons.remove_red_eye,
+                    color: Color(0xff767676),
+                    size: 28.0,
+                  ),
+                  title: Text(
+                    'Sincronizacion',
+                    style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
+                  ),
+                  onTap: () => Navigator.pushNamed(context, 'data'),
                 ),
               ),
               Container(

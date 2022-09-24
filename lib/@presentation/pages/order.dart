@@ -1081,6 +1081,23 @@ class _OrderPageState extends State<OrderPage> {
                   onTap: () => Navigator.pushNamed(context, 'visiteds'),
                 ),
               ),
+                  Container(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                color: Color(0xfff4f4f4),
+                child: ListTile(
+                  minLeadingWidth: 20,
+                  leading: const Icon(
+                    Icons.remove_red_eye,
+                    color: Color(0xff767676),
+                    size: 28.0,
+                  ),
+                  title: Text(
+                    'Sincronizacion',
+                    style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
+                  ),
+                  onTap: () => Navigator.pushNamed(context, 'data'),
+                ),
+              ),
               Container(
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),

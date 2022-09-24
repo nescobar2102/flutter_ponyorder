@@ -45,6 +45,7 @@ dependencies:
   top_snackbar_flutter: ^2.1.1
   intl: ^0.17.0
   syncfusion_flutter_datepicker: ^19.4.56
+  dashed_circular_progress_bar: ^0.0.4
 
 dev_dependencies:
   flutter_test:

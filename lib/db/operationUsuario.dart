@@ -26,9 +26,8 @@ class OperationUsuario {
     // Get a reference to the database.
     Database database = await _openDB();
     final List<Map<String, dynamic>> usuarioMap =
-        await database.query('usuario');
-
-    // Convert the List<Map<String, dynamic> into a List<Dog>.
+        await database.query('usuario'); 
+    
     return List.generate(usuarioMap.length, (i) {
       return Usuario(
         id: usuarioMap[i]['id'],
