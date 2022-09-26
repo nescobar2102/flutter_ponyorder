@@ -133,7 +133,8 @@ class Usuario {
   final String id_tipo_doc_pe;
 
   const Usuario(
-      {required this.id,
+      {
+         required this.id,
       required this.usuario,
       required this.password,
       required this.nit,

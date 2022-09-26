@@ -9,10 +9,10 @@ import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
-import 'package:sqflite/sqflite.dart';
-import '../../db/operationUsuario.dart';
-
+ 
+import '../../db/operationDB.dart';
 import '../../models/usuario.dart';
+import '../../models/sale.dart';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -82,23 +82,23 @@ class _LoginPageState extends State<LoginPage> {
   void validateAndSubmit() async {
     _user = myControllerUsers.text;
     _password = myControllerPassword.text;
-    //   OperationUsuario.insertUsuarios();
-  //  setState(() {
-      _user.isEmpty ? _validate = true : _validate = false;
-      _password.isEmpty ? _validate = true : _validate = false;
+ 
+    _user.isEmpty ? _validate = true : _validate = false;
+    _password.isEmpty ? _validate = true : _validate = false;
 
      // !_validate && isOnline ? await loginApi() : null;
       if (!_validate) {
+        _submitDialog(context);
         print("busca el usuario en BD");
         if (myControllerUsers.text.isNotEmpty &&
             myControllerPassword.text.isNotEmpty) {
-          final user =  await OperationUsuario.getLogin(
+          final user =  await OperationDB.getLogin(
               myControllerUsers.text, myControllerPassword.text);
           if (user != null) {
             print("RESULTADO el usuario en BD $user");
-          setState(() {
-            /* savePref(1, myControllerUsers.text, user[0]['nit'],
-                user[0]['id_tipo_doc_pe'], user[0]['id_tipo_doc_rc']); */
+           setState(() {
+            savePref(1, myControllerUsers.text, user[0]['nit'],
+                user[0]['id_tipo_doc_pe'], user[0]['id_tipo_doc_rc']); 
                 
             _loginStatus = LoginStatus.signIn;
             });
@@ -108,6 +108,7 @@ class _LoginPageState extends State<LoginPage> {
             );
             Navigator.pushNamed(context, 'home');
           } else {
+            Navigator.pop(context);
             showTopSnackBar(
               context,
               CustomSnackBar.error(message: "Credenciales inválidas"),
@@ -161,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState(); 
-    getUsuariosSincronizacion();
+     getUsuariosSincronizacion();    
     getPref();
   }
 
@@ -176,16 +177,20 @@ class _LoginPageState extends State<LoginPage> {
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
+      if(data.length > 0) {
       print("la data que se obtiene de la api $data");
-      await  OperationUsuario.deleteData();
+     await  OperationDB.deleteDataUsuario();
       for (int i = 0; i < data.length; i++) {
-        final user = Usuario(id:i+1,usuario: data[i]['usuario'],
-              password:  data[i]['clave'],
-              nit:  data[i]['nit'],
-              id_tipo_doc_pe:  data[i]['id_tipo_doc_pe'],
-              id_tipo_doc_rc:  data[i]['id_tipo_doc_rc']);
-            print("manda a inserta usuariosssss $user");
-            await OperationUsuario.insertUser(user) ;
+          final user = Usuario(id:i+1,usuario: data[i]['usuario'],
+                password:  data[i]['clave'],
+                nit:  data[i]['nit'],
+                id_tipo_doc_pe:  data[i]['id_tipo_doc_pe'],
+                id_tipo_doc_rc:  data[i]['id_tipo_doc_rc']);
+              print("manda a inserta usuariosssss $user");
+              await OperationDB.insertUser(user) ;
+        }
+      final allUsuarios=   await OperationDB.usuariosAll();
+      print("Allusuaruis $allUsuarios");
       } 
     } else {
       showTopSnackBar(
@@ -195,7 +200,49 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     }
+   // getCuotaVentaSincronizacion();
   }
+
+  /////api obtiene todos los registros de cuota venta de la bd de postgres
+  Future getCuotaVentaSincronizacion() async {
+    print("ingresa a la cuota venta");
+    final response =
+    await http.get(Uri.parse("$_url/cuotaventas_all"));
+    var jsonResponse =
+    convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      print("la data que se obtiene de la api $data");
+      if(data.length > 0) {
+            // await  OperationDB.deleteCuota();
+            for (int i = 0; i < data.length; i++) {
+              final sale = Sale(
+                venta: data[i]['venta'].toString(),
+                cuota:data[i]['cuota'].toString(),
+                id_linea: data[i]['id_linea'],
+                nombre: data[i]['nombre'],
+                nit:  data[i]['nit'],
+                id_vendedor:  data[i]['id_vendedor'],
+                id_suc_vendedor:  data[i]['id_suc_vendedor']);
+            print("manda a inserta cuota_Venta $sale");
+            await OperationDB.insertCuotaVenta(sale);
+          }  
+        final allSale =  await OperationDB.cuotaventaAll();
+          print("muestra todos los reistro de cuota venta  $allSale");
+        }     
+    } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+    }
+  }
+
+
   //Login desde apiRest
   Future<void> loginApi() async {
     _submitDialog(context);

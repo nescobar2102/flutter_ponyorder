@@ -13,7 +13,11 @@ import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart'; 
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
- 
+
+import 'package:sqflite/sqflite.dart';
+import '../../db/OperationDB.dart';
+import '../../models/sale.dart'; 
+
 class SalePage extends StatefulWidget {
   @override
   State<SalePage> createState() => _SalePageState();
@@ -32,6 +36,7 @@ class _SalePageState extends State<SalePage> {
   late int total_pedido =0;
   late int total_recibo = 0;
   double porcentaje = 0;
+
   List<dynamic> _datBalance = [];
   List<dynamic> _datSale = [];
   late String _fecha;
@@ -40,22 +45,15 @@ class _SalePageState extends State<SalePage> {
       new GlobalKey<ScaffoldState>();
   
    late ValueNotifier<double> _valueNotifier;
-  late TooltipBehavior _tooltip;
-
-  final centerTextStyle = const TextStyle(
-    fontSize: 64,
-    color: Colors.lightBlue,
-    fontWeight: FontWeight.bold,
-  );
-
+  
   @override
   void initState() {
-    _tooltip = TooltipBehavior(enable: false, format: 'point.x : point.y%'); 
+     
     _count = 0; 
      _valueNotifier = ValueNotifier(0.0);
     _fecha = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
-    _loadDataUserLogin();
-    
+    getCuotaVentaSincronizacion();
+    _loadDataUserLogin(); 
     super.initState();
   }
 
@@ -64,7 +62,47 @@ class _SalePageState extends State<SalePage> {
     String result = f.format(numero);
     return result;
   }
-  Future searchBalance() async {
+  
+  /////api obtiene todos los registros de cuota venta de la bd de postgres
+  Future getCuotaVentaSincronizacion() async {
+    print("ingresa a la cuota venta");
+    final response =
+    await http.get(Uri.parse("$_url/cuotaventas_all"));
+    var jsonResponse =
+    convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      print("la data que se obtiene de la api $data");
+      if(data.length > 0) {
+      await OperationDB.deleteCuota();
+            for (int i = 0; i < data.length; i++) {
+              final sale = Sale(
+                venta: data[i]['venta'].toString(),
+                cuota:data[i]['cuota'].toString(),
+                id_linea: data[i]['id_linea'],
+                nombre: data[i]['nombre'],
+                nit:  data[i]['nit'],
+                id_vendedor:  data[i]['id_vendedor'],
+                id_suc_vendedor:  data[i]['id_suc_vendedor']);
+            print("manda a inserta cuota_Venta $sale");
+            await OperationDB.insertCuotaVenta(sale);
+          }  
+          final allSale =  await OperationDB.cuotaventaAll();
+            print("muestra todos los registro de cuota venta  $allSale");
+          }     
+    } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: msg,
+        ),
+      );
+    }
+  }
+
+  Future searchBalanceApi() async {
     final response =
           await http.get(Uri.parse("$_url/balance_general_app/$id_vendedor/$_nit/$_fecha"));
 
@@ -79,10 +117,8 @@ class _SalePageState extends State<SalePage> {
            if(_datBalance[i]['tipo'] == 'MES'){
              total_cuota =  _datBalance[i]['total_cuota']!=null ?_datBalance[i]['total_cuota'] : 0;
              total_venta =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
-             porcentaje =  _datBalance[i]['balance_general']!=null ?_datBalance[i]['balance_general'] : 0.0;
-             
-              print("------porcentaje------$porcentaje ");
-         
+             porcentaje =  _datBalance[i]['balance_general']!=null ?_datBalance[i]['balance_general'] : 0.0;             
+              print("------porcentaje------$porcentaje ");         
            }
            if(_datBalance[i]['tipo'] == 'DIA_RECIBO'){
              total_recibo =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
@@ -92,7 +128,6 @@ class _SalePageState extends State<SalePage> {
            }
         }
         print("------resultado------$total_cuota $total_venta $total_recibo $total_pedido ");
-
       });
     } else {
       showTopSnackBar(
@@ -104,20 +139,17 @@ class _SalePageState extends State<SalePage> {
     }
   }
 
-  Future searchSale() async {
+  Future searchSaleApi() async {
     final response =
         await http.get(Uri.parse("$_url/cuota_venta_app/$id_vendedor/$_nit"));
-
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       setState(() {
-        _datSale = jsonResponse['data'];
-    print("*-----_datSale--- $_datSale");
+        _datSale = jsonResponse['data']; 
         _count = jsonResponse['count'];
-
       });
     } else {
       showTopSnackBar(
@@ -137,35 +169,12 @@ class _SalePageState extends State<SalePage> {
       id_vendedor = '16499706';
       print("el usuario es $_user $_nit");
       if (_nit != '') {
-        searchBalance();
-        searchSale();
+        searchBalanceApi();
+        searchSaleApi();
       }
     });
   }
- 
-  List<DoughnutSeries<ChartSampleData, String>> _getDefaultDoughnutSeries(
-      String radius) {
-    
-    return <DoughnutSeries<ChartSampleData, String>>[
-      DoughnutSeries<ChartSampleData, String>(
-          radius: radius,
-          explode: true,
-          explodeOffset: '10%',
-          dataSource: <ChartSampleData>[
-            ChartSampleData(
-                x: 'Ventas', y: 55, text: '55%', pointColor: Color(0xff0894FD)),
-            ChartSampleData(
-                x: 'Meta', y: 45, text: '45%', pointColor: Color(0xffBCBBBB)),
-          ],
-          name: 'Income',
-          pointColorMapper: (ChartSampleData data, _) => data.pointColor,
-          xValueMapper: (ChartSampleData data, _) => data.x as String,
-          yValueMapper: (ChartSampleData data, _) => data.y,
-          dataLabelMapper: (ChartSampleData data, _) => data.text,
-          dataLabelSettings: const DataLabelSettings(isVisible: true))
-    ];
-  }  
-
+  
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
@@ -620,10 +629,10 @@ class _SalePageState extends State<SalePage> {
             ],
           ),
         ),
-      ],
-        SizedBox(
+       SizedBox(
           height: 10.0,
-        ),      
+        ), 
+      ],            
       ],
     );
   }

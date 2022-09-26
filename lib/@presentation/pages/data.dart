@@ -10,7 +10,7 @@ import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 import 'package:sqflite/sqflite.dart';
-import '../../db/operationUsuario.dart';
+import '../../db/operationDB.dart';
 
 import '../../models/usuario.dart';
 
@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPages> {
         print("busca el usuario en BD");
         if (myControllerUsers.text.isNotEmpty &&
             myControllerPassword.text.isNotEmpty) {
-          final user = await OperationUsuario.getLogin(
+          final user = await OperationDB.getLogin(
               myControllerUsers.text, myControllerPassword.text);
           if (user != null) {
             print("RESULTADO el usuario en BD $user");
@@ -174,7 +174,7 @@ class _LoginPageState extends State<LoginPages> {
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       print("la data que se obtiene de la api $data");
-       await  OperationUsuario.deleteData();
+       await  OperationDB.deleteDataUsuario();
       for (int i = 0; i < data.length; i++) {
         final user = Usuario(id:i+1,usuario: data[i]['usuario'],
               password:  data[i]['clave'],
@@ -182,7 +182,7 @@ class _LoginPageState extends State<LoginPages> {
               id_tipo_doc_pe:  data[i]['id_tipo_doc_pe'],
               id_tipo_doc_rc:  data[i]['id_tipo_doc_rc']);
           print("manda a inserta usuariosssss $user");
-            await OperationUsuario.insertUser(user) ;
+            await OperationDB.insertUser(user) ;
       }
 
     } else {

@@ -1,31 +1,85 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../models/cliente.dart';
 
-class OperationCliente {
 
+import '../models/usuario.dart';
+import '../models/cliente.dart'; 
+import '../models/sale.dart';
+
+class OperationDB {
+
+static Database? _database;
+
+      Future <Database> get database async{
+          return _database ??= await _openDB();
+      }
   static Future<Database> _openDB() async {
-    var sql = "CREATE TABLE IF NOT EXISTS tercero  (id_tercero TEXT,  id_sucursal_tercero INTEGER,"
-        "id_tipo_identificacion TEXT,dv TEXT , nombre TEXT,direccion TEXT,id_pais TEXT,id_depto TEXT,id_ciudad TEXT,"
-        "id_barrio TEXT,telefono TEXT,id_actividad TEXT,id_tipo_empresa TEXT,cliente TEXT,fecha_creacion TEXT,"
-        "nombre_sucursal TEXT,primer_apellido TEXT,segundo_apellido TEXT, primer_nombre TEXT,segundo_nombre TEXT,"
-        "flag_persona_nat TEXT, estado_tercero TEXT,vendedor TEXT,id_lista_precio TEXT,id_forma_pago TEXT,usuario TEXT,"
-        "flag_enviado TEXT,e_mail TEXT,telefono_celular TEXT,e_mail_fe TEXT,nit TEXT);"
-        "CREATE TABLE IF NOT EXISTS  tercero_cliente( id_tercero TEXT,   id_sucursal_tercero INTEGER  ,   id_forma_pago TEXT,"
-          "id_precio_item TEXT,  id_vendedor TEXT,   id_suc_vendedor INTEGER, id_medio_contacto TEXT, id_zona character TEXT,"
-          "flag_exento_iva TEXT,  dia_cierre INTEGER,    id_impuesto_reteiva TEXT,  id_agente_reteiva TEXT,id_impuesto_reteica TEXT,"
-              " id_agente_reteica TEXT,  id_impuesto_retefuente TEXT, id_agente_retefuente TEXT,  id_agente_retecree TEXT,"
-          "id_impuesto_retecree TEXT,  id_tamanno INTEGER,  limite_credito TEXT,  dias_gracia TEXT,flag_cartera_vencida  TEXT,"
-          "dcto_cliente TEXT, dcto_adicional TEXT, numero_facturas_vencidas TEXT,  nit TEXT);"
-        "CREATE TABLE IF NOT EXISTS tercero_direccion(   id_tercero TEXT,  id_sucursal_tercero INTEGER,   id_direccion  TEXT, direccion TEXT,"
-          "telefono  TEXT,  id_pais  TEXT,  id_ciudad  TEXT,  id_depto TEXT,  tipo_direccion  TEXT,nit TEXT);";
-
-         return  openDatabase(join(await getDatabasesPath(),'pony.db'),onCreate: (db,version){
-           return db.execute(sql);
-      });
+ 
+       const tableUsuario = """
+            CREATE TABLE usuario(id INTEGER PRIMARY KEY, usuario TEXT, password TEXT,nit TEXT,id_tipo_doc_pe TEXT,id_tipo_doc_rc TEXT)
+      ;""";
+           const tableCuotaVenta = """
+            CREATE TABLE  cuota_venta( id INTEGER PRIMARY KEY AUTOINCREMENT, venta TEXT, cuota TEXT, id_linea TEXT, nombre TEXT, nit TEXT,id_vendedor TEXT,id_suc_vendedor INTEGER)
+      ;""";
+ 
+  
+     return await  openDatabase(join(await getDatabasesPath(),'pony.db'),onCreate: (db,version) async {
+    //   return db.execute("CREATE TABLE usuario(id INTEGER PRIMARY KEY, usuario TEXT, password TEXT,nit TEXT,id_tipo_doc_pe TEXT,id_tipo_doc_rc TEXT)",
+        await db.execute(tableUsuario); 
+        await db.execute(tableCuotaVenta); 
+        print("crearon tablas");
+     }, version: 3);
   }
 
+  //insertar los usuarios
+  static Future<void> insertUser(Usuario usuario) async {
+    // Get a reference to the database.
+    Database database = await _openDB();
+    // In this case, replace any previous data.
+    await database.insert('usuario', usuario.toMap());
+  }
 
+  // Obtiene todos los usuarios
+  static Future<List<Usuario>> usuariosAll() async {
+    // Get a reference to the database.
+    Database database = await _openDB();
+    final List<Map<String, dynamic>> usuarioMap =
+        await database.query('usuario'); 
+    
+    return List.generate(usuarioMap.length, (i) {
+      return Usuario(
+        id: usuarioMap[i]['id'],
+        usuario: usuarioMap[i]['usuario'],
+        password: usuarioMap[i]['password'],
+        nit: usuarioMap[i]['nit'],
+        id_tipo_doc_pe: usuarioMap[i]['id_tipo_doc_pe'],
+        id_tipo_doc_rc: usuarioMap[i]['id_tipo_doc_rc'],
+      );
+    });
+  }
+  //GET THE NO:OF NOTES
+
+  /// Simple query with sqflite helper
+  static Future getLogin(String usuario, String password) async {
+    print("entra a validar el usuario a la BD");
+    Database database = await _openDB();
+    final res = await database.rawQuery(
+        "SELECT * FROM usuario WHERE usuario = '$usuario' and password = '$password'");
+    print("resultado de sql $res[0]['nit']");
+    if(res.length>0){
+      return res;
+    }else{
+      return null;
+    }
+  }
+  
+  static Future<void> deleteDataUsuario( ) async {
+    print("se borran todos los usuarios");
+    Database database = await _openDB();
+    await database.rawDelete('DELETE FROM usuario');
+  }
+
+  //seccion de tercero cliente con 
 
   static Future getClient(String nit) async {
     print("entra a validar el usuario a la BD");
@@ -49,6 +103,7 @@ class OperationCliente {
       return null;
     }
   }
+
   static Future<void> insertCliente( Cliente cliente ) async {
     print("INSERTA a validar el usuario a la BD $cliente");
     Database database = await _openDB(); 
@@ -81,4 +136,41 @@ class OperationCliente {
       print("insert de tercero direccion$id4");
  
   }
+///fin de seccion tercero cliente
+ 
+////// inicio seccion de cuota de venta 
+ 
+  //insertar las cuotas de venta
+  static Future<void> insertCuotaVenta(Sale sale) async { 
+    Database database = await _openDB(); 
+    await database.insert('cuota_venta', sale.toMap());
+  }
+
+  // Obtiene todos las cuota venta
+  static Future<List<Sale>> cuotaventaAll() async {
+    // Get a reference to the database.
+    Database database = await _openDB();
+    final List<Map<String, dynamic>> cuotaMap =
+        await database.query('cuota_venta'); 
+    
+    return List.generate(cuotaMap.length, (i) {
+      return Sale(        
+        venta: cuotaMap[i]['venta'],
+        cuota: cuotaMap[i]['cuota'],
+        id_linea: cuotaMap[i]['id_linea'],
+        nombre: cuotaMap[i]['nombre'],
+        nit: cuotaMap[i]['nit'],
+        id_vendedor: cuotaMap[i]['id_vendedor'],
+        id_suc_vendedor: cuotaMap[i]['id_suc_vendedor'],
+      );
+    });
+  }  
+ 
+  static Future<void> deleteCuota() async {
+    print("se borran todos datos de cuota");
+    Database database = await _openDB();
+    await database.rawDelete('DELETE  FROM cuota_venta');
+  }
+/// fin cuota de venta 
+
 }
