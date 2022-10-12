@@ -47,8 +47,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   Duration get loginTime => Duration(milliseconds: 2250);
   LoginStatus _loginStatus = LoginStatus.notSignIn;
-  //String _url = 'http://173.212.208.69:3000';
-  String _url = 'http://10.0.2.2:3000';
+    String _url = 'http://178.62.80.103:5000';
+ // String _url = 'http://10.0.2.2:3000';
   //String _url = 'http://localhost:3000';
   final myControllerUsers = TextEditingController();
   final myControllerPassword = TextEditingController();
@@ -162,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState(); 
-     getUsuariosSincronizacion();    
+    getUsuariosSincronizacion();    
     getPref();
   }
 
@@ -202,46 +202,7 @@ class _LoginPageState extends State<LoginPage> {
     }
    // getCuotaVentaSincronizacion();
   }
-
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
-  Future getCuotaVentaSincronizacion() async {
-    print("ingresa a la cuota venta");
-    final response =
-    await http.get(Uri.parse("$_url/cuotaventas_all"));
-    var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      print("la data que se obtiene de la api $data");
-      if(data.length > 0) {
-            // await  OperationDB.deleteCuota();
-            for (int i = 0; i < data.length; i++) {
-              final sale = Sale(
-                venta: data[i]['venta'].toString(),
-                cuota:data[i]['cuota'].toString(),
-                id_linea: data[i]['id_linea'],
-                nombre: data[i]['nombre'],
-                nit:  data[i]['nit'],
-                id_vendedor:  data[i]['id_vendedor'],
-                id_suc_vendedor:  data[i]['id_suc_vendedor']);
-            print("manda a inserta cuota_Venta $sale");
-            await OperationDB.insertCuotaVenta(sale);
-          }  
-        final allSale =  await OperationDB.cuotaventaAll();
-          print("muestra todos los reistro de cuota venta  $allSale");
-        }     
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
-    }
-  }
-
+ 
 
   //Login desde apiRest
   Future<void> loginApi() async {

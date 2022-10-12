@@ -24,9 +24,8 @@ class SalePage extends StatefulWidget {
 }
 
 class _SalePageState extends State<SalePage> {
- // String _url = 'http://173.212.208.69:3000';
- String _url = 'http://10.0.2.2:3000';
- //   String _url = 'http://localhost:3000';
+    String _url = 'http://178.62.80.103:5000';
+ // String _url = 'http://10.0.2.2:3000';
   late String id_vendedor; 
   late int _count;
   String _user = '';
@@ -35,7 +34,7 @@ class _SalePageState extends State<SalePage> {
   late int total_venta = 0;
   late int total_pedido =0;
   late int total_recibo = 0;
-  double porcentaje = 0;
+  late int porcentaje = 0;
 
   List<dynamic> _datBalance = [];
   List<dynamic> _datSale = [];
@@ -51,8 +50,7 @@ class _SalePageState extends State<SalePage> {
      
     _count = 0; 
      _valueNotifier = ValueNotifier(0.0);
-    _fecha = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
-    getCuotaVentaSincronizacion();
+    _fecha = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();    
     _loadDataUserLogin(); 
     super.initState();
   }
@@ -61,64 +59,17 @@ class _SalePageState extends State<SalePage> {
     NumberFormat f = new NumberFormat("###,###,###.00#", "es_US");
     String result = f.format(numero);
     return result;
-  }
+  } 
   
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
-  Future getCuotaVentaSincronizacion() async {
-    print("ingresa a la cuota venta");
-    final response =
-    await http.get(Uri.parse("$_url/cuotaventas_all"));
-    var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      print("la data que se obtiene de la api $data");
-      if(data.length > 0) {
-      await OperationDB.deleteCuota();
-            for (int i = 0; i < data.length; i++) {
-              final sale = Sale(
-                venta: data[i]['venta'].toString(),
-                cuota:data[i]['cuota'].toString(),
-                id_linea: data[i]['id_linea'],
-                nombre: data[i]['nombre'],
-                nit:  data[i]['nit'],
-                id_vendedor:  data[i]['id_vendedor'],
-                id_suc_vendedor:  data[i]['id_suc_vendedor']);
-            print("manda a inserta cuota_Venta $sale");
-            await OperationDB.insertCuotaVenta(sale);
-          }  
-          final allSale =  await OperationDB.cuotaventaAll();
-            print("muestra todos los registro de cuota venta  $allSale");
-          }     
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
-    }
-  }
-
   Future searchBalanceApi() async {
-    final response =
-          await http.get(Uri.parse("$_url/balance_general_app/$id_vendedor/$_nit/$_fecha"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      setState(() {
-        _datBalance = jsonResponse['data'];
+     _datBalance = await  OperationDB.getCBalance(_nit,id_vendedor,_fecha);      
+      if(_datBalance.isNotEmpty) {
         for (int i = 0; i < _datBalance.length; i++) {
            if(_datBalance[i]['tipo'] == 'MES'){
              total_cuota =  _datBalance[i]['total_cuota']!=null ?_datBalance[i]['total_cuota'] : 0;
              total_venta =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
-             porcentaje =  _datBalance[i]['balance_general']!=null ?_datBalance[i]['balance_general'] : 0.0;             
-              print("------porcentaje------$porcentaje ");         
+             porcentaje =  _datBalance[i]['balance_general']!=null ?_datBalance[i]['balance_general'] : 0;            
+                     
            }
            if(_datBalance[i]['tipo'] == 'DIA_RECIBO'){
              total_recibo =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
@@ -127,40 +78,35 @@ class _SalePageState extends State<SalePage> {
              total_pedido = _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
            }
         }
-        print("------resultado------$total_cuota $total_venta $total_recibo $total_pedido ");
-      });
-    } else {
+      }
+     else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "Error getCBalance ",
         ),
       );
     }
   }
+ 
 
   Future searchSaleApi() async {
-    final response =
-        await http.get(Uri.parse("$_url/cuota_venta_app/$id_vendedor/$_nit"));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      setState(() {
-        _datSale = jsonResponse['data']; 
-        _count = jsonResponse['count'];
-      });
-    } else {
+      final allSale = await  OperationDB.getCuotaValue(_nit,id_vendedor);   
+        if(allSale.isNotEmpty) {
+        setState(() {
+           _datSale = allSale;
+          _count = _datSale.length; 
+     });
+      } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "Error allSale getCuotaValue",
         ),
       );
     }
   }
-
+ 
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -170,8 +116,8 @@ class _SalePageState extends State<SalePage> {
       print("el usuario es $_user $_nit");
       if (_nit != '') {
         searchBalanceApi();
-        searchSaleApi();
-      }
+        searchSaleApi();             
+     }   
     });
   }
   
@@ -293,7 +239,7 @@ class _SalePageState extends State<SalePage> {
                 DashedCircularProgressBar.aspectRatio(                      
                       aspectRatio: 1.25, // width ÷ height
                       valueNotifier: _valueNotifier,
-                      progress: porcentaje,
+                      progress: double.parse(porcentaje.toString()),
                       startAngle: 225,
                       sweepAngle: 270,
                       foregroundColor: Colors.blue,
@@ -313,7 +259,7 @@ class _SalePageState extends State<SalePage> {
                                 '${value.toInt()}%',
                                  style: TextStyle( 
                                   color: Colors.blue,
-                                  fontSize: 26.0,
+                                  fontSize: 50.0,
                                   fontWeight: FontWeight.w600
                                 ),  
                               ),                      
@@ -596,7 +542,7 @@ class _SalePageState extends State<SalePage> {
              child :   DashedCircularProgressBar.aspectRatio(                      
                       aspectRatio: 2, // width ÷ height
                       valueNotifier: ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
-                      progress:20,
+                      progress:double.parse(_datSale[i]['porcentaje'].toString()),
                       startAngle: 225,
                       sweepAngle: 270,
                       foregroundColor: Colors.blue,
@@ -1008,82 +954,4 @@ class _SalePageState extends State<SalePage> {
     );
   }
 }
-
-class ChartSampleData {
-  /// Holds the datapoint values like x, y, etc.,
-  ChartSampleData(
-      {this.x,
-      this.y,
-      this.xValue,
-      this.yValue,
-      this.secondSeriesYValue,
-      this.thirdSeriesYValue,
-      this.pointColor,
-      this.size,
-      this.text,
-      this.open,
-      this.close,
-      this.low,
-      this.high,
-      this.volume});
-
-  /// Holds x value of the datapoint
-  final dynamic x;
-
-  /// Holds y value of the datapoint
-  final num? y;
-
-  /// Holds x value of the datapoint
-  final dynamic xValue;
-
-  /// Holds y value of the datapoint
-  final num? yValue;
-
-  /// Holds y value of the datapoint(for 2nd series)
-  final num? secondSeriesYValue;
-
-  /// Holds y value of the datapoint(for 3nd series)
-  final num? thirdSeriesYValue;
-
-  /// Holds point color of the datapoint
-  final Color? pointColor;
-
-  /// Holds size of the datapoint
-  final num? size;
-
-  /// Holds datalabel/text value mapper of the datapoint
-  final String? text;
-
-  /// Holds open value of the datapoint
-  final num? open;
-
-  /// Holds close value of the datapoint
-  final num? close;
-
-  /// Holds low value of the datapoint
-  final num? low;
-
-  /// Holds high value of the datapoint
-  final num? high;
-
-  /// Holds open value of the datapoint
-  final num? volume;
-}
-
-/// Chart Sales Data
-class SalesData {
-  /// Holds the datapoint values like x, y, etc.,
-  SalesData(this.x, this.y, [this.date, this.color]);
-
-  /// X value of the data point
-  final dynamic x;
-
-  /// y value of the data point
-  final dynamic y;
-
-  /// color value of the data point
-  final Color? color;
-
-  /// Date time value of the data point
-  final DateTime? date;
-}
+ 

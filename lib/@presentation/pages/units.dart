@@ -1,11 +1,8 @@
-import 'package:pony_order/@presentation/components/btnForm.dart';
 import 'package:pony_order/@presentation/components/inputCallback.dart';
 import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
-import 'package:pony_order/@presentation/components/itemCategoryOrderHistoryRecibo.dart';
-import 'package:pony_order/@presentation/components/itemClient.dart';
+import 'package:pony_order/@presentation/components/itemCategoryOrderHistoryRecibo.dart'; 
 import 'package:pony_order/@presentation/components/itemProductOrder.dart';
-import 'package:pony_order/@presentation/components/itemProductOrderHistory.dart';
-//import 'package:app_pony_order/@presentation/components/itemUnits.dart';
+import 'package:pony_order/@presentation/components/itemProductOrderHistory.dart'; 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -14,11 +11,11 @@ import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
-import 'dart:io';
+ 
 
 class UnitsPage extends StatefulWidget {
   @override
@@ -26,22 +23,19 @@ class UnitsPage extends StatefulWidget {
 }
 
 class _UnitsPageState extends State<UnitsPage> {
-  bool _clientShow = false;
-  bool _formShow = false;
-  bool _formOrderShow = false;
-  bool _formRecipeShow = false;
-  bool _formHistoryShow = false;
-  bool _checkedCartera = true;
-  bool _checkedPedido = false;
-  bool _checkedRecibo = false;
-  bool? _checked = false;
+  bool _clientShow = false;  
+  late int _checked =0;
 
   bool isOnline = true;
   bool _isLoading = false;
-  String _nit = '900054835';
-  String _url = 'http://10.0.2.2:3000';
- // String _url = 'http://localhost:3000';
+ 
+    String _url = 'http://178.62.80.103:5000';
+ // String _url = 'http://10.0.2.2:3000';
   bool focus = false;
+  //usuario login
+  String _user = '';
+  String _nit = ''; 
+
 
   late int _countClasificacion;
   late Object _body;
@@ -60,7 +54,37 @@ class _UnitsPageState extends State<UnitsPage> {
   void initState() {
     super.initState();
     print("----------iniciando");
-    searchClasificacionProductos();
+     _loadDataUserLogin();   
+  }
+
+
+  _loadDataUserLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _user = (prefs.getString('user') ?? '');
+      _nit = (prefs.getString('nit') ?? '');
+      print("el usuario es $_user $_nit");
+      if (_nit != '') {
+         searchClasificacionProductos();
+      }
+    });
+  }
+  
+  Future<Null> _submitDialog(BuildContext context) async {
+    return await showDialog<Null>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            elevation: 0.0,
+            backgroundColor: Colors.transparent,
+            children: <Widget>[
+              Center(
+                child: CircularProgressIndicator(),
+              )
+            ],
+          );
+        });
   }
 
   Future<void> searchClasificacionProductos() async {
@@ -92,15 +116,12 @@ class _UnitsPageState extends State<UnitsPage> {
         }
       });
     } else {
-         showTopSnackBar(
+       showTopSnackBar(
         context,
         CustomSnackBar.error(
           message: msg,
         ),
-      );
-   /*    print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg")));*/
+      );  
     } 
   }
 
@@ -108,7 +129,7 @@ class _UnitsPageState extends State<UnitsPage> {
     print("searchProductos------------------------------ $idClasificacion ");
     _body = {
       'nit': _nit,
-      'id_clasificacion': '$idClasificacion',
+      'id_clasificacion': idClasificacion,
       'descripcion': (_searchProducto.isNotEmpty && _searchProducto != '')
           ? _searchProducto
           : '@',
@@ -123,58 +144,30 @@ class _UnitsPageState extends State<UnitsPage> {
       _datProductos = jsonResponse['data'];
       _countProductos = jsonResponse['count'];
       setState(() {
-        if (_countProductos > 0) {
+        if (_datProductos.isNotEmpty) {
           print("mosrtart los productos $_datProductos");
           _clientShow = true;
-          _clientShow ? _client(context, _datProductos) : Container();
-        }
+          _clientShow ? _client(context, _datProductos) : Container();         
+        } 
       });
-    } else {
-   /*    print(
-          "Wronggooooooooooooooooooooooooooo Wronggooooooooooooooooooooooooooo");
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg"))); */
+    } else {    
+       setState(() { 
+      _countProductos = 0;
+      _datProductos = [];  
+          });
      showTopSnackBar(
         context,
         CustomSnackBar.error(
           message: msg,
         ),
-      );
+      );    
     }
+    
   }
-
-  /// This implementation is just to simulate a load data behavior
-  /// from a data base sqlite or from a API
-  ///
-  /////api
-  Future getItemTypeIdentication() async {
-    //calisifacionde item
-    final response =
-        await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-
-      print("object object $data");
-    } else {
-       showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
-   /*    print("Wronggooooooooooooooooooooooooooo en la apli intente de nuevo");
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("$msg"))); */
-    }
-  }
-
+ 
   // Perform login
   void validateAndSubmit() {
+ 
     print('Entrando a buscar productos con la clasificacion $idClasificacion');
     _searchProducto = myControllerSearch.text;
     setState(() {
@@ -258,12 +251,7 @@ class _UnitsPageState extends State<UnitsPage> {
                           horizontal: 20.0, vertical: 15.0),
                       child: Column(
                         children: [
-                          _formShow ||
-                                  _formOrderShow ||
-                                  _formRecipeShow ||
-                                  _formHistoryShow
-                              ? Container()
-                              : Column(
+                           Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
@@ -287,13 +275,7 @@ class _UnitsPageState extends State<UnitsPage> {
                                   ],
                                 ),
                           SizedBox(height: 10.0),
-                          _clientShow ? _client(context, null) : Container(),
-                          _formShow ? _form(context) : Container(),
-                          _formOrderShow ? _formOrder(context) : Container(),
-                          _formRecipeShow ? _formRecipe(context) : Container(),
-                          _formHistoryShow
-                              ? _formHistory(context)
-                              : Container(),
+                          _clientShow ? _client(context, null) : Container(),  
                         ],
                       ),
                     ),
@@ -420,11 +402,12 @@ class _UnitsPageState extends State<UnitsPage> {
                   height: 40.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6.0),
-                      color: i == 0 ? Color(0xff06538D) : Color(0xff0894FD)),
+                      color: i == _checked? Color(0xff06538D) : Color(0xff0894FD)),
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(6.0),
+                      
                       child: Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 15.0),
@@ -439,6 +422,7 @@ class _UnitsPageState extends State<UnitsPage> {
                       ),
                       onTap: () {
                         setState(() {
+                          _checked = i;
                           idClasificacion =
                               '${_datClasificacionProductos[i]['id_clasificacion']}';
                           print(
@@ -471,9 +455,7 @@ class _UnitsPageState extends State<UnitsPage> {
               context,
               '${_datProductos[i]['id_item']}',
               '${_datProductos[i]['descripcion']}',
-              '${_datProductos[i]['saldo_inventario']} - UND '),
-
-          //   '${_datProductos[i]['saldo_inventario']} - UND ${_datProductos[i]['id_unidad_compra']}'),
+              '${_datProductos[i]['saldo_inventario']} - UND '), 
         ],
       ],
     );
@@ -889,1391 +871,6 @@ class _UnitsPageState extends State<UnitsPage> {
       ),
     );
   }
-
-  Widget _formHistory(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return Container(
-      width: _size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Visualice el historial del cliente',
-            style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Color(0xff06538D)),
-          ),
-          SizedBox(
-            height: 15.0,
-          ),
-          Text(
-            'Jiménez Pérez Juan Pablo',
-            style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Color(0xff0894FD)),
-          ),
-          SizedBox(
-            height: 20.0,
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
-            decoration: BoxDecoration(
-                color: Color(0xffE8E8E8),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(color: Color(0xffC7C7C7), width: 1.0)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.assignment_ind_rounded,
-                              color: Color(0xff707070), size: 20.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Identificación',
-                                style: TextStyle(
-                                    color: Color(0xff707070),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('123456789',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.location_on,
-                              color: Color(0xff707070), size: 20.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Dirección',
-                                style: TextStyle(
-                                    color: Color(0xff707070),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('Cr 74 # 37 - 38',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.phone,
-                              color: Color(0xff707070), size: 20.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Teléfono',
-                                style: TextStyle(
-                                    color: Color(0xff707070),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('7661231231',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10.0),
-          SizedBox(
-            width: _size.width,
-            height: 40.0,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                _btnHistory(context, 'Cartera',
-                    _checkedCartera ? Color(0xff06538D) : Color(0xff0894FD),
-                    () {
-                  setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
-                  });
-                }),
-                SizedBox(
-                  width: 8.0,
-                ),
-                _btnHistory(context, 'Pedido',
-                    _checkedPedido ? Color(0xff06538D) : Color(0xff0894FD), () {
-                  setState(() {
-                    _checkedCartera = false;
-                    _checkedPedido = true;
-                    _checkedRecibo = false;
-                  });
-                }),
-                SizedBox(
-                  width: 8.0,
-                ),
-                _btnHistory(context, 'Recibo',
-                    _checkedRecibo ? Color(0xff06538D) : Color(0xff0894FD), () {
-                  setState(() {
-                    _checkedCartera = false;
-                    _checkedPedido = false;
-                    _checkedRecibo = true;
-                  });
-                }),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 10.0,
-          ),
-          _checkedCartera ? _totalHistoryCartera(context) : Container(),
-          _checkedPedido ? _totalHistoryPedido(context) : Container(),
-          _checkedRecibo ? _totalHistoryRecibo(context) : Container(),
-        ],
-      ),
-    );
-  }
-
-  Widget _totalHistoryCartera(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return Container(
-      width: _size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-            decoration: BoxDecoration(
-                color: Color(0xffE8E8E8),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total de cartera',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 17.0,
-                      fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  '\$ 347.281',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 17.0,
-                      fontWeight: FontWeight.w500),
-                )
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 10.0,
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
-            width: _size.width,
-            decoration: BoxDecoration(
-                border: Border.all(
-                  width: 1.0,
-                  color: Color(0xffE8E8E8),
-                ),
-                borderRadius: BorderRadius.circular(5.0)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Datos de Cartera',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w700),
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.location_on,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('N° Documento',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('Cr 74 # 37 - 38',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.credit_card,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Débito',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('\$ 347.281',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Días',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('3 Días',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 190.0,
-          ),
-          Container(
-            width: _size.width,
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0),
-                color: Color(0xff0894FD)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0),
-                      child: Text(
-                        'Aceptar',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17.0,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _checkedCartera = true;
-                      _checkedPedido = false;
-                      _checkedRecibo = false;
-                      _formHistoryShow = false;
-                      _clientShow = false;
-                    });
-                  }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _totalHistoryPedido(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return Container(
-      width: _size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-            decoration: BoxDecoration(
-                color: Color(0xffE8E8E8),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total de Pedido',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 17.0,
-                      fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  '\$ 347.281',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 17.0,
-                      fontWeight: FontWeight.w500),
-                )
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 10.0,
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
-            width: _size.width,
-            decoration: BoxDecoration(
-                border: Border.all(
-                  width: 1.0,
-                  color: Color(0xffE8E8E8),
-                ),
-                borderRadius: BorderRadius.circular(5.0)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Datos de pedido',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w700),
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.credit_card,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('N° Factura',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('6243',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Fecha de factura',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('11/12/21',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10.0),
-          Text(
-            'Este pedido tiene 5 items',
-            style: TextStyle(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w300,
-                fontStyle: FontStyle.italic,
-                color: Color(0xff06538D)),
-          ),
-          SizedBox(height: 10.0),
-          SizedBox(
-            height: 160.0,
-            child: ListView(
-              scrollDirection: Axis.vertical,
-              children: [
-                ItemProductOrderHistory(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: () {})
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 20.0,
-          ),
-          Container(
-            width: _size.width,
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0),
-                color: Color(0xff0894FD)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0),
-                      child: Text(
-                        'Aceptar',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17.0,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _checkedCartera = true;
-                      _checkedPedido = false;
-                      _checkedRecibo = false;
-                      _formHistoryShow = false;
-                      _clientShow = false;
-                    });
-                  }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _totalHistoryRecibo(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return Container(
-      width: _size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-            decoration: BoxDecoration(
-                color: Color(0xffE8E8E8),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total de recibo',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 17.0,
-                      fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  '\$ 347.281',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 17.0,
-                      fontWeight: FontWeight.w500),
-                )
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 10.0,
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
-            width: _size.width,
-            decoration: BoxDecoration(
-                border: Border.all(
-                  width: 1.0,
-                  color: Color(0xffE8E8E8),
-                ),
-                borderRadius: BorderRadius.circular(5.0)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Datos de Recibo',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w700),
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.credit_card,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('N° Recibo',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('6243',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Fecha de recibo',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('12/21/21',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              color: Color(0xff0894FD), size: 18.0),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 57,
-                            child: Text('Días',
-                                style: TextStyle(
-                                    color: Color(0xff0894FD),
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    SizedBox(
-                      width: _size.width * 0.5 - 33,
-                      child: Text('3 Días',
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10.0),
-          Text(
-            'Este pedido tiene 5 items',
-            style: TextStyle(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w300,
-                fontStyle: FontStyle.italic,
-                color: Color(0xff06538D)),
-          ),
-          SizedBox(height: 10.0),
-          SizedBox(
-            height: 160.0,
-            child: ListView(
-              scrollDirection: Axis.vertical,
-              children: [
-                ItemProductOrderHistoryRecibo(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: () {}),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 20.0,
-          ),
-          Container(
-            width: _size.width,
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0),
-                color: Color(0xff0894FD)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0),
-                      child: Text(
-                        'Aceptar',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17.0,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _checkedCartera = true;
-                      _checkedPedido = false;
-                      _checkedRecibo = false;
-                      _formHistoryShow = false;
-                      _clientShow = false;
-                    });
-                  }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _btnHistory(
-      BuildContext context, String text, Color color, VoidCallback callback) {
-    final _size = MediaQuery.of(context).size;
-    return Container(
-      height: 40.0,
-      decoration:
-          BoxDecoration(borderRadius: BorderRadius.circular(6.0), color: color),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(6.0),
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15.0),
-              child: Text(
-                text,
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17.0,
-                    fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-          onTap: callback,
-        ),
-      ),
-    );
-  }
-
-  Widget _formRecipe(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Clientes / Nuevo reciboo',
-          style: TextStyle(
-              fontSize: 22.0,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff06538D)),
-        ),
-        SizedBox(height: 20.0),
-        _itemForm(context, 'Recibo N°', '14408'),
-        _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
-        _itemForm(context, 'Nombre', 'Jiménez Pérez Juan Pablo'),
-        _itemForm(context, 'Total cartera', '22554'),
-        _itemSelectForm(
-            context, 'Banco', 'Banco de occidente', 'Selecciona fecha'),
-        _itemSelectForm(context, 'N° cheque', '', 'Selecciona fecha'),
-        SizedBox(height: 30.0),
-        Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
-        SizedBox(height: 30.0),
-        Row(
-          children: [
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xffCB1B1B)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Cancelar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        setState(() {
-                          _clientShow = false;
-                          _formRecipeShow = false;
-                        });
-                      },
-                    ),
-                  ),
-                )),
-            SizedBox(width: 10.0),
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xff0894FD)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Continuar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {},
-                    ),
-                  ),
-                ))
-          ],
-        ),
-        SizedBox(height: 10.0)
-      ],
-    );
-  }
-
-  Widget _formOrder(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Completa los campos para crear un nuevo pedido',
-          style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff06538D)),
-        ),
-        SizedBox(height: 20.0),
-        _itemForm(context, 'Pedido', 'Automático'),
-        _itemSelectForm(context, 'Fecha', '12/10/21', 'Selecciona fecha'),
-        _itemForm(context, 'Nombre', 'Jiménez Pérez Juan Pablo'),
-        _itemSelectForm(context, 'Dir. envío factura', 'Cr 74 # 37 - 38',
-            'Selecciona fecha'),
-        _itemSelectForm(context, 'Dir. envío mercancía', 'Cr 74 # 37 - 38',
-            'Selecciona fecha'),
-        _itemForm(context, 'Orden de compra', ''),
-        _itemSelectForm(context, 'Forma de pago', '7 días', 'Selecciona fecha'),
-        SizedBox(height: 30.0),
-        Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
-        SizedBox(height: 30.0),
-        Text(
-          'Crédito',
-          style: TextStyle(
-              color: Color(0xff0091CE),
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
-              fontWeight: FontWeight.w600),
-        ),
-        SizedBox(height: 10.0),
-        _itemForm(context, 'Cupo crédito', '1.200.000'),
-        _itemSelectForm(
-            context, 'Total cartera', '347.281', 'Selecciona fecha'),
-        SizedBox(height: 30.0),
-        Row(
-          children: [
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xffCB1B1B)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Cancelar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        setState(() {
-                          _clientShow = false;
-                          _formOrderShow = false;
-                        });
-                      },
-                    ),
-                  ),
-                )),
-            SizedBox(width: 10.0),
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xff0894FD)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Continuar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {},
-                    ),
-                  ),
-                ))
-          ],
-        ),
-        SizedBox(height: 10.0)
-      ],
-    );
-  }
-
-  Widget _form(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return Column(
-      children: [
-        Text(
-          'Completa los campos para crear un nuevo cliente',
-          style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff06538D)),
-        ),
-        SizedBox(height: 20.0),
-        _itemSelectForm(context, 'Tipo de documento', 'Cédula de identidad',
-            'Seleccione su tipo de documento'),
-        _itemForm(context, 'N° de documento', '7213123'),
-        _itemForm(context, 'DV.', 'PersonaNatural'),
-        _itemForm(context, 'Primer nombre', 'Juan'),
-        _itemForm(context, 'Segundo nombre', 'Pablo'),
-        _itemForm(context, 'Primer apellido', 'PersonaNatural'),
-        _itemForm(context, 'Segundo apellido', 'Pérez'),
-        _itemForm(context, 'Razón social', ''),
-        _itemForm(context, 'Dirección', ''),
-        _itemForm(context, 'Email', ''),
-        _itemForm(context, 'Teléfono fijo', ''),
-        _itemSelectForm(context, 'Clasificación', 'Persona natural',
-            'Seleccione su medio de contacto'),
-        _itemSelectForm(context, 'Medio contacto', 'Tienda',
-            'Seleccione clasificación de persona'),
-        _itemSelectForm(
-            context, 'Zona', 'Cali', 'Seleccione la zona de residencia'),
-        _itemSelectForm(context, 'Departamento', 'Valle del cauca',
-            'Seleccione su departamento'),
-        _itemSelectForm(context, 'Ciudad', 'Cali', 'Seleccione su ciudad'),
-        _itemSelectForm(
-            context, 'Barrio', '7 de agosto', 'Seleccione su barrio'),
-        SizedBox(height: 30.0),
-        Row(
-          children: [
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xffCB1B1B)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Cancelar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        setState(() {
-                          _clientShow = false;
-                          _formShow = false;
-                        });
-                      },
-                    ),
-                  ),
-                )),
-            SizedBox(width: 10.0),
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xff0894FD)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Guardar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        showDialog<String>(
-                          context: context,
-                          builder: (BuildContext context) => Dialog(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10.0))),
-                              child: Container(
-                                height: 283.0,
-                                width: _size.width * 0.7,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 20.0, vertical: 15.0),
-                                child: Column(
-                                  children: [
-                                    SizedBox(height: 20.0),
-                                    Image(
-                                      height: 90.0,
-                                      image: AssetImage(
-                                          'assets/images/icon-check.png'),
-                                    ),
-                                    SizedBox(height: 20.0),
-                                    Text(
-                                      'Creación de cliente exitosa',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          color: Color(0xff06538D),
-                                          fontSize: 22.0,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    SizedBox(height: 30.0),
-                                    Container(
-                                      width: _size.width,
-                                      height: 41.0,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(5.0),
-                                          color: Color(0xff0894FD)),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          borderRadius:
-                                              BorderRadius.circular(5.0),
-                                          child: Center(
-                                            child: Text(
-                                              'Aceptar',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w700),
-                                            ),
-                                          ),
-                                          onTap: () {
-                                            Navigator.pop(context);
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )),
-                        );
-                      },
-                    ),
-                  ),
-                ))
-          ],
-        ),
-        SizedBox(height: 10.0),
-      ],
-    );
-  }
-
-  Widget _itemForm(BuildContext context, String label, String hintText) {
-    final _size = MediaQuery.of(context).size;
-    return Row(
-      children: [
-        Container(
-          width: _size.width * 0.5 - 20,
-          child: Text(
-            label,
-            style: TextStyle(
-                color: Color(0xff06538D),
-                fontSize: 14.0,
-                fontWeight: FontWeight.w600),
-          ),
-        ),
-        Container(
-          width: _size.width * 0.5 - 20,
-          child: TextField(
-            style: TextStyle(
-              color: Color(0xff707070),
-              fontSize: 14.0,
-            ),
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: TextStyle(
-                color: Color(0xff707070),
-                fontSize: 14.0,
-              ),
-              contentPadding: EdgeInsets.only(bottom: 0, top: 0),
-            ),
-          ),
-        )
-      ],
-    );
-  }
-
-  Widget _itemSelectForm(
-      BuildContext context, String label, String hintText, String title) {
-    final _size = MediaQuery.of(context).size;
-    return Row(
-      children: [
-        Container(
-          width: _size.width * 0.5 - 20,
-          child: Text(
-            label,
-            style: TextStyle(
-                color: Color(0xff06538D),
-                fontSize: 14.0,
-                fontWeight: FontWeight.w600),
-          ),
-        ),
-        Container(
-          width: _size.width * 0.5 - 20,
-          child: TextField(
-            style: TextStyle(
-              color: Color(0xff707070),
-              fontSize: 14.0,
-            ),
-            readOnly: true,
-            decoration: InputDecoration(
-                disabledBorder: UnderlineInputBorder(
-                    borderSide:
-                        BorderSide(width: 0.8, color: Color(0xff707070))),
-                enabled: true,
-                hintText: hintText,
-                hintStyle: TextStyle(
-                  color: Color(0xff707070),
-                  fontSize: 14.0,
-                ),
-                contentPadding: EdgeInsets.only(bottom: 0, top: 15),
-                suffixIcon: GestureDetector(
-                  onTap: () {
-                    // showDialog<String>(
-                    //   context: context,
-                    //   builder: (BuildContext context) => Dialog(
-                    //       shape: RoundedRectangleBorder(
-                    //           borderRadius:
-                    //               BorderRadius.all(Radius.circular(10.0))),
-                    //       child: Container(
-                    //         height: 333.0,
-                    //         width: _size.width * 0.7,
-                    //         padding: EdgeInsets.symmetric(
-                    //             horizontal: 20.0, vertical: 15.0),
-                    //         child: Column(
-                    //           children: [
-                    //             SizedBox(height: 10.0),
-                    //             Text(
-                    //               title,
-                    //               textAlign: TextAlign.center,
-                    //               style: TextStyle(
-                    //                   color: Color(0xff06538D),
-                    //                   fontSize: 22.0,
-                    //                   fontWeight: FontWeight.bold),
-                    //             ),
-                    //             SizedBox(height: 30.0),
-                    //             CheckboxListTile(
-                    //                 title: Text('DNI'),
-                    //                 value: this._checked,
-                    //                 onChanged: (bool? value) {
-                    //                   setState(() {
-                    //                     print(value);
-                    //                     this._checked = value;
-                    //                   });
-                    //                 }),
-                    //             CheckboxListTile(
-                    //                 title: Text('DNI'),
-                    //                 value: this._checked,
-                    //                 onChanged: (bool? value) {
-                    //                   setState(() {
-                    //                     print(value);
-                    //                     this._checked = value;
-                    //                   });
-                    //                 }),
-                    //             CheckboxListTile(
-                    //                 title: Text('DNI'),
-                    //                 value: this._checked,
-                    //                 onChanged: (bool? value) {
-                    //                   setState(() {
-                    //                     print(value);
-                    //                     this._checked = value;
-                    //                   });
-                    //                 }),
-                    //             Container(
-                    //               width: _size.width,
-                    //               height: 41.0,
-                    //               decoration: BoxDecoration(
-                    //                   borderRadius: BorderRadius.circular(5.0),
-                    //                   color: Color(0xff0894FD)),
-                    //               child: Material(
-                    //                 color: Colors.transparent,
-                    //                 child: InkWell(
-                    //                   borderRadius: BorderRadius.circular(5.0),
-                    //                   child: Center(
-                    //                     child: Text(
-                    //                       'Aceptar',
-                    //                       style: TextStyle(
-                    //                           color: Colors.white,
-                    //                           fontSize: 18,
-                    //                           fontWeight: FontWeight.w700),
-                    //                     ),
-                    //                   ),
-                    //                   onTap: () {
-                    //                     Navigator.pop(context);
-                    //                   },
-                    //                 ),
-                    //               ),
-                    //             ),
-                    //           ],
-                    //         ),
-                    //       )),
-                    // );
-                  },
-                  child: Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 24.0,
-                    color: Color(0xff00437C),
-                  ),
-                )),
-          ),
-        )
-      ],
-    );
-  }
+   
+ 
 }

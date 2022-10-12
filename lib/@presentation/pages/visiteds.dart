@@ -20,9 +20,8 @@ class VisitedsPage extends StatefulWidget {
 
 class _VisitedsPageState extends State<VisitedsPage> {
   bool _showItems = false;
- // String _url = 'http://173.212.208.69:3000';
- String _url = 'http://10.0.2.2:3000';
- //  String _url = 'http://localhost:3000';
+    String _url = 'http://178.62.80.103:5000';
+ // String _url = 'http://10.0.2.2:3000';
   late String id_vendedor;
   late String fecha1;
   late int _count;

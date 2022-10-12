@@ -36,8 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_calendar_carousel: ^2.1.0
   syncfusion_flutter_charts: ^19.4.56
-  sqflite: ^2.0.2+1
-  path_provider: ^2.0.2
+  sqflite: ^2.0.2+1 
   shared_preferences: ^2.0.15
   connectivity: ^3.0.6
   select_form_field: "^2.2.0"
@@ -46,6 +45,7 @@ dependencies:
   intl: ^0.17.0
   syncfusion_flutter_datepicker: ^19.4.56
   dashed_circular_progress_bar: ^0.0.4
+  path_provider: ^2.0.11
 
 dev_dependencies:
   flutter_test:
@@ -70,7 +70,8 @@ flutter:
   uses-material-design: true
 
   assets:
-   - assets/images/
+    - assets/ponyorder.db
+    - assets/images/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

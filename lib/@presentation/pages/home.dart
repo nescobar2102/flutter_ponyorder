@@ -22,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../db/operationDB.dart';
+import '../../models/cliente.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -41,12 +42,13 @@ class _HomePageState extends State<HomePage> {
   bool _checkedCartera = true;
   bool _checkedPedido = false;
   bool _checkedRecibo = false;
-  bool? _checked = false;
+  late int _checked =0; 
   bool isCheckedDV = false;
   bool isReadOnly = true;
   bool isOnline = true;
-  String _url = 'http://10.0.2.2:3000';
- // String _url = 'http://localhost:3000';
+  //String _url = 'http://10.0.2.2:3000';
+  String _url = 'http://178.62.80.103:5000';
+ 
   //data
   bool focus = false;
   late String _search = '@';
@@ -55,6 +57,7 @@ class _HomePageState extends State<HomePage> {
   late String nombre_tercero = '';
   late String direccion_tercero = '';
   late String tlf_tercero = '';
+  late String id_tipo_pago = '';
   late String forma_pago_tercero = '';
   late String id_empresa = '';
   late String id_suc_vendedor = '';
@@ -64,7 +67,7 @@ class _HomePageState extends State<HomePage> {
   String _user = '';
   String _nit = '';
   String idPedidoUser = '';
-  String idReciboUser = '';
+  String idReciboUser = ''; 
   int _cantidadProducto = 1;
 
   //nuevo cliente
@@ -81,6 +84,12 @@ class _HomePageState extends State<HomePage> {
   late Object _body;
   List<dynamic> _datClient = [];
 
+  List<dynamic> _datDetalleFactura = [];
+  late int _countFactura;
+    List<dynamic> _datFactura= [];
+
+    bool _showItems = false;
+
   final myControllerNroDoc = TextEditingController();
   final myControllerDv = TextEditingController();
   final myControllerPrimerNombre = TextEditingController();
@@ -92,29 +101,9 @@ class _HomePageState extends State<HomePage> {
   final myControllerEmail = TextEditingController();
   final myControllerTelefono = TextEditingController();
 //nuevo cliente
-  List<Map<String, dynamic>> _itemsTypeDoc = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "13", "label": "Cédula de Ciudadanía"},
-    {"value": "31", "label": "Número de indentificación Tributaria - Nit"}
-  ];
+ 
 
-  List<Map<String, dynamic>> _itemsClasification = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "01", "label": "COMERCIAL"},
-    {"value": "02", "label": "MUEBLES Y OFICINAS MODULARES"},
-    {"value": "03", "label": "SERVICIOS"}
-  ];
-
-  List<Map<String, dynamic>> _itemsCiudad = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "76001", "label": "Cali"},
-    {"value": "76016", "label": "Buenaventura"}
-  ];
-/*   List<Map<String, dynamic>> _itemsBarrio = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "76001001", "label": "Las acacias"},
-    {"value": "76001002", "label": "Los Andes"}
-  ]; */
+ 
 //nuevo pedido
   List<Map<String, dynamic>> _itemsFormaPago = [
     {"value": "", "label": "Seleccione"},
@@ -228,246 +217,202 @@ class _HomePageState extends State<HomePage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
-      idReciboUser = (prefs.getString('idReciboUser') ?? '');
-      print("el usuario es $_user $_nit");
-      if (_nit != '') {
-        searchClient();
+      idReciboUser = (prefs.getString('idReciboUser') ?? ''); 
+      print("el usuario es $_user $_nit $idPedidoUser");
+      if (_nit != '' ) {
+       searchClient();      
       }
     });
   }
-
-  /////api
-  Future getItemTypeIdentication() async {
-    final response =
-        await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-
-      print("object object $data");
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
-    }
-  }
-
+    
   late List<Map<String, dynamic>> _itemsDepartamento=[];
-  Future getItemDepartamento() async {
-    final response = await http.get(Uri.parse("$_url/app_depto/$_nit"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+  Future getItemDepartamento() async {   
+     final data= await  OperationDB.getDeptoList(_nit);   
+        if (data != false) {  
       setState(() {
-        _itemsDepartamento = (convert.jsonDecode(response.body)["data"] as List)
+        _itemsDepartamento = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-
-        print("object _itemsDepartamento   $_itemsDepartamento");
-      });
+         }); 
+   
     } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "error",
         ),
       );
     }
   }
-
+ 
   
   late List<Map<String, dynamic>> _itemsBarrio=[];
-  Future getItemBarrio() async {
-    final response = await http.get(Uri.parse("$_url/app_barrio/$_nit"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+  Future getItemBarrio() async {   
+     final data= await  OperationDB.getBarrioList(_nit);   
+        if (data != false) {  
       setState(() {
-        _itemsBarrio = (convert.jsonDecode(response.body)["data"] as List)
+        _itemsBarrio = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-
-        print("object _itemsBarrio   $_itemsBarrio");
-      });
+         });    
     } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "error",
         ),
       );
     }
   }
-
-  Future getItemClasification() async {
-    final response =
-        await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
+ 
+  late List<Map<String, dynamic>> _itemsClasification=[];
+  Future getItemClasificacion() async { 
+      final data= await  OperationDB.getTipoEmpresaList(_nit);   
+        if (data != false) {  
       setState(() {
-        //_item_type_identification = data;
-      });
+        _itemsClasification = (data as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+         }); 
     } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "error",
         ),
       );
     }
-  }
+  } 
+ 
+  late List<Map<String, dynamic>> _itemsTypeDoc=[];
+  Future getItemTypeIdentication() async { 
+      final data= await  OperationDB.getTipoIdentificacionList();   
+        if (data != false) {  
+      setState(() {
+        _itemsTypeDoc = (data as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+         }); 
+    } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: "error",
+        ),
+      );
+    }
+  } 
+ 
 
   late List<Map<String, dynamic>> _itemsMedioContacto=[];
-  Future getItemMedioContacto() async {
-    final response = await http.get(Uri.parse("$_url/app_medioContacto/$_nit"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+  Future getItemMedioContacto() async { 
+     final data= await  OperationDB.getMedioContactoList(_nit);   
+        if (data != false) {  
       setState(() {
-        _itemsMedioContacto =
-            (convert.jsonDecode(response.body)["data"] as List)
-                .map((dynamic e) => e as Map<String, dynamic>)
-                .toList();
-
-        print("object app_medioContacto   $_itemsMedioContacto");
-      });
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
-    }
-  }
-
-  late List<Map<String, dynamic>> _itemsZona=[];
-  Future getItemZona() async {
-    final response = await http.get(Uri.parse("$_url/app_zona/$_nit"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      setState(() {
-        _itemsZona = (convert.jsonDecode(response.body)["data"] as List)
+        _itemsMedioContacto = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-
-        print("object _itemsZona   $_itemsZona");
-      });
-    } else {
+         });
+    }  else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "no se obtiene medio de contacto",
         ),
       );
     }
   }
-
-  Future getItemCiudad() async {
-    final response = await http.get(Uri.parse("$_url/app_ciudades/$_nit"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
+ 
+ late List<Map<String, dynamic>> _itemsZona=[];
+  Future getItemZona() async { 
+    final data= await  OperationDB.getZonaList(_nit);   
+        if (data != false) {  
+      setState(() {
+        _itemsZona = (data as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+         });
     } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No se obtuvo la zona",
+        ),
+      );
+    }
+  }
+ 
+ late List<Map<String, dynamic>> _itemsCiudad=[];
+  Future getItemCiudad(iddepto) async { 
+    final data= await  OperationDB.getCiudadList(_nit,iddepto);   
+        if (data != false) {  
+      setState(() {
+        _itemsCiudad = (data as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+         });
+    } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: "No se obtuvo la ciudad",
         ),
       );
     }
   }
  
 //fin data
-
   final myControllerSearch = TextEditingController();
-
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
 
   Future<void> searchClient() async {
-     try {
+    
     print("buscar el cliente");
     _body = {
       'nit': _nit,
       'nombre': (_search.isNotEmpty && _search != '') ? _search : null,
     };
        print("buscar el cliente----------- $_body");
-    final response =
-        await http.post(Uri.parse("$_url/clientes"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    print("------response $success");
-      _count = jsonResponse['count'];
-    if (response.statusCode == 200 && success) {
-      _datClient = jsonResponse['data']; 
-     // if (_count > 0) {
+   
+      final allClient= await  OperationDB.getClient(_nit);   
+      if (allClient != false) {    
         setState(() {
+             _count = allClient.length;
+           _datClient = allClient; 
           _clientShow = true;
           _productosShow = false;
         });
-     // }
+   
     } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No existen clientes",
         ),
       );
     }
-      } catch (e) {
-        print("aerorroroor");
-    //  print(e.toString());
-    }
+    
      setState(() {
           _clientShow = true;
           _productosShow = false;
         });
   }
 
-  Future<void> saldoCartera(bool pedido) async {
-    final response = await http
-        .get(Uri.parse("$_url/saldo_cartera/$id_tercero/$id_sucursal_tercero"));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
+  Future<void> saldoCartera(bool pedido) async {  
+    print("busca saldoCartera");
+        var data = await  OperationDB.getSaldoCartera(id_tercero, id_sucursal_tercero);   
+      if (data != false) {    
       setState(() {
         _saldoCartera = data[0]['debito'] != null ? data[0]['debito'].toString() : '0';
       });
+      var data1= await  OperationDB.getFormPago(id_tercero, _nit);
+      if (data1 != false) {
+        setState(() {
+          id_tipo_pago = data1[0]['id_tipo_pago'];
+          forma_pago_tercero = data1[0]['descripcion'];
+        });
+      }
       if (_value_automatico != '' && pedido) {
         _direccionClient = [];
         searchClientDireccion();
@@ -477,13 +422,147 @@ class _HomePageState extends State<HomePage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "error",
+        ),
+      );
+    }
+  }
+  
+Future<void> searchFactura() async { 
+  print ("busca factura");
+      final allFactura= await  OperationDB.getFacturaId(id_tercero);   
+        if (allFactura != false) {   
+          setState(() {
+          _datFactura = allFactura;
+          }); 
+        } else{
+          print("no tiene factura ");
+        }
+}
+
+  
+  Future<void> _saveClient() async {
+    print("Save client A la bd");
+
+      final nuevo_cliente = Cliente (
+          id_tercero: myControllerNroDoc.text,
+          id_sucursal_tercero: "1",
+          id_tipo_identificacion: _value_itemsTypeDoc,
+          dv: myControllerDv.text,
+          nombre: isCheckedDV ? myControllerPrimerNombre.text : '',
+          direccion: myControllerDireccion.text,
+          id_pais: "57",
+          id_depto: _value_itemsDepartamento,
+          id_ciudad: _value_itemsCiudad,
+          id_barrio: _value_itemsBarrio,
+          telefono: myControllerTelefono.text,
+          fecha_creacion:'${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+          nombre_sucursal: !isCheckedDV
+        ? myControllerRazonSocial.text
+          : myControllerPrimerNombre.text +
+          myControllerPrimerApellido.text,
+          primer_apellido: isCheckedDV ? myControllerPrimerApellido.text : '',
+          segundo_apellido:
+              isCheckedDV ? myControllerSegundoApellido.text : '',
+          primer_nombre: isCheckedDV ? myControllerPrimerNombre.text : '',
+          segundo_nombre: isCheckedDV ? myControllerSegundoNombre.text : '',
+          e_mail: myControllerEmail.text,        
+          id_forma_pago: "01",
+          id_precio_item: "01",
+          id_lista_precio:"01",
+          id_vendedor: "16499705",
+          id_medio_contacto: _value_itemsMedioContacto,
+          id_zona: _value_itemsZona, 
+          id_suc_vendedor: "1",
+          nit: _nit,
+          id_tipo_empresa: '',
+          flag_persona_nat: isCheckedDV ? 'SI' :'NO'
+       );
+         await  OperationDB.insertCliente(nuevo_cliente);
+
+        var save_cliente = await OperationDB.validaInsertCliente(nuevo_cliente.id_tercero);
+          if(!save_cliente) {
+          isCheckedDV = false;
+          isReadOnly = false;
+          myControllerNroDoc.clear();  myControllerDv.clear();  myControllerPrimerNombre.clear();  myControllerSegundoNombre.clear();
+          myControllerPrimerApellido.clear();  myControllerSegundoApellido.clear();  myControllerRazonSocial.clear();  myControllerDireccion.clear();
+          myControllerEmail.clear();  myControllerTelefono.clear();
+      showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => Dialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0))),
+            child: Container(
+              height: 283.0,
+              width: 100.0,
+              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 20.0),
+                  Image(
+                    height: 90.0,
+                    image: AssetImage('assets/images/icon-check.png'),
+                  ),
+                  SizedBox(height: 20.0),
+                  Text(
+                    'Creación de cliente exitosa',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Color(0xff06538D),
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 30.0),
+                  Container(
+                    width: 100.0,
+                    height: 41.0,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0),
+                        color: Color(0xff0894FD)),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(5.0),
+                        child: Center(
+                          child: Text(
+                            'Aceptar',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pushNamed(context, 'home');
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+      );
+
+      setState(() {
+        Navigator.pushNamed(context, 'home');
+      });
+      showTopSnackBar(
+        context,
+        CustomSnackBar.info(
+          message: "Creación de cliente exitosa",
+        ),
+      );
+    } else {
+      showTopSnackBar(
+        context,
+        CustomSnackBar.error(
+          message: "Ocurrio un error",
         ),
       );
     }
   }
 
-  Future<void> _saveClient() async {
+  Future<void> _saveClient_api() async {
     print("Save client");
 
     final response = await http.post(Uri.parse("$_url/nuevo_cliente_app"),
@@ -501,8 +580,8 @@ class _HomePageState extends State<HomePage> {
           "telefono": myControllerTelefono.text,
           "nombre_sucursal": !isCheckedDV
               ? myControllerRazonSocial.text
-              : myControllerPrimerApellido.text +
-                  myControllerSegundoApellido.text,
+              : myControllerPrimerNombre.text +
+               myControllerPrimerApellido.text,
           "primer_apellido": isCheckedDV ? myControllerPrimerApellido.text : '',
           "segundo_apellido":
               isCheckedDV ? myControllerSegundoApellido.text : '',
@@ -518,17 +597,14 @@ class _HomePageState extends State<HomePage> {
           "id_direccion": "1",
           "tipo_direccion": "Factura",
           "id_suc_vendedor": "1",
-          'nit': _nit,
-          "id_tipo_empresa": _value_itemsClasification
+          'nit': _nit
         }));
  
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
-     print('response crear cliente antes http: $msg $success ');
     if (response.statusCode == 201 && success) {
-      print('response crear cliente http: $msg $success ');
       showDialog<String>(
         context: context,
         builder: (BuildContext context) => Dialog(
@@ -604,18 +680,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> getConsecutivo(bool pedido) async {
-    print("id de tercero a buscar $id_tercero $nombre_tercero");
+    print("id de tercero a buscar $id_tercero $nombre_tercero $id_empresa");
     var idTipoDoc = pedido ? idPedidoUser : idReciboUser;
-    final response = await http
-        .get(Uri.parse("$_url/tipodoc_consecutivo_app/$_nit/$idTipoDoc"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      _value_automatico = data[0]['consecutivo'].toString();
+      final allConse= await  OperationDB.getConsecutivoTipoDoc(_nit,idTipoDoc,id_empresa);   
+      if (allConse != false) {  
+      _value_automatico = allConse[0]['consecutivo'].toString(); 
       if (_value_automatico != '') {
         saldoCartera(pedido);
       } else {
@@ -627,7 +696,7 @@ class _HomePageState extends State<HomePage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "error",
         ),
       );
     }
@@ -635,54 +704,45 @@ class _HomePageState extends State<HomePage> {
 
   late List<Map<String, dynamic>> _direccionClient=[];
   Future<void> searchClientDireccion() async {
+    print("busca direccion");
     _body = {
       'nit': _nit,
       'id_tercero':
           (id_tercero.isNotEmpty && id_tercero != '') ? id_tercero : null,
     };
-    final response =
-        await http.post(Uri.parse("$_url/clientes_direccion"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+    
+    final allDireccion= await  OperationDB.getDireccion(_nit,id_tercero);   
+        if (allDireccion != false) {  
       setState(() {
-        _direccionClient = (convert.jsonDecode(response.body)["data"] as List)
+        _direccionClient = (allDireccion as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
+         
         Navigator.pop(context);
         _clientShow = false;
         _formOrderShow = true;
         _productosShow = false;
+          searchFactura(); //busca las facturas
       });
     } else {
       Navigator.pop(context);
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "sad",
         ),
       );
     }
   }
 
   Future<void> searchClasificacionProductos() async {
-    print("searchClasificacionProductos------------------------------ ");
-    _body = {'nit': _nit, 'nombre': '@', 'nivel': '1', 'id_padre': '-'};
-    final response = await http
-        .post(Uri.parse("$_url/clasificacion_productos_nivel"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _datClasificacionProductos = jsonResponse['data'];
-      _countClasificacion = jsonResponse['count'];
+    print("searchClasificacionProductos-----------CB------------------- ");  
+       var data= await  OperationDB.getClasificacionProductos(_nit,'1','-');   
+        if (data != false) {  
+       _datClasificacionProductos = data;
+      _countClasificacion = data.length;
       setState(() {
-        if (_countClasificacion > 0) {
-          print(
-              "mosrtart la clasificacion unidades $_datClasificacionProductos");
+        if (_countClasificacion > 0) {        
           idClasificacion =
               '${_datClasificacionProductos[0]['id_clasificacion']}';
           _formOrderShow = false;
@@ -696,28 +756,22 @@ class _HomePageState extends State<HomePage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "error",
         ),
       );
     }
   }
 
   Future<void> selectProducto() async {
-    _body = {'nit': _nit, 'nombre': '@', 'nivel': '1', 'id_padre': '-'};
-    final response = await http
-        .post(Uri.parse("$_url/clasificacion_productos_nivel"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _datClasificacionProductos = jsonResponse['data'];
+     print("selectProducto");
+    _body = {'nit': _nit, 'nombre': '@', 'nivel': '1', 'id_padre': '-'}; 
 
-      _countClasificacion = jsonResponse['count'];
+     var data= await  OperationDB.getClasificacionProductos(_nit,'1','-');   
+        if (data != false) {  
+      _datClasificacionProductos = data;
+      _countClasificacion = data.length;
       setState(() {
-        if (_countClasificacion > 0) {
-          print(
-              "mosrtart la clasificacion unidades $_datClasificacionProductos");
+        if (_countClasificacion > 0) { 
           idClasificacion =
               '${_datClasificacionProductos[0]['id_clasificacion']}';
           _formOrderShow = false;
@@ -731,24 +785,20 @@ class _HomePageState extends State<HomePage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "error"
         ),
       );
     }
   }
 
   Future<void> selectProductoNivel() async {
+    print("selectProductoNivel");
     _body = {'nit': _nit, 'nombre': '@', 'nivel': '2', 'id_padre': _id_padre};
-    final response = await http
-        .post(Uri.parse("$_url/clasificacion_productos_nivel"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _datClasificacionProductosNivel = jsonResponse['data'];
-
-      _countClasificacionNivel = jsonResponse['count'];
+ 
+     var data= await  OperationDB.getClasificacionProductos(_nit,'2',_id_padre);   
+        if (data != false) {  
+      _datClasificacionProductosNivel = data;
+      _countClasificacionNivel =data.length;
       setState(() {
         idClasificacion =
             '${_datClasificacionProductosNivel[0]['id_clasificacion']}';
@@ -758,13 +808,14 @@ class _HomePageState extends State<HomePage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message:"error"
         ),
       );
     }
   }
 
   Future<void> searchProductosPedido() async {
+    print("-----searchProductosPedido----- $idClasificacion");
     _body = {
       'nit': _nit,
       'id_clasificacion': idClasificacion,
@@ -772,52 +823,46 @@ class _HomePageState extends State<HomePage> {
           ? _searchProducto
           : '@',
     };
-    final response = await http.post(Uri.parse("$_url/items"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _datProductos = jsonResponse['data'];
-      _countProductos = jsonResponse['count'];
+
+    var data= await  OperationDB.getItems(_nit,idClasificacion);
+    if (data != false) {    
       setState(() {
+       _datProductos = data;
+       _countProductos =data.length;
         _productosShow = false;
         _productosShowCat = true;
       });
     } else {
+         setState(() {
+       _datProductos = [];
+       _countProductos = 0;
+       
+      });
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No tiene productos"
         ),
       );
     }
   }
 
   void searchPrecioProductos(String idItem) async {
-    _body = {
-      'nit': _nit,
-      'id_item': idItem,
-      'id_precio_item': _value_itemsListPrecio
-    };
-    final response =
-        await http.post(Uri.parse("$_url/precio_items_app"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+    print("todavia en tra aqui");
+
+    var data= await  OperationDB.getPrecioProducto(_nit,idItem,_value_itemsListPrecio);
+    if (data != false) {
       setState(() {
-        _precio = double.parse(jsonResponse['data'][0]['precio']);
-        _itemSelect = jsonResponse['data'][0]['id_item'];
-        _descuento = double.parse(jsonResponse['data'][0]['descuento_maximo']);
+       _precio =   double.parse(data[0]['precio']);
+        _itemSelect = data[0]['id_item'];
+        _descuento = double.parse(data[0]['descuento_maximo']);
         print("El de mierdad precio precio $_precio $_itemSelect $_descuento");
       });
     }else{
          showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No se obtuvo el precio de este producto",
         ),
       );
     }
@@ -1033,7 +1078,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       id_tercero = '${data['id_tercero']}';
       nombre_tercero =
-          '${data['nombre_completo']}  ${data['nombre_sucursal']} ';
+          '${data['nombre_sucursal']}  ';
       direccion_tercero = '${data['direccion']}';
       tlf_tercero = '${data['telefono']}';
       id_empresa = '${data['id_empresa']}';
@@ -1051,8 +1096,8 @@ class _HomePageState extends State<HomePage> {
       id_tercero = '${data['id_tercero']}';
       nombre_tercero =
           '${data['nombre_completo'].toString()}  ${data['nombre_sucursal'].toString()} ';
-      forma_pago_tercero = '${data['forma_pago'].toString()}';
-      _value_itemsFormaPago = data['id_forma_pago'];
+      //forma_pago_tercero = '${data['forma_pago'].toString()}';
+   //   _value_itemsFormaPago = data['id_forma_pago'];
       id_empresa = '${data['id_empresa']}';
       id_suc_vendedor = '${data['id_suc_vendedor']}';
       id_sucursal_tercero = '${data['id_sucursal_tercero']}';
@@ -1083,12 +1128,10 @@ class _HomePageState extends State<HomePage> {
                   setState(() {
                     getItemTypeIdentication();
                     getItemDepartamento();
-                    getItemClasification();
-                    _itemsMedioContacto = [];
-                    getItemMedioContacto();
-                    _itemsZona = [];
+                    getItemClasificacion(); 
+                    getItemMedioContacto(); 
                     getItemZona();
-                    getItemCiudad();
+                    getItemCiudad('76');
                     getItemBarrio();
                     _clientShow = false;
                     _formShow = true;
@@ -2357,8 +2400,8 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('6243',
-                          style: TextStyle(
+                      child: Text('6243',  
+                          style: TextStyle( 
                               color: Color(0xff707070),
                               fontSize: 13.0,
                               fontWeight: FontWeight.w600)),
@@ -3472,7 +3515,217 @@ class _HomePageState extends State<HomePage> {
             'Total cartera',
             '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
             'Selecciona'),
-        SizedBox(height: 30.0),
+           SizedBox(height: 20.0),
+            Column(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Ver la última factura del cliente',
+                                    style: TextStyle(
+                                        fontSize: 16.0,
+                                        color: Color(0xff0f538d),
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  GestureDetector(
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: Color(0xff06538D),
+                                      size: 18.0,
+                                    ),
+                                    onTap: () {
+                                     _datFactura.length > 0 ? showDialog<String>(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            Dialog(
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                10.0))),
+                                                child: Container(
+                                                  height: 510.0,
+                                                  width: 340.4,
+                                                           
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 20.0,
+                                                      vertical: 15.0),
+                                                  child: Column(
+                                                    children: [
+                                                      SizedBox(height: 10.0),
+                                                       Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [                                                      
+                                                          Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Container(
+                                                              width: _size.width * 0.5 - 40,
+                                                              child: Row(
+                                                                children: [
+                                                                  Text(
+                                                                    'N° Factura', style: TextStyle(
+                                                                      color: Color(0xff06538D),
+                                                                      fontSize: 17.0,
+                                                                      fontWeight: FontWeight.w700),
+                                                               
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Container(
+                                                              width: _size.width * 0.5 - 90,
+                                                              child: Text(
+                                                                  '${_datFactura[0]['numero']}',
+                                                                  style: TextStyle(
+                                                                       color: Color(0xff707070),
+                                                                      fontSize: 17.0,
+                                                                      fontWeight: FontWeight.w700),
+                                                                      ),
+                                                            ),
+                                                          ],
+                                                        ),   
+                                                        SizedBox(height: 15.0),
+                                                      Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Container(
+                                                              width: _size.width * 0.5 - 40,
+                                                              child: Row(
+                                                                children: [
+                                                                  Text(
+                                                                    'Fecha de factura', style: TextStyle(
+                                                                      color: Color(0xff06538D),
+                                                                      fontSize: 17.0,
+                                                                      fontWeight: FontWeight.w700),
+                                                               
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Container(
+                                                              width: _size.width * 0.5 - 90,
+                                                              child: Text(
+                                                               '${_datFactura[0]['fecha']}',
+                                                                  style: TextStyle(
+                                                                       color: Color(0xff707070),
+                                                                      fontSize: 17.0,
+                                                                      fontWeight: FontWeight.w700),
+                                                                      ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        SizedBox(height: 20.0),
+                                                        for (var i = 0; i < _datFactura.length; i++) ...[
+                                                          _ItemProductOrder(_datFactura[i], i),
+                                                      
+                                                        ], 
+                                                        SizedBox(height: 10.0),
+                                                      ],
+                                                    ), 
+                                                       Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Container(
+                                                              width: _size.width * 0.5 - 40,
+                                                              child: Row(
+                                                                children: [
+                                                                  Text(
+                                                                    'Total', style: TextStyle(
+                                                                      color: Color(0xff06538D),
+                                                                      fontSize: 17.0,
+                                                                      fontWeight: FontWeight.w700),
+                                                               
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Container(
+                                                              width: _size.width * 0.5 - 90,
+                                                              child: Text( 
+                                                                  '\$ ' +  
+                                                                      expresionRegular(
+                                                                          double.parse(_datFactura[0]['total_fac'].toString())),  
+                                                                  style: TextStyle(
+                                                                       color: Color(0xff06538D),
+                                                                      fontSize: 17.0,
+                                                                      fontWeight: FontWeight.w700),
+                                                                      ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      SizedBox(
+                                                        height: 30.0,
+                                                      ),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [ 
+                                                          Container(
+                                                            width: _size.width * 0.7 , 
+                                                            height: 40.0,
+                                                            decoration: BoxDecoration(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            5.0),
+                                                                color: Color(
+                                                                    0xff0894FD)),
+                                                            child: Material(
+                                                              color: Colors
+                                                                  .transparent,
+                                                              child: InkWell(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            5.0),
+                                                                child: Center(
+                                                                  child: Text(
+                                                                    'Aceptar',
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .white,
+                                                                        fontSize:
+                                                                            18,
+                                                                        fontWeight:
+                                                                            FontWeight.w700),
+                                                                  ),
+                                                                ),
+                                                                onTap: () {
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )),
+                                      ):   showTopSnackBar(
+                                       context,
+                                       CustomSnackBar.error(
+                                         message: "Este cliente no tiene facturas.",
+                                       ),
+                                     );
+                                    },
+                                  )
+                                ],
+                              ), 
+                            ],
+                          ),
+                          SizedBox(height: 10.0),
+                        ],
+                      ),  
+             
+        SizedBox(height: 10.0),
         Row(
           children: [
             Container(
@@ -3740,6 +3993,169 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+ 
+  Widget itemOrder(data,  ) {
+    final nombre =data['nombre'] !='' ? data['nombre']: data['nombre_sucursal'];
+    final _size = MediaQuery.of(context).size;
+    return Container(
+      width: _size.width,
+      decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
+          borderRadius: BorderRadius.circular(5.0)),
+      child: Column( 
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(4.0),
+                    topRight: Radius.circular(4.0)),
+                color: Colors.blue),
+            width: _size.width,
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$nombre',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                GestureDetector(
+                    child: Row(
+                      children: [
+                        Text(
+                          'Ver detalles',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w300,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 3.0),
+                        Icon(
+                          Icons.remove_red_eye,
+                          color: Colors.white,
+                          size: 15.0,
+                        )
+                      ],
+                    ),
+                    onTap: () => {
+                          setState(() {
+                          //  _seePedido = i;
+                           // searchDetallePedido(data['numero']);
+                          })
+                        }),
+              ],
+            ),
+          ),
+          SizedBox(height: 5.0),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'N° Pedido',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('${data['numero']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Fecha',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('${data['fecha']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Total',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(
+                                  double.parse(data['total'].toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 5.0),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+
   Widget _itemForm(
       BuildContext context, String label, String hintText, controller, enable) {
     final _size = MediaQuery.of(context).size;
@@ -3775,6 +4191,173 @@ class _HomePageState extends State<HomePage> {
           ),
         )
       ],
+    );
+  }
+
+  Widget _ItemProductOrder(data, i) {
+    final _size = MediaQuery.of(context).size;
+    return Container(
+       width: _size.width * 0.8,    
+      decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
+          borderRadius: BorderRadius.circular(5.0)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,        
+        children: [
+          Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(4.0),
+                    topRight: Radius.circular(4.0)),
+                color: Color(0xffF4F4F4)),
+            width: _size.width,
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              verticalDirection : VerticalDirection.down,
+              children: [
+                Text(
+                  '${data['descripcion_item']}',
+                  style: TextStyle(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xff707070),
+                  ),
+                ),
+           
+              ],
+            ),
+          ),
+          SizedBox(height: 5.0),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start, 
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 60,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Código',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('${data['id_item']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],                
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 60,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Cantidad',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 60,
+                      child: Text('${data['cantidad']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 60,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Precio Unidad',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 60,
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(
+                                  double.parse(data['precio'].toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 60,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Total',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 60,
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(
+                                  double.parse(data['total'].toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 5.0),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 
@@ -3824,8 +4407,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _ItemClient(hintText, data) { 
-    final nombre =data['nombre_completo']   != '' ? data['nombre_completo']:data['nombre_sucursal'];
+  Widget _ItemClient(hintText, data) {
+   // print ("data de los clientessssssssss $data");
+    final nombre =data['nombre_sucursal'].toUpperCase() ;
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -4020,12 +4604,12 @@ class _HomePageState extends State<HomePage> {
                           ),
                           onTap: () {
                             setState(() {
+                              print(data);
                               _submitDialog(context);
                               id_tercero = '${data['id_tercero']}';
                               nombre_tercero =
-                                  '${data['nombre_completo'].toString()}  ${data['nombre_sucursal'].toString()} ';
-                              forma_pago_tercero =
-                                  '${data['forma_pago'].toString()}';
+                                  '${data['nombre_sucursal'].toString()}  ';
+
                               limiteCreditoTercero =
                                   double.parse(data['limite_credito']);
                               listaPrecioTecero =
@@ -4067,10 +4651,7 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               id_tercero = '${data['id_tercero']}';
                               nombre_tercero =
-                                  '${data['nombre_completo'].toString()}  ${data['nombre_sucursal'].toString()} ';
-                              forma_pago_tercero =
-                                  '${data['forma_pago'].toString()}';
-                              _value_itemsFormaPago = data['id_forma_pago'];
+                                  '${data['nombre_sucursal'].toString()}  ';
                               id_empresa = '${data['id_empresa']}';
                               id_suc_vendedor = '${data['id_suc_vendedor']}';
                               id_sucursal_tercero =
@@ -4120,6 +4701,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _ItemProductos(data) {
+    print("imagen   $data[i]");
+
     return GridView.count(
       scrollDirection: Axis.vertical,
       primary: false,
@@ -4134,7 +4717,7 @@ class _HomePageState extends State<HomePage> {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(                    
-                image: AssetImage('assets/images/${data[i]['imagen']}.png'),
+                image: AssetImage('assets/images/${data[i]['descripcion']}.png'),
                     fit: BoxFit.cover,
                   ),
                 borderRadius: BorderRadius.all(
@@ -4159,6 +4742,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _ItemCategoryOrderState(i, data) {
     final _size = MediaQuery.of(context).size;
+    final saldo = data['saldo_inventario'] != 'null' ?  data['saldo_inventario']  : 0;
     return Container(
       width: _size.width,
       decoration: BoxDecoration(
@@ -4270,7 +4854,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text(expresionRegular(double.parse(data['saldo_inventario'].toString())),
+                      child: Text(expresionRegular(double.parse(saldo.toString())),                      
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -4310,7 +4894,7 @@ class _HomePageState extends State<HomePage> {
                                       i,
                                       data['id_item'],
                                       data['descripcion'],
-                                      data['saldo_inventario']);
+                                     int.parse(data['saldo_inventario']));
                                 }
                               : null,
                         ),
@@ -4618,12 +5202,7 @@ class _HomePageState extends State<HomePage> {
                 IconButton(
                     onPressed: () {
                       print("eliminar producto del carrito");
-                      _showDialog(context, index);
-                      /*      dbHelper!.deleteCartItem(
-                                         provider.cart[index].id!);
-                                     provider
-                                         .removeItem(provider.cart[index].id!);
-                                     provider.removeCounter(); */
+                      _showDialog(context, index); 
                     },
                     icon: Icon(
                       Icons.do_disturb_on,
@@ -4806,7 +5385,8 @@ class _HomePageState extends State<HomePage> {
                   height: 40.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6.0),
-                      color: i == 0 ? Color(0xff06538D) : Color(0xff0894FD)),
+                       color: i == _checked? Color(0xff06538D) : Color(0xff0894FD)),
+                  // 
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -4825,6 +5405,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
+                          _checked = i;
                           idClasificacion =
                               '${_datClasificacionProductosNivel[i]['id_clasificacion']}';
                           print(
@@ -5074,6 +5655,7 @@ class _HomePageState extends State<HomePage> {
           )),
     );
   }
+ 
 
   Future createPedido() async {
     final response = await http.post(
@@ -5316,8 +5898,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> searchDocumentPend(data) async {
-    final response =
-        //   await http.get(Uri.parse("$_url/cuentaportercero/$_nit/$id_tercero"));
+    final response = 
         await http.get(
             Uri.parse("$_url/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
     var jsonResponse =
@@ -5930,8 +6511,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _listDescuento(BuildContext context, data, i) {
-    print("asdasd asdasd asdasd asdasd asdasd  $i");
+  Widget _listDescuento(BuildContext context, data, i) { 
     final _size = MediaQuery.of(context).size;
     return Column(
       children: [

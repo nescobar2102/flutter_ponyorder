@@ -29,9 +29,8 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       new GlobalKey<ScaffoldState>();
 
 //api
-  //String _url = 'http://173.212.208.69:3000';
-  String _url = 'http://10.0.2.2:3000';
- //  String _url = 'http://localhost:3000';
+    String _url = 'http://178.62.80.103:5000';
+ // String _url = 'http://10.0.2.2:3000';
   late Object _body;
   late String _search = '@';
   late int _count;
