@@ -142,8 +142,9 @@ class PedidoDet {
     final String  id_sucursal ;
     final String  id_tipo_doc ;
     final String  numero ;
-    final String  consecutivo ;
+    final int  consecutivo ;
     final String  id_item ;
+    final String descripcion_item;
     final String  id_bodega ;
     final String  cantidad ;
     final String  precio ;
@@ -181,6 +182,7 @@ class PedidoDet {
         required this.numero ,
         required this.consecutivo ,
         required this.id_item ,
+        required this.descripcion_item,
         required this.id_bodega ,
         required this.cantidad ,
         required this.precio ,
@@ -220,6 +222,7 @@ class PedidoDet {
         'numero':numero,
         'consecutivo':consecutivo,
         'id_item':id_item,
+        'descripcion_item':descripcion_item,
         'id_bodega':id_bodega,
         'cantidad':cantidad,
         'precio':precio,
@@ -255,7 +258,7 @@ class PedidoDet {
   @override
   String toString() {
      return 'PedidoDet { id_empresa:$id_empresa, id_sucursal:$id_sucursal, id_tipo_doc:$id_tipo_doc, numero:$numero, consecutivo:$consecutivo, id_item:$id_item,'
-        'id_bodega:$id_bodega, cantidad:$cantidad, precio:$precio, precio_lista:$precio_lista, tasa_iva:$tasa_iva, total_iva:$total_iva, tasa_dcto_fijo:$tasa_dcto_fijo,'
+        'descripcion_item:$descripcion_item,id_bodega:$id_bodega, cantidad:$cantidad, precio:$precio, precio_lista:$precio_lista, tasa_iva:$tasa_iva, total_iva:$total_iva, tasa_dcto_fijo:$tasa_dcto_fijo,'
         'total_dcto_fijo:$total_dcto_fijo, total_dcto:$total_dcto, costo:$costo, subtotal:$subtotal, total:$total, total_item:$total_item, id_unidad:$id_unidad,'
         'cantidad_kit:$cantidad_kit, cantidad_de_kit:$cantidad_de_kit, recno:$recno, id_precio_item:$id_precio_item,  factor:$factor, id_impuesto_iva:$id_impuesto_iva,'
         'total_dcto_adicional:$total_dcto_adicional,  tasa_dcto_adicional:$tasa_dcto_adicional, id_kit:$id_kit, precio_kit:$precio_kit, tasa_dcto_cliente:$tasa_dcto_cliente,'

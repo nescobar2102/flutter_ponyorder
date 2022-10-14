@@ -16,6 +16,7 @@ import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+import '../../db/operationDB.dart';
 
 class OrderPage extends StatefulWidget {
   @override
@@ -47,6 +48,8 @@ class _OrderPageState extends State<OrderPage> {
 
   @override
   void initState() {
+    _datPedido=[];
+    _count = 0;
     _dateCount = '';
     _range = DateFormat('dd/MM/yyyy').format(DateTime.now()).toString() +
         ' - ' +
@@ -120,15 +123,11 @@ class _OrderPageState extends State<OrderPage> {
       "fecha2": fecha2,
       "search": (_search.isNotEmpty && _search != '') ? _search : '@',
     };
-    final response =
-        await http.post(Uri.parse("$_url/historial_pedido"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _datPedido = jsonResponse['data'];
-      _count = jsonResponse['count'];
+    final search_ =  (_search.isNotEmpty && _search != '') ? _search : '@';
+    final data=  await OperationDB.getHistorialPedidos("16499705",fecha1,fecha2,search_);
+    if (data != false ) {
+      _datPedido = data;
+      _count = data.length;
       setState(() {
         if (_count > 0) {
           // myControllerSearch.clear();
@@ -144,7 +143,7 @@ class _OrderPageState extends State<OrderPage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No existen pedidos",
         ),
       );
     }
@@ -152,16 +151,11 @@ class _OrderPageState extends State<OrderPage> {
 
   //descuentos poara el recibo
   Future<void> searchDetallePedido(numeroPedido) async {
-    final response =
-        await http.get(Uri.parse("$_url/detalle_pedido/$numeroPedido"));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+    final data=  await OperationDB.getHistorialPedidosDetalle(numeroPedido,_nit);
+    if (data != false ) {
       setState(() {
-        _countDetalle = jsonResponse['count'];
-        _datDetallePedido = jsonResponse['data'];
+        _countDetalle = data.length;
+        _datDetallePedido = data;
         _clientShow = false;
         _formShow = true;
       });
@@ -169,7 +163,7 @@ class _OrderPageState extends State<OrderPage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No se pudo obtener el detalle",
         ),
       );
     }

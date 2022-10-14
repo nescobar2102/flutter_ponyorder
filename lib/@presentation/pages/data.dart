@@ -442,9 +442,9 @@ class _LoginPageState extends State<LoginPages> {
         for (int i = 0; i < data.length; i++) {
           final pedido = Pedido(
               id_empresa:data[i]['id_empresa'],id_sucursal:data[i]['id_sucursal'],
-              id_tipo_doc:data[i]['id_tipo_doc'],numero:data[i]['numero'],
-              id_tercero:data[i]['id_tercero'],id_sucursal_tercero:data[i]['id_sucursal_tercero'], 
-              id_vendedor:data[i]['id_vendedor'], id_suc_vendedor:data[i]['id_suc_vendedor'],
+              id_tipo_doc:data[i]['id_tipo_doc'],numero:data[i]['numero'].toString(),
+              id_tercero:data[i]['id_tercero'],id_sucursal_tercero:data[i]['id_sucursal_tercero'].toString(),
+              id_vendedor:data[i]['id_vendedor'], id_suc_vendedor:data[i]['id_suc_vendedor'].toString(),
               fecha:data[i]['fecha'],vencimiento:data[i]['vencimiento'],
               fecha_entrega:data[i]['fecha_entrega'],  fecha_trm:data[i]['fecha_trm'],
               id_forma_pago:data[i]['id_forma_pago'], id_precio_item:data[i]['id_precio_item'], 
@@ -456,7 +456,7 @@ class _LoginPageState extends State<LoginPages> {
               estado:data[i]['estado'], flag_autorizado:data[i]['flag_autorizado'], 
               comentario:data[i]['comentario'],observacion:data[i]['observacion'], 
               letras:data[i]['letras'], id_direccion_factura:data[i]['id_direccion_factura'],
-              usuario:data[i]['usuario'],  id_tiempo_entrega:data[i]['id_tiempo_entrega'],
+              usuario:data[i]['usuario'],  id_tiempo_entrega:data[i]['id_tiempo_entrega'].toString(),
               flag_enviado:data[i]['flag_enviado'], nit:data[i]['nit']              );
           await OperationDB.insertPedido(pedido);
         }
@@ -469,8 +469,8 @@ class _LoginPageState extends State<LoginPages> {
         ),
       );
     }
-    final allPedidoDet= await OperationDB.getPedido();
-    print("muestra todos los getPedido  $allPedidoDet");
+    final allPedido= await OperationDB.getPedido();
+    print("muestra todos los getPedido  $allPedido");
     await getPedidoDet();
   }
 
@@ -487,9 +487,9 @@ class _LoginPageState extends State<LoginPages> {
         for (int i = 0; i < data.length; i++) {
           final pedidodet = PedidoDet(
                     id_empresa:data[i]['id_empresa'],id_sucursal:data[i]['id_sucursal'],
-                    id_tipo_doc:data[i]['id_tipo_doc'],numero:data[i]['numero'],
+                    id_tipo_doc:data[i]['id_tipo_doc'],numero:data[i]['numero'].toString(),
                     id_precio_item:data[i]['id_precio_item'], 
-                    subtotal:data[i]['subtotal'],  
+                    subtotal:data[i]['subtotal'],  descripcion_item:data[i]['descripcion_item'],
                     total_iva:data[i]['total_iva'], 
                     total_dcto:data[i]['total_dcto'],total:data[i]['total'],
                     total_item:data[i]['total_item'],  
@@ -497,9 +497,9 @@ class _LoginPageState extends State<LoginPages> {
                     cantidad: data[i]['cantidad'],precio:data[i]['precio'],precio_lista:data[i]['precio_lista'],tasa_iva:data[i]['tasa_iva'],
                     tasa_dcto_fijo:data[i]['tasa_dcto_fijo'],total_dcto_fijo:data[i]['total_dcto_fijo'],costo:data[i]['costo'],
                     id_unidad:data[i]['id_unidad'],cantidad_kit:data[i]['cantidad_kit'], cantidad_de_kit:data[i]['cantidad_de_kit'],
-                    recno:data[i]['recno'],factor:data[i]['factor'],id_impuesto_iva:data[i]['id_impuesto_iva'],total_dcto_adicional:data[i]['total_dcto_adicional'],
+                    recno:data[i]['recno'].toString(),factor:data[i]['factor'],id_impuesto_iva:data[i]['id_impuesto_iva'],total_dcto_adicional:data[i]['total_dcto_adicional'],
                     tasa_dcto_adicional:data[i]['tasa_dcto_adicional'],id_kit:data[i]['id_kit'],precio_kit:data[i]['precio_kit'],
-                    tasa_dcto_cliente:data[i]['tasa_dcto_cliente'],total_dcto_cliente:data[i]['total_dcto_cliente']
+                    tasa_dcto_cliente:data[i]['tasa_dcto_cliente'].toString(),total_dcto_cliente:data[i]['total_dcto_cliente'].toString()
           );
           await OperationDB.insertPedidoDet(pedidodet);
         }
@@ -533,7 +533,7 @@ class _LoginPageState extends State<LoginPages> {
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final tercero = Tercero(
-              id_tercero: data[i]['id_tercero'],
+              id_tercero: data[i]['id_tercero'].toString(),
               id_sucursal_tercero: data[i]['id_sucursal_tercero'],
               id_tipo_identificacion: data[i]['id_tipo_identificacion'],
               dv: data[i]['dv'],
@@ -544,9 +544,9 @@ class _LoginPageState extends State<LoginPages> {
               id_ciudad: data[i]['id_ciudad'],
               id_barrio: data[i]['id_barrio'],
               telefono: data[i]['telefono'],
-              /* id_actividad: data[i]['id_actividad'] != null
+               id_actividad: data[i]['id_actividad'] != null
                   ? data[i]['id_actividad']
-                  : '', */
+                  : '',  
               id_tipo_empresa: data[i]['id_tipo_empresa'],
               cliente: data[i]['cliente'],
               fecha_creacion: data[i]['fecha_creacion'],
@@ -567,7 +567,7 @@ class _LoginPageState extends State<LoginPages> {
                   ? data[i]['id_forma_pago']
                   : '',
               usuario: data[i]['usuario'] != null ? data[i]['usuario'] : '',
-              flag_enviado: 1,
+              flag_enviado: 'NO',
               e_mail: data[i]['e_mail'],
               telefono_celular: data[i]['telefono_celular'] != null
                   ? data[i]['telefono_celular']

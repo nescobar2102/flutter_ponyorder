@@ -23,6 +23,9 @@ import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../db/operationDB.dart';
 import '../../models/cliente.dart';
+import '../../models/pedido.dart';
+
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -45,8 +48,7 @@ class _HomePageState extends State<HomePage> {
   late int _checked =0; 
   bool isCheckedDV = false;
   bool isReadOnly = true;
-  bool isOnline = true;
-  //String _url = 'http://10.0.2.2:3000';
+  bool isOnline = true; 
   String _url = 'http://178.62.80.103:5000';
  
   //data
@@ -73,6 +75,8 @@ class _HomePageState extends State<HomePage> {
   //nuevo cliente
   String _valueChanged = '';
   String _valueToValidate = '';
+  bool isBanco = false;
+  bool isCheque = false;
   String _valueSaved = '';
   String _value_itemsTypeDoc = '';
   String _value_itemsDepartamento = '';
@@ -101,8 +105,7 @@ class _HomePageState extends State<HomePage> {
   final myControllerEmail = TextEditingController();
   final myControllerTelefono = TextEditingController();
 //nuevo cliente
- 
-
+  
  
 //nuevo pedido
   List<Map<String, dynamic>> _itemsFormaPago = [
@@ -175,7 +178,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _itemsTipoPago = [
     {"value": "", "label": "Seleccione"},
     {"value": "01", "label": "EFECTIVO"},
-    {"value": "02", "label": "TRANSFERENCIA BANCOLOMBIA"},
+    {"value": "02", "label": "TRANSFERENCIA"},
     {"value": "03", "label": "PAGO CON CHEQUES"},
   ];
 
@@ -367,7 +370,11 @@ class _HomePageState extends State<HomePage> {
       new GlobalKey<ScaffoldState>();
 
   Future<void> searchClient() async {
-    
+    isCheckedDV = false;
+    isReadOnly = false;
+    myControllerNroDoc.clear();  myControllerDv.clear();  myControllerPrimerNombre.clear();  myControllerSegundoNombre.clear();
+    myControllerPrimerApellido.clear();  myControllerSegundoApellido.clear();  myControllerRazonSocial.clear();  myControllerDireccion.clear();
+    myControllerEmail.clear();  myControllerTelefono.clear();
     print("buscar el cliente");
     _body = {
       'nit': _nit,
@@ -387,6 +394,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       showTopSnackBar(
         context,
+        animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: "No existen clientes",
         ),
@@ -421,8 +429,9 @@ class _HomePageState extends State<HomePage> {
       Navigator.pop(context);
       showTopSnackBar(
         context,
+         animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
-          message: "error",
+          message: "No se obtuvo  el saldo",
         ),
       );
     }
@@ -449,16 +458,17 @@ Future<void> searchFactura() async {
           id_sucursal_tercero: "1",
           id_tipo_identificacion: _value_itemsTypeDoc,
           dv: myControllerDv.text,
-          nombre: isCheckedDV ? myControllerPrimerNombre.text : '',
+          nombre: isCheckedDV ? myControllerPrimerNombre.text : myControllerRazonSocial.text,
           direccion: myControllerDireccion.text,
           id_pais: "57",
           id_depto: _value_itemsDepartamento,
           id_ciudad: _value_itemsCiudad,
           id_barrio: _value_itemsBarrio,
           telefono: myControllerTelefono.text,
+          id_actividad: _value_itemsClasification,
           fecha_creacion:'${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
           nombre_sucursal: !isCheckedDV
-        ? myControllerRazonSocial.text
+          ? myControllerRazonSocial.text
           : myControllerPrimerNombre.text +
           myControllerPrimerApellido.text,
           primer_apellido: isCheckedDV ? myControllerPrimerApellido.text : '',
@@ -479,91 +489,12 @@ Future<void> searchFactura() async {
           flag_persona_nat: isCheckedDV ? 'SI' :'NO'
        );
          await  OperationDB.insertCliente(nuevo_cliente);
-
-        var save_cliente = await OperationDB.validaInsertCliente(nuevo_cliente.id_tercero);
-          if(!save_cliente) {
-          isCheckedDV = false;
-          isReadOnly = false;
-          myControllerNroDoc.clear();  myControllerDv.clear();  myControllerPrimerNombre.clear();  myControllerSegundoNombre.clear();
-          myControllerPrimerApellido.clear();  myControllerSegundoApellido.clear();  myControllerRazonSocial.clear();  myControllerDireccion.clear();
-          myControllerEmail.clear();  myControllerTelefono.clear();
-      showDialog<String>(
-        context: context,
-        builder: (BuildContext context) => Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.0))),
-            child: Container(
-              height: 283.0,
-              width: 100.0,
-              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-              child: Column(
-                children: [
-                  SizedBox(height: 20.0),
-                  Image(
-                    height: 90.0,
-                    image: AssetImage('assets/images/icon-check.png'),
-                  ),
-                  SizedBox(height: 20.0),
-                  Text(
-                    'Creación de cliente exitosa',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Color(0xff06538D),
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 30.0),
-                  Container(
-                    width: 100.0,
-                    height: 41.0,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5.0),
-                        color: Color(0xff0894FD)),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(5.0),
-                        child: Center(
-                          child: Text(
-                            'Aceptar',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pushNamed(context, 'home');
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
-      );
-
-      setState(() {
-        Navigator.pushNamed(context, 'home');
-      });
-      showTopSnackBar(
-        context,
-        CustomSnackBar.info(
-          message: "Creación de cliente exitosa",
-        ),
-      );
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Ocurrio un error",
-        ),
-      );
-    }
-  }
+         await  _saveClient_api();
+     }  
+       
 
   Future<void> _saveClient_api() async {
-    print("Save client");
+    print("Save clientapi ");
 
     final response = await http.post(Uri.parse("$_url/nuevo_cliente_app"),
         body: ({
@@ -571,13 +502,14 @@ Future<void> searchFactura() async {
           "id_sucursal_tercero": "1",
           "id_tipo_identificacion": _value_itemsTypeDoc,
           "dv": myControllerDv.text,
-          "nombre": isCheckedDV ? myControllerPrimerNombre.text : '',
+          "nombre": isCheckedDV ? myControllerPrimerNombre.text : myControllerRazonSocial.text,
           "direccion": myControllerDireccion.text,
           "id_pais": "57",
           "id_depto": _value_itemsDepartamento,
           "id_ciudad": _value_itemsCiudad,
           "id_barrio": _value_itemsBarrio,
           "telefono": myControllerTelefono.text,
+          "id_actividad":_value_itemsClasification,
           "nombre_sucursal": !isCheckedDV
               ? myControllerRazonSocial.text
               : myControllerPrimerNombre.text +
@@ -603,9 +535,8 @@ Future<void> searchFactura() async {
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
     if (response.statusCode == 201 && success) {
-      showDialog<String>(
+      /*showDialog<String>(
         context: context,
         builder: (BuildContext context) => Dialog(
             shape: RoundedRectangleBorder(
@@ -659,21 +590,15 @@ Future<void> searchFactura() async {
                 ],
               ),
             )),
-      );
-      setState(() {
-        Navigator.pushNamed(context, 'home');
-      });
-      showTopSnackBar(
-        context,
-        CustomSnackBar.info(
-          message: msg,
-        ),
-      );
+      );*/
+
+
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
-          message: msg,
+          message: "No se sincronizó el cliente",
         ),
       );
     }
@@ -695,8 +620,9 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
-          message: "error",
+          message: "Error no se obtuvo consecutivo",
         ),
       );
     }
@@ -728,8 +654,9 @@ Future<void> searchFactura() async {
       Navigator.pop(context);
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
-          message: "sad",
+          message: "El cliente no registra dirección",
         ),
       );
     }
@@ -755,8 +682,9 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
-          message: "error",
+          message: "ERROR SCP",
         ),
       );
     }
@@ -784,8 +712,9 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
-          message: "error"
+          message: "ERROR SP1"
         ),
       );
     }
@@ -807,8 +736,9 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
-          message:"error"
+          message:"ERROR SPN2"
         ),
       );
     }
@@ -840,6 +770,7 @@ Future<void> searchFactura() async {
       });
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: "No tiene productos"
         ),
@@ -848,7 +779,6 @@ Future<void> searchFactura() async {
   }
 
   void searchPrecioProductos(String idItem) async {
-    print("todavia en tra aqui");
 
     var data= await  OperationDB.getPrecioProducto(_nit,idItem,_value_itemsListPrecio);
     if (data != false) {
@@ -860,7 +790,8 @@ Future<void> searchFactura() async {
       });
     }else{
          showTopSnackBar(
-        context,
+         context,
+         animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: "No se obtuvo el precio de este producto",
         ),
@@ -1667,10 +1598,11 @@ Future<void> searchFactura() async {
                               ),
                               onTap: () {
                                 setState(() {
+                                  myControllerOrdenCompra.clear();
                                   _productosShow = false;
                                   _productosShowCat = false;
-                                  /*   _search = '@';
-                                  searchClient(); */
+                                     _search = '@';
+                                  searchClient();
                                 });
                               },
                             ),
@@ -3265,7 +3197,7 @@ Future<void> searchFactura() async {
               ),
               SizedBox(height: 20.0),
               _itemForm(context, 'Recibo N°', '$_value_automatico',
-                  myControllerNroRecibo, true),
+                  myControllerNroRecibo, true,'number',false),
               InkWell(
                 onTap: () {
                   _pickDateDialog();
@@ -3287,14 +3219,14 @@ Future<void> searchFactura() async {
                 ),
               ),
               SizedBox(height: 10),
-              _itemForm(context, 'Nombre', '$nombre_tercero', null, false),
+              _itemForm(context, 'Nombre', '$nombre_tercero', null, false,'text',false),
               _itemForm(
                   context,
                   'Total cartera',
                   '\$ ' +
                       expresionRegular(double.parse(_saldoCartera.toString())),
                   null,
-                  false),
+                  false,'number',false),
               SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
@@ -3303,7 +3235,17 @@ Future<void> searchFactura() async {
                 type: SelectFormFieldType.dropdown, // or can be dialog
                 labelText: 'Forma de pago',
                 items: _itemsTipoPago,
-                onChanged: (val) => setState(() => _value_itemsTipoPago = val),
+                onChanged: (val) =>   setState(() {
+                 _value_itemsTipoPago = val;
+                 if(_value_itemsTipoPago == '02'){
+                    isBanco = true;
+                    isCheque = false;
+                    }
+                    if(_value_itemsTipoPago == '03'){
+                    isCheque = true;
+                    isBanco = false;
+                    }
+                 }), 
                 onSaved: (val) => setState(() => _valueSaved = val ?? ''),
                 validator: (val) {
                   setState(() => _valueToValidate = val ?? '');
@@ -3326,7 +3268,7 @@ Future<void> searchFactura() async {
                 },
               ),
               _itemForm(
-                  context, 'N° cheque', '00000', myControllerNroCheque, false),
+                  context, 'N° cheque', '00000', myControllerNroCheque, false,'number',isCheque),
               SizedBox(height: 30.0),
               Container(
                   width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
@@ -3423,7 +3365,7 @@ Future<void> searchFactura() async {
         ),
         SizedBox(height: 20.0),
         _itemForm(context, 'Pedido', '$_value_automatico',
-            myControllerNroPedido, true),
+            myControllerNroPedido, true,'number',false),
         InkWell(
           onTap: () {
             _pickDateDialog();
@@ -3446,16 +3388,8 @@ Future<void> searchFactura() async {
             ),
           ),
         ),
-        // ElevatedButton(onPressed: _pickDateDialog, child: Text('Fecha')),
-        /*    _itemForm(
-            context,
-            'Fecha',
-            _selectedDate == null //ternary expression to check if date is null
-                ? 'No date was chosen!'
-                : '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-            null,
-            true), */
-        _itemForm(context, 'Nombre', '$nombre_tercero', null, true),
+
+        _itemForm(context, 'Nombre', '$nombre_tercero', null, true,'text',false),
         SelectFormField(
           style: TextStyle(
               color: Color(0xff06538D),
@@ -3490,8 +3424,8 @@ Future<void> searchFactura() async {
           },
         ),
         _itemForm(
-            context, 'Orden de compra', '', myControllerOrdenCompra, false),
-        _itemForm(context, 'Forma de pago', '$forma_pago_tercero', null, true),
+            context, 'Orden de compra', '', myControllerOrdenCompra, false,'text',true),
+        _itemForm(context, 'Forma de pago', '$forma_pago_tercero', null, true,'text',false),
         SizedBox(height: 30.0),
         Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
         SizedBox(height: 30.0),
@@ -3507,14 +3441,14 @@ Future<void> searchFactura() async {
         _itemForm(
             context,
             'Cupo crédito',
-            expresionRegular(double.parse(limite_credito.toString())),
+            '\$ ' + expresionRegular(double.parse(limite_credito.toString())),
             null,
-            false),
+            true,'number',false),
         _itemSelectForm(
             context,
             'Total cartera',
             '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
-            'Selecciona'),
+            ''),
            SizedBox(height: 20.0),
             Column(
                         children: [
@@ -3623,8 +3557,8 @@ Future<void> searchFactura() async {
                                                         SizedBox(height: 20.0),
                                                         for (var i = 0; i < _datFactura.length; i++) ...[
                                                           _ItemProductOrder(_datFactura[i], i),
-                                                      
-                                                        ], 
+
+                                                        ],
                                                         SizedBox(height: 10.0),
                                                       ],
                                                     ), 
@@ -3632,7 +3566,7 @@ Future<void> searchFactura() async {
                                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                           children: [
                                                             Container(
-                                                              width: _size.width * 0.5 - 40,
+                                                              width: _size.width * 0.5 - 50,
                                                               child: Row(
                                                                 children: [
                                                                   Text(
@@ -3646,7 +3580,7 @@ Future<void> searchFactura() async {
                                                               ),
                                                             ),
                                                             Container(
-                                                              width: _size.width * 0.5 - 90,
+                                                              width: _size.width * 0.5 - 110,
                                                               child: Text( 
                                                                   '\$ ' +  
                                                                       expresionRegular(
@@ -3668,7 +3602,7 @@ Future<void> searchFactura() async {
                                                                 .spaceBetween,
                                                         children: [ 
                                                           Container(
-                                                            width: _size.width * 0.7 , 
+                                                            width: _size.width * 0.6 ,
                                                             height: 40.0,
                                                             decoration: BoxDecoration(
                                                                 borderRadius:
@@ -3711,6 +3645,7 @@ Future<void> searchFactura() async {
                                                 )),
                                       ):   showTopSnackBar(
                                        context,
+                                          animationDuration: const Duration(seconds: 1),
                                        CustomSnackBar.error(
                                          message: "Este cliente no tiene facturas.",
                                        ),
@@ -3819,7 +3754,7 @@ Future<void> searchFactura() async {
             return null;
           },
         ),
-        _itemForm(context, 'N° de documento', '', myControllerNroDoc, false),
+        _itemForm(context, 'N° de documento', '', myControllerNroDoc, false,'number',true),
         CheckboxListTile(
             checkColor: Color(0xff06538D),
             title: Text(
@@ -3837,20 +3772,20 @@ Future<void> searchFactura() async {
                 isReadOnly = !isReadOnly;
               });
             }),
-        _itemForm(context, 'DV.', 'PersonaNatural', myControllerDv, false),
+        _itemForm(context, 'DV.', 'PersonaNatural', myControllerDv, false,'text',isCheckedDV),
         _itemForm(
-            context, 'Primer nombre', '', myControllerPrimerNombre, isReadOnly),
+            context, 'Primer nombre', '', myControllerPrimerNombre, isReadOnly,'text',isCheckedDV),
         _itemForm(context, 'Segundo nombre', '', myControllerSegundoNombre,
-            isReadOnly),
+            isReadOnly,'text',isCheckedDV),
         _itemForm(context, 'Primer apellido', '', myControllerPrimerApellido,
-            isReadOnly),
+            isReadOnly,'text',isCheckedDV),
         _itemForm(context, 'Segundo apellido', '', myControllerSegundoApellido,
-            isReadOnly),
+            isReadOnly,'text',isCheckedDV),
         _itemForm(
-            context, 'Razón social', '', myControllerRazonSocial, isCheckedDV),
-        _itemForm(context, 'Dirección', '', myControllerDireccion, false),
-        _itemForm(context, 'Email', '', myControllerEmail, false),
-        _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false),
+            context, 'Razón social', '', myControllerRazonSocial, isCheckedDV,'text',!isCheckedDV),
+        _itemForm(context, 'Dirección', '', myControllerDireccion, false,'text',true),
+        _itemForm(context, 'Email', '', myControllerEmail, false,'email',true),
+        _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,'phone',true),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Clasificación',
@@ -4157,8 +4092,32 @@ Future<void> searchFactura() async {
 
 
   Widget _itemForm(
-      BuildContext context, String label, String hintText, controller, enable) {
+      BuildContext context, String label, String hintText, controller, enable,String type,bool isRequired ) {
     final _size = MediaQuery.of(context).size;
+    var typeInput ;
+    var cant;
+    switch(type) {
+      case 'number':
+        print('number!');
+        typeInput = TextInputType.number;
+        cant = 15;
+        break; // The switch statement must be told to exit, or it will execute every case.
+      case 'email':
+        print('email!');
+        cant = 40;
+        typeInput = TextInputType.emailAddress;
+        break;
+      case 'phone':
+        print('phone!');
+        cant = 13;
+        typeInput = TextInputType.phone;
+        break;
+      case 'text':
+        print('text!');
+        cant = 30;
+        typeInput = TextInputType.text;
+        break;
+    }
     return Row(
       children: [
         Container(
@@ -4175,12 +4134,19 @@ Future<void> searchFactura() async {
           width: _size.width * 0.5 - 20,
           child: TextField(
             readOnly: enable,
+            keyboardType : typeInput,
+            inputFormatters: <TextInputFormatter>[
+              type =="number" ||  type =="phone" ? FilteringTextInputFormatter.digitsOnly :FilteringTextInputFormatter.singleLineFormatter,
+               LengthLimitingTextInputFormatter(cant)
+            ],
             controller: controller,
             style: TextStyle(
               color: Color(0xff707070),
               fontSize: 14.0,
             ),
             decoration: InputDecoration(
+              errorText:
+              isRequired && controller.text.isEmpty ? 'Es requerido' : null,
               hintText: hintText,
               hintStyle: TextStyle(
                 color: Color(0xff707070),
@@ -4197,7 +4163,7 @@ Future<void> searchFactura() async {
   Widget _ItemProductOrder(data, i) {
     final _size = MediaQuery.of(context).size;
     return Container(
-       width: _size.width * 0.8,    
+       width: _size.width * 0.8,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
@@ -4362,7 +4328,7 @@ Future<void> searchFactura() async {
   }
 
   Widget _itemSelectForm(
-      BuildContext context, String label, String hintText, String title) {
+      BuildContext context, String label, String hintText, String title ) {
     final _size = MediaQuery.of(context).size;
     return Row(
       children: [
@@ -4381,7 +4347,7 @@ Future<void> searchFactura() async {
               color: Color(0xff707070),
               fontSize: 14.0,
             ),
-            readOnly: false,
+            readOnly: true,
             decoration: InputDecoration(
                 disabledBorder: UnderlineInputBorder(
                     borderSide:
@@ -4911,6 +4877,7 @@ Future<void> searchFactura() async {
   }
 
   Widget _ItemCategoryOrderEdit(index, idItem, descripcion, cantidad) {
+   var nombre = descripcion.length > 35 ?  descripcion.substring(0, 33) +'...' : descripcion;
     final _size = MediaQuery.of(context).size;
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
     return Container(
@@ -4925,11 +4892,10 @@ Future<void> searchFactura() async {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 7.0, horizontal: 7.0),
-            child: Row(
-              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Row(           
               children: [
                 Text(
-                  '$descripcion',
+                  '$nombre',
                   style: TextStyle(
                     fontSize: 16.0,
                     fontWeight: FontWeight.w700,
@@ -4945,8 +4911,7 @@ Future<void> searchFactura() async {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  //  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Row(    
                   children: [
                     Container(
                       width: _size.width * 0.5 - 40,
@@ -4973,8 +4938,7 @@ Future<void> searchFactura() async {
                   ],
                 ),
                 SizedBox(height: 10.0),
-                Row(
-                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Row(                
                   children: [
                     Container(
                       width: _size.width * 0.5 - 40,
@@ -5070,8 +5034,7 @@ Future<void> searchFactura() async {
                                                   color: Color(0xff707070))),
                                           labelText:
                                               _cantidadProducto.toString(),
-                                          hintText:
-                                              _cantidadProducto.toString())),
+                                          hintText:'')),
                                 ),
                               ),
                               InkWell(
@@ -5106,7 +5069,8 @@ Future<void> searchFactura() async {
                     controller: myControllerDescuentos,
                     keyboardType: TextInputType.number,                    
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(3),
                     ],
                     decoration: InputDecoration(
                       disabledBorder: UnderlineInputBorder(
@@ -5556,10 +5520,14 @@ Future<void> searchFactura() async {
           ? _value_itemsListPrecio
           : listaPrecioTecero,
     });
+
+      savePref( _cartProductos); //guarda en memoria local el carrito
+
     Navigator.of(context).pop();
     setState(() {
       myControllerCantidad.clear();
       myControllerDescuentos.clear();
+      myControllerDescuentos.text = '0';
       _cantidadProducto = 1;
       totalPedido = valorTotal(_cartProductos);
       numeroAletra(totalPedido.toString());
@@ -5593,7 +5561,16 @@ Future<void> searchFactura() async {
     totalDescuento = '0.00';
     numeroAletra('');
   }
-
+  
+  savePref( _cartProductos) async {
+     final prefs = await SharedPreferences.getInstance();
+      String rawJson = convert.jsonEncode(_cartProductos); 
+ 
+     setState(() {
+       prefs.setString('pedido_key', rawJson);
+       prefs.setString('id_tercero_pedido', id_tercero); 
+    });
+  }
   modalSinPedido() {
     showDialog<String>(
       context: context,
@@ -5655,9 +5632,170 @@ Future<void> searchFactura() async {
           )),
     );
   }
- 
 
   Future createPedido() async {
+    final total_costo = double.parse(totalPedido) + double.parse(totalDescuento);
+    var flag_pedido = true;
+    var flag_pedido_det = true;
+    final nuevo_pedido = Pedido (
+             nit: _nit,
+            id_tercero: '$id_tercero',
+            id_empresa: '$id_empresa',
+            id_sucursal: "01",
+            id_tipo_doc: idPedidoUser,
+            numero: '$_value_automatico',
+            id_sucursal_tercero: "1",
+            id_vendedor: "16499705",
+            id_suc_vendedor: '$id_suc_vendedor',
+            fecha: '$_selectedDate',
+            vencimiento: '$_selectedDate',
+            fecha_entrega: '$_selectedDate',
+            fecha_trm: '$_selectedDate',
+            id_forma_pago: '$_value_itemsFormaPago',
+            id_precio_item: '$listaPrecioTecero',
+            id_direccion: _value_DireccionMercancia,
+            id_moneda: "COLP",
+            trm: "1",
+            subtotal: '$totalSubTotal',
+            total_costo: total_costo.toString(),
+            total_iva: "1900",
+            total_dcto: '$totalDescuento',
+            total: '$totalPedido',
+            total_item: "10000",
+            orden_compra: myControllerOrdenCompra.text,
+            estado: "PENDIENTE",
+            flag_autorizado: "SI",
+            comentario: "PRUEBA",
+            observacion: myControllerObservacion.text,
+            letras: _letras,
+            id_direccion_factura: _value_DireccionFactura,
+            usuario: _user,
+            id_tiempo_entrega: "22",
+            flag_enviado: "NO"
+    );
+    flag_pedido = await  OperationDB.insertPedido(nuevo_pedido);
+
+     for (var i = 0; i < _cartProductos.length; i++) { 
+      final total_dcto =  (_cartProductos[i]['precio'] *  _cartProductos[i]['cantidad']) * (_cartProductos[i]['total_dcto'] / 100);
+      final subtotal = _cartProductos[i]['precio'] * _cartProductos[i]['cantidad'];
+      final total =  (_cartProductos[i]['precio'] * _cartProductos[i]['cantidad']) - ((_cartProductos[i]['precio'] *
+              _cartProductos[i]['cantidad']) *     (_cartProductos[i]['total_dcto'] / 100));
+                 final nuevo_pedido_det = PedidoDet (               
+                  nit: _nit,
+                  id_empresa: '$id_empresa',
+                  id_sucursal: "01",
+                  id_tipo_doc: idPedidoUser,
+                  numero: '$_value_automatico',
+                  consecutivo: i + 1,
+                  id_item: _cartProductos[i]['id_item'],
+                  descripcion_item: _cartProductos[i]['descripcion'],
+                  id_bodega: "01",
+                  cantidad: _cartProductos[i]['cantidad'].toString(),
+                  precio: _cartProductos[i]['precio'].toString(),
+                  precio_lista: "10000",
+                  tasa_iva: "19",
+                  total_iva: "1900",
+                  tasa_dcto_fijo: "0",
+                  total_dcto_fijo: "0",
+                  total_dcto: total_dcto.toString(),
+                  costo: "7500",
+                  subtotal: subtotal.toString(),
+                  total:  total.toString(),
+                  total_item: "10000",
+                  id_unidad: "Und",
+                  cantidad_kit: "0",
+                  cantidad_de_kit: "0",
+                  recno: "0",
+                  id_precio_item: _cartProductos[i]['id_precio_item'],
+                  factor: "1",
+                  id_impuesto_iva: "IVA19",
+                  total_dcto_adicional: "0",
+                  tasa_dcto_adicional: "0",
+                  id_kit: "",
+                  precio_kit: "0",
+                  tasa_dcto_cliente: "0",
+                  total_dcto_cliente: "0"
+                  );
+            flag_pedido_det = await  OperationDB.insertPedidoDet(nuevo_pedido_det);
+            await OperationDB.getPedidoDetNum(_value_automatico);
+      };
+        if(flag_pedido && flag_pedido_det) {
+              showDialog<String>(
+                context: context,
+                builder: (BuildContext context) => Dialog(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                    child: Container(
+                      height: 283.0,
+                      width: 283.0,
+                      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 20.0),
+                          Image(
+                            height: 90.0,
+                            image: AssetImage('assets/images/icon-check.png'),
+                          ),
+                          SizedBox(height: 20.0),
+                          Text(
+                            'Creación de pedido exitoso',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Color(0xff06538D),
+                                fontSize: 22.0,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 30.0),
+                          Container(
+                            width: 90,
+                            height: 41.0,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5.0),
+                                color: Color(0xff0894FD)),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(5.0),
+                                child: Center(
+                                  child: Text(
+                                    'Aceptar',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                onTap: () {
+                                  removeCarrito();
+                                  setState(() {
+                                    _clientShow = true;
+                                    _productosShowCat = false;
+                                    _productosShow = false;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+              );
+             await OperationDB.updateConsecutivo(int.parse(_value_automatico),_nit,idPedidoUser);
+             isOnline ? await createPedidoAPI() : '';
+        } else {
+            showTopSnackBar(
+              context,
+                 animationDuration: const Duration(seconds: 1),
+              CustomSnackBar.error(
+                message: "Error en la creacion del pedido local",
+              ),
+            );
+    }
+  }
+ 
+
+  Future createPedidoAPI() async {
     final response = await http.post(
       Uri.parse('$_url/synchronization_pedido'),
       headers: <String, String>{
@@ -5760,70 +5898,13 @@ Future<void> searchFactura() async {
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 201 && success) {
-      showDialog<String>(
-        context: context,
-        builder: (BuildContext context) => Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.0))),
-            child: Container(
-              height: 283.0,
-              width: 283.0,
-              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-              child: Column(
-                children: [
-                  SizedBox(height: 20.0),
-                  Image(
-                    height: 90.0,
-                    image: AssetImage('assets/images/icon-check.png'),
-                  ),
-                  SizedBox(height: 20.0),
-                  Text(
-                    'Creación de pedido exitoso',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Color(0xff06538D),
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 30.0),
-                  Container(
-                    width: 90,
-                    height: 41.0,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5.0),
-                        color: Color(0xff0894FD)),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(5.0),
-                        child: Center(
-                          child: Text(
-                            'Aceptar',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        onTap: () {
-                          removeCarrito();
-                          setState(() {
-                            _clientShow = true;
-                            _productosShowCat = false;
-                            _productosShow = false;
-                          });
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
-      );
+
+      //actyualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI
+       
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: "Error en la creacion del pedido",
         ),
@@ -5917,6 +5998,7 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: msg,
         ),
@@ -5941,6 +6023,7 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: msg,
         ),
@@ -6944,6 +7027,7 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: "Error en la creacion del recibo cuentas_por_tercero $msg",
         ),
@@ -7188,6 +7272,7 @@ Future<void> searchFactura() async {
     } else {
       showTopSnackBar(
         context,
+           animationDuration: const Duration(seconds: 1),
         CustomSnackBar.error(
           message: "Error en la creacion del recibo",
         ),

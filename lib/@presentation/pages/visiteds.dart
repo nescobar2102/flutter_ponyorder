@@ -12,7 +12,7 @@ import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 import 'package:flutter/material.dart';
-
+import '../../db/operationDB.dart';
 class VisitedsPage extends StatefulWidget {
   @override
   _VisitedsPageState createState() => _VisitedsPageState();
@@ -34,24 +34,26 @@ class _VisitedsPageState extends State<VisitedsPage> {
       new GlobalKey<ScaffoldState>();
 
   Future searchVisitados() async {
-    final response =
+    /*final response =
         await http.get(Uri.parse("$_url/visitados/$id_vendedor/$fecha1"));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+    if (response.statusCode == 200 && success) {*/
+    final data=  await OperationDB.getVisitados(id_vendedor,fecha1);
+    if (data != false ) {
       setState(() {
-        _datVisits = jsonResponse['data'];
-        _count = jsonResponse['count'];
+        _datVisits = data;
+        _count = data.length;
         _showItems = true;
       });
     } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No existen visitas para hoy"
         ),
       );
     }

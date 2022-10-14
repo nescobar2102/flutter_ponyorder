@@ -35,8 +35,8 @@ class OperationDB {
 
   static Future<Database> _openDB() async {
      var databasesPath = await getDatabasesPath();
-     String path = join(databasesPath, "demo_asset_example1.db");
-    // await deleteDatabase(path);
+     String path = join(databasesPath, "demo_asset_example.db");
+  // await deleteDatabase(path);
    // print("path $path");
     const tableUsuario = """
             CREATE TABLE IF NOT EXISTS usuario(id INTEGER PRIMARY KEY, usuario TEXT, password TEXT,nit TEXT,id_tipo_doc_pe TEXT,id_tipo_doc_rc TEXT)
@@ -367,6 +367,7 @@ CREATE TABLE IF NOT EXISTS  tercero
     id_ciudad TEXT  NOT NULL,
     id_barrio TEXT  NOT NULL,
     telefono TEXT  NOT NULL, 
+    id_actividad TEXT , 
     id_tipo_empresa TEXT  NOT NULL,
     cliente TEXT DEFAULT 'SI',
     fecha_creacion TEXT  ,
@@ -658,7 +659,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
       await db.execute(tableCarteraProveedores);
        await db.execute(viewCartera);
       print("crearon tablas");
-    }, version: 1);
+    }, version: 2);
   }
 
   //insertar los usuarios
@@ -707,18 +708,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
   //seccion de tercero cliente
   static Future getClient(String nit) async {
     print("entra a validar getClient  BD");
-    Database database = await _openDB();
-  /*    final res = await database.rawQuery(
-        " SELECT tercero.id_tercero,tercero.id_sucursal_tercero, usuario,id_tipo_identificacion,tercero.dv,tercero.telefono,ciudad.nombre AS ciudad,tercero.direccion,"
-        " tercero.primer_nombre || ' ' || primer_apellido AS nombre_completo ,"  
-        " nombre_sucursal,e_mail,tercero.nit,limite_credito,tercero.id_forma_pago,tipo_pago.descripcion as forma_pago,"
-        " tercero_cliente.id_precio_item as lista_precio,id_suc_vendedor,id_empresa"
-        " FROM tercero JOIN ciudad ON tercero.id_ciudad=ciudad.id_ciudad AND tercero.nit=ciudad.nit"
-        " JOIN tercero_cliente ON tercero_cliente.id_tercero=tercero.id_tercero AND tercero.nit=tercero_cliente.nit"
-        " JOIN tipo_pago ON tipo_pago.id_tipo_pago=tercero.id_forma_pago AND tercero.nit=tipo_pago.nit "
-        " JOIN empresa ON empresa.nit=tercero.nit"
-        " WHERE tercero.nit ='$nit'"
-        " ORDER BY nombre_completo ASC ");  */
+    Database database = await _openDB(); 
 
         final res = await database.rawQuery(
         "  SELECT tercero.id_tercero,tercero.id_sucursal_tercero, usuario,id_tipo_identificacion,tercero.dv,tercero.telefono,ciudad.nombre AS ciudad,tercero.direccion,"
@@ -729,8 +719,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
         " JOIN ciudad ON tercero.id_ciudad=ciudad.id_ciudad AND tercero.nit=ciudad.nit"
         " JOIN empresa ON empresa.nit=tercero.nit"
         " WHERE tercero.nit ='$nit'"
-        " ORDER BY 1 ASC "); 
- 
+        " ORDER BY 1 ASC ");  
          
     if (res.length > 0) {
       return res;
@@ -773,10 +762,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
                 "id_tercero, id_sucursal_tercero, id_direccion, direccion, telefono, id_pais, id_ciudad, id_depto, tipo_direccion, nit)"
                 "   VALUES (${cliente.id_tercero},${cliente.id_sucursal_tercero},'2', '${cliente.direccion}',${cliente.telefono}, ${cliente.id_pais},${cliente.id_ciudad}, ${cliente.id_depto},"
                 "   'Mercancia', ${cliente.nit})");
-            print("insert de tercero direccion$id4");
-
-
-            
+            print("insert de tercero direccion$id4");  
           }
 
   }
@@ -802,6 +788,22 @@ WHERE C.DISTRIBUCION = 'DC';""";
       flag = true;        
     }
   print("calidacion deasd falg $flag");
+    return flag;
+  }
+
+  
+  //insertar los tercero que viene de la api
+  static Future<bool> updateCliente(String tercero,String nit) async {
+    var flag = false;
+    Database database = await _openDB();
+      final res = await database
+        .rawQuery(" UPDATE tercero SET   flag_enviado='SI' 	WHERE  id_tercero = '$tercero' and nit = '$nit'");
+    print("resultado de sql upadte$res ");
+    if (res.length == 0 ) {    
+      flag = true;        
+    }  
+    
+ 
     return flag;
   }
   ///fin de seccion tercero cliente
@@ -1502,16 +1504,27 @@ WHERE C.DISTRIBUCION = 'DC';""";
       return null;
     }
   } 
+  static Future updateConsecutivo(int numero,String nit,String id_tipo_doc) async {
+   var nuevo_conse =  numero + 1;
+    Database database = await _openDB();
+    final res = await database.rawQuery("UPDATE  tipo_doc SET consecutivo='$nuevo_conse'  WHERE id_tipo_doc='id_tipo_doc' AND nit='$nit' ");
+    if (res.length > 0) {
+      return res;
+    } else {
+      return null;
+    }
+  } 
+
+ 
 
     static Future<bool> insertPedidoDet(PedidoDet pedidodet) async {
     var numero = pedidodet.numero;
-    var id_empresa = pedidodet.id_empresa;
+    var id_item = pedidodet.id_item;
     var nit = pedidodet.nit;
-    var id_sucursal = pedidodet.id_sucursal;
     var id_tipo_doc = pedidodet.id_tipo_doc;
     Database database = await _openDB();
       final res = await database    
-        .rawQuery(" SELECT * FROM pedido_det WHERE id_empresa ='$id_empresa' and id_sucursal= '$id_sucursal' and id_tipo_doc ='$id_tipo_doc' and numero='$numero' and nit= '$nit'"); 
+        .rawQuery(" SELECT * FROM pedido_det WHERE id_item='$id_item' and  id_tipo_doc ='$id_tipo_doc' and numero='$numero' and nit= '$nit'");
     if (res.length == 0) {    
        await database.insert('pedido_det', pedidodet.toMap());
        return true;
@@ -1519,7 +1532,16 @@ WHERE C.DISTRIBUCION = 'DC';""";
       return false;
     }
   }
-   
+  static Future getPedidoDetNum(numero) async {
+    Database database = await _openDB();
+    final res = await database.rawQuery("SELECT count(*) FROM pedido_det where numero = '$numero' ");
+    if (res.length > 0) {
+      print("existen pedido det $res");
+      return res;
+    } else {
+      return null;
+    }
+  }
   static Future getPedidoDet() async {
     Database database = await _openDB();
     final res = await database.rawQuery("SELECT count(*) FROM pedido_det");
@@ -1528,8 +1550,72 @@ WHERE C.DISTRIBUCION = 'DC';""";
     } else {
       return null;
     }
-  } 
-   //seccion de tercero cliente
+  }
+
+
+  static Future getHistorialPedidos(idVendedor,fecha1,fecha2,search) async {
+    Database database = await _openDB();
+
+    var sql = "SELECT T.NOMBRE  as nombre , T.nombre_sucursal as nombre_sucursal ,P.ID_EMPRESA,P.ID_SUCURSAL,"
+    "P.ID_TIPO_DOC,P.NUMERO,  STRFTIME('%d/%m/%Y ', P.FECHA)  AS fecha,  "
+    "P.TOTAL,P.ESTADO,TD.DIRECCION  FROM PEDIDO P "
+    "INNER JOIN TERCERO_DIRECCION TD ON (TD.ID_TERCERO = P.ID_TERCERO "
+    "AND TD.ID_SUCURSAL_TERCERO = P.ID_SUCURSAL_TERCERO "
+    "AND TD.ID_DIRECCION = P.ID_DIRECCION) INNER JOIN TERCERO T ON (T.ID_TERCERO = P.ID_TERCERO "
+    "AND T.ID_SUCURSAL_TERCERO = P.ID_SUCURSAL_TERCERO) WHERE P.ID_VENDEDOR ='$idVendedor' "
+        "AND  date(FECHA)  >= '$fecha1'  AND  date(FECHA)  <=  '$fecha2' ";
+    if (search != '@') {
+      if (!search.isNaN)  {
+    sql += ' AND T.ID_TERCERO = "$search" OR P.NUMERO = "$search" ';
+    } else {
+    sql += ' AND T.NOMBRE ILIKE  "%$search%"  OR  T.NOMBRE_SUCURSAL ILIKE "%$search%" ';
+    }
+    }
+    print("rel sql de historial de pedido $sql");
+    final res = await database.rawQuery(sql);
+    print("el resultado $res");
+    if (res.length > 0) {
+      return res;
+    } else {
+      return false;
+    }
+  }
+
+  static Future getHistorialPedidosDetalle(numero,nit) async {
+    Database database = await _openDB();
+
+    var sql = " SELECT id_item,descripcion_item,cantidad,precio,total FROM pedido_det"
+               " where nit ='$nit' and numero = '$numero'";
+    print("rel sql de historial de pedido det $sql");
+    final res = await database.rawQuery(sql);
+    print("el resultado $res");
+    if (res.length > 0) {
+      return res;
+    } else {
+      return false;
+    }
+  }
+
+  static Future getVisitados(idVendedor,fecha) async {
+    Database database = await _openDB();
+
+    var sql = "SELECT T.NOMBRE as nombre, T.nombre_sucursal as nombre_sucursal ,T.direccion ,T.telefono "
+    "FROM PEDIDO P INNER JOIN TERCERO_DIRECCION TD ON (TD.ID_TERCERO =P.ID_TERCERO "
+    "AND TD.ID_SUCURSAL_TERCERO = P.ID_SUCURSAL_TERCERO AND TD.ID_DIRECCION = P.ID_DIRECCION) "
+    "INNER JOIN TERCERO T ON (T.ID_TERCERO = P.ID_TERCERO AND  T.ID_SUCURSAL_TERCERO = P.ID_SUCURSAL_TERCERO) "
+    "WHERE P.ID_VENDEDOR = '$idVendedor' AND date(FECHA)  = '$fecha'  "
+    "GROUP BY T.NOMBRE , T.nombre_sucursal ,T.direccion ,T.telefono";
+
+    print("rel sql visitados $sql");
+    final res = await database.rawQuery(sql);
+    print("el resultado $res");
+    if (res.length > 0) {
+      return res;
+    } else {
+      return false;
+    }
+  }
+  //seccion de tercero cliente
   static Future getSaldoCartera(String id_tercero, String  id_sucursal_tercero) async {
  
     Database database = await _openDB();

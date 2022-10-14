@@ -17,6 +17,7 @@ class Cliente {
   final String id_ciudad;
   final String id_barrio;
   final String telefono; 
+  final String id_actividad;
 /*   final String cliente;*/
   final String fecha_creacion;
   final String nombre_sucursal;
@@ -49,6 +50,7 @@ class Cliente {
           required this.id_ciudad,
           required this.id_barrio,
           required this.telefono,  
+          required this.id_actividad,
           required this.fecha_creacion,
           required this.nombre_sucursal,
           required this.primer_apellido,
@@ -84,6 +86,7 @@ class Cliente {
       'id_ciudad': id_ciudad,
       'id_barrio': id_barrio,
       'telefono': telefono,
+      'id_actividad':id_actividad,
       'fecha_creacion': fecha_creacion,
       'nombre_sucursal': nombre_sucursal,
       'primer_apellido': primer_apellido,
@@ -110,7 +113,7 @@ class Cliente {
   String toString() {
     return 'Cliente{  id_tercero: $id_tercero, id_sucursal_tercero: $id_sucursal_tercero,'
            '  id_tipo_identificacion: $id_tipo_identificacion,  dv: $dv, nombre: $nombre, direccion: $direccion,'
-           '  id_pais: $id_pais, id_depto: $id_depto, id_ciudad: $id_ciudad, id_barrio: $id_barrio,telefono: $telefono,fecha_creacion: $fecha_creacion,'
+           '  id_pais: $id_pais, id_depto: $id_depto, id_ciudad: $id_ciudad, id_barrio: $id_barrio,telefono: $telefono, id_actividad: $id_actividad,fecha_creacion: $fecha_creacion,'
            '  nombre_sucursal: $nombre_sucursal, primer_apellido: $primer_apellido,'
            '  segundo_apellido: $segundo_apellido, primer_nombre: $primer_nombre,  segundo_nombre: $segundo_nombre, e_mail: $e_mail, nit: $nit,'
            ' id_tipo_empresa: $id_tipo_empresa,id_forma_pago: $id_forma_pago,id_lista_precio:$id_lista_precio, id_precio_item:$id_precio_item,id_vendedor:$id_vendedor,'
