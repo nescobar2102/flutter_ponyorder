@@ -1,31 +1,22 @@
 import 'package:pony_order/@presentation/components/btnForm.dart';
 import 'package:pony_order/@presentation/components/btnSmall.dart';
-import 'package:pony_order/@presentation/components/inputCallback.dart';
 import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
-import 'package:pony_order/@presentation/components/itemCategoryOrderHistoryRecibo.dart';
 import 'package:pony_order/@presentation/components/itemClient.dart';
 import 'package:pony_order/@presentation/components/itemProductOrder.dart';
-import 'package:pony_order/@presentation/components/itemProductOrderHistory.dart';
 import 'package:flutter/material.dart';
 import 'package:select_form_field/select_form_field.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
-import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/safe_area_values.dart';
-import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
 import '../../db/operationDB.dart';
 import '../../models/cliente.dart';
 import '../../models/pedido.dart';
-
-
 
 class HomePage extends StatefulWidget {
   @override
@@ -45,17 +36,18 @@ class _HomePageState extends State<HomePage> {
   bool _checkedCartera = true;
   bool _checkedPedido = false;
   bool _checkedRecibo = false;
-  late int _checked =0; 
+  late int _checked = 0;
   bool isCheckedDV = false;
   bool isReadOnly = true;
-  bool isOnline = true; 
+  bool isOnline = true;
   String _url = 'http://178.62.80.103:5000';
- 
+
   //data
   bool focus = false;
   late String _search = '@';
-  late int _count=0;
+  late int _count = 0;
   late String id_tercero = ''; //la cliente del dataClient para hacer el pedido
+  late String id_vendedor = '';
   late String nombre_tercero = '';
   late String direccion_tercero = '';
   late String tlf_tercero = '';
@@ -69,7 +61,7 @@ class _HomePageState extends State<HomePage> {
   String _user = '';
   String _nit = '';
   String idPedidoUser = '';
-  String idReciboUser = ''; 
+  String idReciboUser = '';
   int _cantidadProducto = 1;
 
   //nuevo cliente
@@ -87,12 +79,9 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsBarrio = '';
   late Object _body;
   List<dynamic> _datClient = [];
-
   List<dynamic> _datDetalleFactura = [];
   late int _countFactura;
-    List<dynamic> _datFactura= [];
-
-    bool _showItems = false;
+  List<dynamic> _datFactura = [];
 
   final myControllerNroDoc = TextEditingController();
   final myControllerDv = TextEditingController();
@@ -105,8 +94,7 @@ class _HomePageState extends State<HomePage> {
   final myControllerEmail = TextEditingController();
   final myControllerTelefono = TextEditingController();
 //nuevo cliente
-  
- 
+
 //nuevo pedido
   List<Map<String, dynamic>> _itemsFormaPago = [
     {"value": "", "label": "Seleccione"},
@@ -117,8 +105,8 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsFormaPago = '';
   late String _value_automatico = '';
   late String _value_automaticoRecibo = '';
-  String _value_DireccionFactura = '';
-  String _value_DireccionMercancia = '';
+  String _value_DireccionFactura = '0';
+  String _value_DireccionMercancia = '0';
 
   late String forma_pago_pedido = '';
   List<dynamic> _datClasificacionProductos = [];
@@ -137,7 +125,7 @@ class _HomePageState extends State<HomePage> {
   late String _searchProducto = '@';
   late int _countProductos = 0;
   List<dynamic> _datProductos = [];
-  List<dynamic> _cartProductos = [];
+  List<Map<String, dynamic>> _cartProductos = [];
 
   List<Map<String, dynamic>> _itemsListPrecio = [
     {"value": "", "label": "Seleccione"},
@@ -145,14 +133,14 @@ class _HomePageState extends State<HomePage> {
   ];
 
   //variables de pedidos
-  List<dynamic> _addProductos = [];
   bool selectItem = false;
   final myControllerNroPedido = TextEditingController();
   final myControllerDescuentos = TextEditingController(text: "0");
   final myControllerObservacion = TextEditingController();
-  final myControllerCantidad = TextEditingController();
+  final myControllerCantidad = TextEditingController(text: "1");
   final myControllerOrdenCompra = TextEditingController();
-
+  final myControllerBuscarProd = TextEditingController();
+  final myControllerBuscarCatego= TextEditingController();
   late String _precioList = '';
   late String _value_itemsListPrecio = '';
   late String _itemSelect = '';
@@ -169,11 +157,6 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsTipoPago = '';
 
   //nuevo pedido
-  List<Map<String, dynamic>> _itemsBanco = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "07", "label": "Bancolombia"},
-    {"value": "23", "label": "Banco de Occidente"},
-  ];
 
   List<Map<String, dynamic>> _itemsTipoPago = [
     {"value": "", "label": "Seleccione"},
@@ -181,6 +164,8 @@ class _HomePageState extends State<HomePage> {
     {"value": "02", "label": "TRANSFERENCIA"},
     {"value": "03", "label": "PAGO CON CHEQUES"},
   ];
+
+  get callback => null;
 
   @override
   void initState() {
@@ -220,150 +205,189 @@ class _HomePageState extends State<HomePage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
-      idReciboUser = (prefs.getString('idReciboUser') ?? ''); 
+      idReciboUser = (prefs.getString('idReciboUser') ?? '');
       print("el usuario es $_user $_nit $idPedidoUser");
-      if (_nit != '' ) {
-       searchClient();      
+      if (_nit != '') {
+        searchClient();
+        searchVendedor(_nit.trim(), _user.trim());
       }
     });
   }
-    
-  late List<Map<String, dynamic>> _itemsDepartamento=[];
-  Future getItemDepartamento() async {   
-     final data= await  OperationDB.getDeptoList(_nit);   
-        if (data != false) {  
+  
+  String id_sucursal_tercero_cliente = '';
+  String id_forma_pago_cliente = '';
+  String id_precio_item_cliente = '';
+  String id_lista_precio_cliente = '';
+  String id_suc_vendedor_cliente = '';
+
+
+  Future<void> searchVendedor(_nit, user) async {
+    final vendedor = await OperationDB.getVendedor(_nit, _user);
+    if (vendedor != false) {
+      setState(() {
+        id_vendedor = vendedor[0]['id_tercero'];
+        id_sucursal_tercero_cliente = vendedor[0]['id_sucursal_tercero'].toString();
+        id_forma_pago_cliente = vendedor[0]['id_forma_pago'];
+        id_precio_item_cliente = vendedor[0]['id_precio_item'];
+        id_lista_precio_cliente = vendedor[0]['id_lista_precio'];
+        id_suc_vendedor_cliente = vendedor[0]['id_suc_vendedor'].toString();
+        print("-----el di del vendedor es $id_vendedor");
+      });
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        prefs.setString("id_vendedor", id_vendedor);
+        prefs.setString("id_sucursal_tercero", id_sucursal_tercero_cliente);
+        prefs.setString("id_forma_pago", id_forma_pago_cliente);
+        prefs.setString("id_precio_item", id_precio_item_cliente);
+        prefs.setString("id_lista_precio", id_lista_precio_cliente);
+        prefs.setString("id_suc_vendedor", id_suc_vendedor_cliente);
+      });
+    }
+  }
+
+  Future<void> searchDigitoVerif() async {
+    if(myControllerNroDoc.text.isNotEmpty){
+    //_submitDialog(context);
+  final numero_id =  myControllerNroDoc.text;
+    print("busca el digito $numero_id");
+    final response = await http.get(Uri.parse("$_url/cliente_dv/$numero_id"));
+    var jsonResponse =
+    convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    var msg = jsonResponse['msg'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      setState(() {
+       myControllerDv.text = data.toString();
+      });
+     } else {
+        _showBarMsg('$msg',false);
+      }
+    }
+  }
+
+
+  late List<Map<String, dynamic>> _itemsDepartamento = [];
+  Future getItemDepartamento() async {
+    final data = await OperationDB.getDeptoList(_nit);
+    if (data != false) {
       setState(() {
         _itemsDepartamento = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         }); 
-   
+      });
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "error",
-        ),
-      );
+      _showBarMsg('Error',false);
     }
   }
- 
-  
-  late List<Map<String, dynamic>> _itemsBarrio=[];
-  Future getItemBarrio() async {   
-     final data= await  OperationDB.getBarrioList(_nit);   
-        if (data != false) {  
+
+  late List<Map<String, dynamic>> _itemsBarrio = [];
+  Future getItemBarrio(id_ciudad) async {
+    final data = await OperationDB.getBarrioList(_nit, id_ciudad);
+    if (data != false) {
       setState(() {
         _itemsBarrio = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         });    
+      });
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "error",
-        ),
-      );
+      setState(() {
+        _itemsBarrio = [];
+      });
+      _showBarMsg('Error',false);
     }
   }
- 
-  late List<Map<String, dynamic>> _itemsClasification=[];
-  Future getItemClasificacion() async { 
-      final data= await  OperationDB.getTipoEmpresaList(_nit);   
-        if (data != false) {  
+
+  late List<Map<String, dynamic>> _itemsClasification = [];
+  Future getItemClasificacion() async {
+    final data = await OperationDB.getTipoEmpresaList(_nit);
+    if (data != false) {
       setState(() {
         _itemsClasification = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         }); 
+      });
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "error",
-        ),
-      );
+      _showBarMsg('Error',false);
     }
-  } 
- 
-  late List<Map<String, dynamic>> _itemsTypeDoc=[];
-  Future getItemTypeIdentication() async { 
-      final data= await  OperationDB.getTipoIdentificacionList();   
-        if (data != false) {  
+  }
+
+  late List<Map<String, dynamic>> _itemsTypeDoc = [];
+  Future getItemTypeIdentication() async {
+    final data = await OperationDB.getTipoIdentificacionList();
+    if (data != false) {
       setState(() {
         _itemsTypeDoc = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         }); 
+      });
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "error",
-        ),
-      );
+      _showBarMsg('Error',false);
     }
-  } 
- 
+  }
 
-  late List<Map<String, dynamic>> _itemsMedioContacto=[];
-  Future getItemMedioContacto() async { 
-     final data= await  OperationDB.getMedioContactoList(_nit);   
-        if (data != false) {  
+  late List<Map<String, dynamic>> _itemsMedioContacto = [];
+  Future getItemMedioContacto() async {
+    final data = await OperationDB.getMedioContactoList(_nit);
+    if (data != false) {
       setState(() {
         _itemsMedioContacto = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         });
-    }  else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "no se obtiene medio de contacto",
-        ),
-      );
+      });
+    } else {
+      _showBarMsg('No se obtuvo medio de contacto',false);
     }
   }
- 
- late List<Map<String, dynamic>> _itemsZona=[];
-  Future getItemZona() async { 
-    final data= await  OperationDB.getZonaList(_nit);   
-        if (data != false) {  
+
+  late List<Map<String, dynamic>> _itemsZona = [];
+  Future getItemZona() async {
+    final data = await OperationDB.getZonaList(_nit);
+    if (data != false) {
       setState(() {
         _itemsZona = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         });
+      });
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "No se obtuvo la zona",
-        ),
-      );
+      _showBarMsg('No se obtuvo la zona',false);
     }
   }
- 
- late List<Map<String, dynamic>> _itemsCiudad=[];
-  Future getItemCiudad(iddepto) async { 
-    final data= await  OperationDB.getCiudadList(_nit,iddepto);   
-        if (data != false) {  
+
+  late List<Map<String, dynamic>> _itemsCiudad = [];
+  Future getItemCiudad(iddepto) async {
+    final data = await OperationDB.getCiudadList(_nit, iddepto);
+    if (data != false) {
       setState(() {
         _itemsCiudad = (data as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         });
+      });
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "No se obtuvo la ciudad",
-        ),
-      );
+      setState(() {
+        _itemsCiudad = [];
+      });
+      _showBarMsg('No se obtuvo la ciudad',false);
     }
   }
- 
+
+  late List<Map<String, dynamic>> _itemsBanco = [];
+  Future getItemBanco(iddepto) async {
+    final data = await OperationDB.getBancoList(_nit);
+    if (data != false) {
+      setState(() {
+        _itemsBanco = (data as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+      });
+    } else {
+      setState(() {
+        _itemsBanco = [];
+      });
+      _showBarMsg('No se obtuvo el banco',false);
+    }
+  }
+
 //fin data
   final myControllerSearch = TextEditingController();
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
@@ -372,54 +396,59 @@ class _HomePageState extends State<HomePage> {
   Future<void> searchClient() async {
     isCheckedDV = false;
     isReadOnly = false;
-    myControllerNroDoc.clear();  myControllerDv.clear();  myControllerPrimerNombre.clear();  myControllerSegundoNombre.clear();
-    myControllerPrimerApellido.clear();  myControllerSegundoApellido.clear();  myControllerRazonSocial.clear();  myControllerDireccion.clear();
-    myControllerEmail.clear();  myControllerTelefono.clear();
-    print("buscar el cliente");
-    _body = {
-      'nit': _nit,
-      'nombre': (_search.isNotEmpty && _search != '') ? _search : null,
-    };
-       print("buscar el cliente----------- $_body");
-   
-      final allClient= await  OperationDB.getClient(_nit);   
-      if (allClient != false) {    
-        setState(() {
-             _count = allClient.length;
-           _datClient = allClient; 
-          _clientShow = true;
-          _productosShow = false;
-        });
-   
+    myControllerNroDoc.clear();
+    myControllerDv.clear();
+    myControllerPrimerNombre.clear();
+    myControllerSegundoNombre.clear();
+    myControllerPrimerApellido.clear();
+    myControllerSegundoApellido.clear();
+    myControllerRazonSocial.clear();
+    myControllerDireccion.clear();
+    myControllerEmail.clear();
+    myControllerTelefono.clear();
+
+    final allClient = await OperationDB.getClient(_nit, _search.trim());
+    if (allClient != false) {
+      setState(() {
+        _count = allClient.length;
+        _datClient = allClient;
+        _clientShow = true;
+        _productosShowCat = false;
+        _productosShow = false;
+        _formNewClientShowDescuento = false;
+        _formNewClientShow = false;
+      });
     } else {
-      showTopSnackBar(
-        context,
-        animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "No existen clientes",
-        ),
-      );
+      _showBarMsg('No existen clientes',false);
     }
-    
-     setState(() {
-          _clientShow = true;
-          _productosShow = false;
-        });
+
+    setState(() {
+      _clientShow = true;
+      _productosShowCat = false;
+      _productosShow = false;
+      _formNewClientShowDescuento = false;
+      _formNewClientShow = false;
+    });
   }
 
-  Future<void> saldoCartera(bool pedido) async {  
+  Future<void> saldoCartera(bool pedido) async {
     print("busca saldoCartera");
-        var data = await  OperationDB.getSaldoCartera(id_tercero, id_sucursal_tercero);   
-      if (data != false) {    
+    var data =
+        await OperationDB.getSaldoCartera(id_tercero, id_sucursal_tercero);
+    if (data != false) {
       setState(() {
-        _saldoCartera = data[0]['debito'] != null ? data[0]['debito'].toString() : '0';
+        _saldoCartera =
+            data[0]['debito'] != null ? data[0]['debito'].toString() : '0';
       });
-      var data1= await  OperationDB.getFormPago(id_tercero, _nit);
+      var data1 = await OperationDB.getFormPago(id_tercero, _nit);
       if (data1 != false) {
         setState(() {
           id_tipo_pago = data1[0]['id_tipo_pago'];
           forma_pago_tercero = data1[0]['descripcion'];
         });
+      } else {
+        id_tipo_pago = '01';
+        forma_pago_tercero = 'EFECTIVO';
       }
       if (_value_automatico != '' && pedido) {
         _direccionClient = [];
@@ -427,190 +456,141 @@ class _HomePageState extends State<HomePage> {
       }
     } else {
       Navigator.pop(context);
-      showTopSnackBar(
-        context,
-         animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "No se obtuvo  el saldo",
-        ),
-      );
+      _showBarMsg('No se obtuvo  el saldo',false);
     }
   }
-  
-Future<void> searchFactura() async { 
-  print ("busca factura");
-      final allFactura= await  OperationDB.getFacturaId(id_tercero);   
-        if (allFactura != false) {   
-          setState(() {
-          _datFactura = allFactura;
-          }); 
-        } else{
-          print("no tiene factura ");
-        }
-}
 
-  
+  Future<void> searchFactura() async {
+    print("busca factura");
+    final allFactura = await OperationDB.getFacturaId(id_tercero);
+    if (allFactura != false) {
+      setState(() {
+        _datFactura = allFactura;
+      });
+    } else {
+      print("no tiene factura ");
+    }
+  }
+
   Future<void> _saveClient() async {
     print("Save client A la bd");
 
-      final nuevo_cliente = Cliente (
-          id_tercero: myControllerNroDoc.text,
-          id_sucursal_tercero: "1",
-          id_tipo_identificacion: _value_itemsTypeDoc,
-          dv: myControllerDv.text,
-          nombre: isCheckedDV ? myControllerPrimerNombre.text : myControllerRazonSocial.text,
-          direccion: myControllerDireccion.text,
-          id_pais: "57",
-          id_depto: _value_itemsDepartamento,
-          id_ciudad: _value_itemsCiudad,
-          id_barrio: _value_itemsBarrio,
-          telefono: myControllerTelefono.text,
-          id_actividad: _value_itemsClasification,
-          fecha_creacion:'${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-          nombre_sucursal: !isCheckedDV
-          ? myControllerRazonSocial.text
-          : myControllerPrimerNombre.text +
-          myControllerPrimerApellido.text,
-          primer_apellido: isCheckedDV ? myControllerPrimerApellido.text : '',
-          segundo_apellido:
-              isCheckedDV ? myControllerSegundoApellido.text : '',
-          primer_nombre: isCheckedDV ? myControllerPrimerNombre.text : '',
-          segundo_nombre: isCheckedDV ? myControllerSegundoNombre.text : '',
-          e_mail: myControllerEmail.text,        
-          id_forma_pago: "01",
-          id_precio_item: "01",
-          id_lista_precio:"01",
-          id_vendedor: "16499705",
-          id_medio_contacto: _value_itemsMedioContacto,
-          id_zona: _value_itemsZona, 
-          id_suc_vendedor: "1",
-          nit: _nit,
-          id_tipo_empresa: '',
-          flag_persona_nat: isCheckedDV ? 'SI' :'NO'
-       );
-         await  OperationDB.insertCliente(nuevo_cliente);
-         await  _saveClient_api();
-     }  
-       
+    final nuevo_cliente = Cliente(
+        id_tercero: myControllerNroDoc.text.trim(),
+        id_sucursal_tercero: id_sucursal_tercero_cliente,
+        id_tipo_identificacion: _value_itemsTypeDoc,
+        dv: myControllerDv.text.trim(),
+        nombre: isCheckedDV
+            ? myControllerPrimerNombre.text.trim()
+            : myControllerRazonSocial.text.trim(),
+        direccion: myControllerDireccion.text.trim(),
+        id_pais: "57",
+        id_depto: _value_itemsDepartamento,
+        id_ciudad: _value_itemsCiudad,
+        id_barrio: _value_itemsBarrio,
+        telefono: myControllerTelefono.text.trim(),
+        id_actividad: _value_itemsClasification,
+        fecha_creacion:
+            '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+        nombre_sucursal: !isCheckedDV
+            ? myControllerRazonSocial.text.trim()
+            : myControllerPrimerNombre.text.trim() +
+                ' ' +
+                myControllerPrimerApellido.text.trim(),
+        primer_apellido: isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
+        segundo_apellido: isCheckedDV ? myControllerSegundoApellido.text.trim() : '',
+        primer_nombre: isCheckedDV ? myControllerPrimerNombre.text.trim() : '',
+        segundo_nombre: isCheckedDV ? myControllerSegundoNombre.text.trim() : '',
+        e_mail: myControllerEmail.text.trim(),
+        id_forma_pago: id_forma_pago_cliente,
+        id_precio_item: id_precio_item_cliente,
+        id_lista_precio: id_lista_precio_cliente,
+        id_vendedor: id_vendedor,
+        id_medio_contacto: _value_itemsMedioContacto,
+        id_zona: _value_itemsZona,
+        id_suc_vendedor: id_suc_vendedor_cliente,
+        nit: _nit,
+        id_tipo_empresa: '',
+        flag_persona_nat: isCheckedDV ? 'SI' : 'NO');
+    final insert = await OperationDB.insertCliente(nuevo_cliente);
+    if (insert) {
+      _showBarMsg('Creación exitosa del cliente',true);
+      await _saveClient_api();
+     /* _search = '@';
+      searchClient();*/
+    } else {
+      _showBarMsg('Error en la creción del cliente',false);
+      Navigator.pushNamed(context, 'home');
+    }
+  }
 
   Future<void> _saveClient_api() async {
+    final tercero_update = myControllerNroDoc.text;
     print("Save clientapi ");
-
     final response = await http.post(Uri.parse("$_url/nuevo_cliente_app"),
         body: ({
-          "id_tercero": myControllerNroDoc.text,
-          "id_sucursal_tercero": "1",
+          "id_tercero": tercero_update.trim(),
+          "id_sucursal_tercero":id_sucursal_tercero_cliente,
           "id_tipo_identificacion": _value_itemsTypeDoc,
-          "dv": myControllerDv.text,
-          "nombre": isCheckedDV ? myControllerPrimerNombre.text : myControllerRazonSocial.text,
-          "direccion": myControllerDireccion.text,
+          "dv": myControllerDv.text.trim(),
+          "nombre": isCheckedDV
+              ? myControllerPrimerNombre.text.trim()
+              : myControllerRazonSocial.text.trim(),
+          "direccion": myControllerDireccion.text.trim(),
           "id_pais": "57",
           "id_depto": _value_itemsDepartamento,
           "id_ciudad": _value_itemsCiudad,
           "id_barrio": _value_itemsBarrio,
-          "telefono": myControllerTelefono.text,
-          "id_actividad":_value_itemsClasification,
+          "telefono": myControllerTelefono.text.trim(),
+          "id_actividad": _value_itemsClasification,
           "nombre_sucursal": !isCheckedDV
-              ? myControllerRazonSocial.text
-              : myControllerPrimerNombre.text +
-               myControllerPrimerApellido.text,
-          "primer_apellido": isCheckedDV ? myControllerPrimerApellido.text : '',
+              ? myControllerRazonSocial.text.trim()
+              : myControllerPrimerNombre.text.trim() +
+                  ' ' +
+                  myControllerPrimerApellido.text.trim(),
+          "primer_apellido": isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
           "segundo_apellido":
-              isCheckedDV ? myControllerSegundoApellido.text : '',
-          "primer_nombre": isCheckedDV ? myControllerPrimerNombre.text : '',
-          "segundo_nombre": isCheckedDV ? myControllerSegundoNombre.text : '',
-          "e_mail": myControllerEmail.text,
-          "telefono_celular": myControllerTelefono.text,
-          "id_forma_pago": "01",
-          "id_precio_item": "01",
-          "id_vendedor": "16499705",
+              isCheckedDV ? myControllerSegundoApellido.text.trim() : '',
+          "primer_nombre": isCheckedDV ? myControllerPrimerNombre.text.trim() : '',
+          "segundo_nombre": isCheckedDV ? myControllerSegundoNombre.text.trim() : '',
+          "e_mail": myControllerEmail.text.trim(),
+          "telefono_celular": myControllerTelefono.text.trim(),
+          "id_forma_pago": id_forma_pago_cliente,
+          "id_precio_item": id_precio_item_cliente,
+          "id_lista_precio": id_lista_precio_cliente,
+          "id_vendedor": id_vendedor,
           "id_medio_contacto": _value_itemsMedioContacto,
           "id_zona": _value_itemsZona,
           "id_direccion": "1",
           "tipo_direccion": "Factura",
-          "id_suc_vendedor": "1",
+          "id_suc_vendedor": id_suc_vendedor_cliente,
           'nit': _nit
         }));
- 
+
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    if (response.statusCode == 201 && success) {
-      /*showDialog<String>(
-        context: context,
-        builder: (BuildContext context) => Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.0))),
-            child: Container(
-              height: 283.0,
-              width: 100.0,
-              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-              child: Column(
-                children: [
-                  SizedBox(height: 20.0),
-                  Image(
-                    height: 90.0,
-                    image: AssetImage('assets/images/icon-check.png'),
-                  ),
-                  SizedBox(height: 20.0),
-                  Text(
-                    'Creación de cliente exitosa',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Color(0xff06538D),
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 30.0),
-                  Container(
-                    width: 100.0,
-                    height: 41.0,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5.0),
-                        color: Color(0xff0894FD)),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(5.0),
-                        child: Center(
-                          child: Text(
-                            'Aceptar',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pushNamed(context, 'home');
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
-      );*/
-
-
+    print("ssuccesssuccesssuccess $success $response");
+    if (response.statusCode != 201 && !success) {
+      _showBarMsg('No se sincronizó el cliente',false); ;
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "No se sincronizó el cliente",
-        ),
-      );
+      print("se actualiza el status del cliente");
+      await OperationDB.updateCliente(tercero_update, _nit);
     }
+     Navigator.pushNamed(context, 'home');
   }
 
   Future<void> getConsecutivo(bool pedido) async {
-    print("id de tercero a buscar $id_tercero $nombre_tercero $id_empresa");
+    print(
+        "--------------getConsecutivo getConsecutivo $idReciboUser $id_tercero $nombre_tercero $id_empresa");
     var idTipoDoc = pedido ? idPedidoUser : idReciboUser;
-      final allConse= await  OperationDB.getConsecutivoTipoDoc(_nit,idTipoDoc,id_empresa);   
-      if (allConse != false) {  
-      _value_automatico = allConse[0]['consecutivo'].toString(); 
+    final allConse =
+        await OperationDB.getConsecutivoTipoDoc(_nit, idTipoDoc, id_empresa);
+    if (allConse != false) {
+      _value_automatico = allConse[0]['consecutivo'].toString();
       if (_value_automatico != '') {
+        print("se busca el carrito en el home");
+        await ObtieneCarrito(false);
         saldoCartera(pedido);
       } else {
         setState(() {
@@ -618,58 +598,60 @@ Future<void> searchFactura() async {
         });
       }
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "Error no se obtuvo consecutivo",
-        ),
-      );
+      _showBarMsg('No se obtuvo consecutivo',false);
     }
   }
 
-  late List<Map<String, dynamic>> _direccionClient=[];
+  Future<void> ObtieneCarrito(bool update) async {
+    final data = await OperationDB.getCarrito(
+        _nit, id_tercero, _value_automatico, false);
+    if (data != false) {
+      _cartProductos =
+          (data as List).map((dynamic e) => e as Map<String, dynamic>).toList();
+      print("tiene articulos en el carrito $_cartProductos");
+    } else {
+    //  _cartProductos = [];
+    }
+    totalPedido = await valorTotal();
+    numeroAletra(totalPedido.toString());
+    if (update) {
+      await OperationDB.updateCarritoG(
+          _value_automatico, totalDescuento, totalPedido, _letras);
+    }
+  }
+
+  late List<Map<String, dynamic>> _direccionClient = [];
   Future<void> searchClientDireccion() async {
-    print("busca direccion");
-    _body = {
-      'nit': _nit,
-      'id_tercero':
-          (id_tercero.isNotEmpty && id_tercero != '') ? id_tercero : null,
-    };
-    
-    final allDireccion= await  OperationDB.getDireccion(_nit,id_tercero);   
-        if (allDireccion != false) {  
+    final allDireccion = await OperationDB.getDireccion(_nit, id_tercero);
+    if (allDireccion != false) {
       setState(() {
         _direccionClient = (allDireccion as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-         
+
         Navigator.pop(context);
         _clientShow = false;
         _formOrderShow = true;
         _productosShow = false;
-          searchFactura(); //busca las facturas
+        searchFactura(); //busca las facturas
       });
     } else {
       Navigator.pop(context);
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "El cliente no registra dirección",
-        ),
-      );
+      _showBarMsg('El cliente no registra dirección',false);
     }
   }
 
   Future<void> searchClasificacionProductos() async {
-    print("searchClasificacionProductos-----------CB------------------- ");  
-       var data= await  OperationDB.getClasificacionProductos(_nit,'1','-');   
-        if (data != false) {  
-       _datClasificacionProductos = data;
+
+    _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text :'@';
+
+    var data =
+        await OperationDB.getClasificacionProductos(_nit, '1', '-', true,_search);
+    if (data != false) {
+      _datClasificacionProductos = data;
       _countClasificacion = data.length;
       setState(() {
-        if (_countClasificacion > 0) {        
+        if (_countClasificacion > 0) {
           idClasificacion =
               '${_datClasificacionProductos[0]['id_clasificacion']}';
           _formOrderShow = false;
@@ -680,122 +662,87 @@ Future<void> searchFactura() async {
         }
       });
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "ERROR SCP",
-        ),
-      );
+      _showBarMsg('ERROR SCP',false);
     }
   }
 
   Future<void> selectProducto() async {
-     print("selectProducto");
-    _body = {'nit': _nit, 'nombre': '@', 'nivel': '1', 'id_padre': '-'}; 
-
-     var data= await  OperationDB.getClasificacionProductos(_nit,'1','-');   
-        if (data != false) {  
+    String _search = '@';
+  //  _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text : _search;
+     print("-************selectProducto*********** $_search");
+    var data =
+        await OperationDB.getClasificacionProductos(_nit, '1', '-', true,_search);
+    if (data != false) {
       _datClasificacionProductos = data;
       _countClasificacion = data.length;
       setState(() {
-        if (_countClasificacion > 0) { 
+        if (_countClasificacion > 0) {
           idClasificacion =
               '${_datClasificacionProductos[0]['id_clasificacion']}';
-          _formOrderShow = false;
-          _productosShow = true;
+          if(_search =='@') {
+            _formOrderShow = false;
+            _productosShow = true;
+          }
           _productosShow
               ? _productos(context, _datClasificacionProductos)
               : Container();
         }
       });
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "ERROR SP1"
-        ),
-      );
+      _showBarMsg('ERROR SP1',false);
     }
   }
 
   Future<void> selectProductoNivel() async {
-    print("selectProductoNivel");
-    _body = {'nit': _nit, 'nombre': '@', 'nivel': '2', 'id_padre': _id_padre};
- 
-     var data= await  OperationDB.getClasificacionProductos(_nit,'2',_id_padre);   
-        if (data != false) {  
+
+    var data =
+        await OperationDB.getClasificacionProductos(_nit, '2', _id_padre, true,'@');
+    if (data != false) {
       _datClasificacionProductosNivel = data;
-      _countClasificacionNivel =data.length;
+      _countClasificacionNivel = data.length;
       setState(() {
         idClasificacion =
             '${_datClasificacionProductosNivel[0]['id_clasificacion']}';
         searchProductosPedido();
       });
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message:"ERROR SPN2"
-        ),
-      );
+      _showBarMsg('ERROR SPN2',false);
     }
   }
 
   Future<void> searchProductosPedido() async {
-    print("-----searchProductosPedido----- $idClasificacion");
-    _body = {
-      'nit': _nit,
-      'id_clasificacion': idClasificacion,
-      'descripcion': (_searchProducto.isNotEmpty && _searchProducto != '')
-          ? _searchProducto
-          : '@',
-    };
 
-    var data= await  OperationDB.getItems(_nit,idClasificacion);
-    if (data != false) {    
+    final  _search =  myControllerBuscarProd.text.isNotEmpty ? myControllerBuscarProd.text : '@';
+
+    print("-------*-*--------searchProductosPedido *---------**-*-- $_search");
+    var data = await OperationDB.getItems(_nit, idClasificacion,_search);
+    if (data != false) {
       setState(() {
-       _datProductos = data;
-       _countProductos =data.length;
+        _datProductos = data;
+        _countProductos = data.length;
         _productosShow = false;
         _productosShowCat = true;
       });
     } else {
-         setState(() {
-       _datProductos = [];
-       _countProductos = 0;
-       
+      setState(() {
+        _datProductos = [];
+        _countProductos = 0;
       });
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "No tiene productos"
-        ),
-      );
+      _showBarMsg('No tiene productos',false);
     }
   }
 
   void searchPrecioProductos(String idItem) async {
-
-    var data= await  OperationDB.getPrecioProducto(_nit,idItem,_value_itemsListPrecio);
+    var data = await OperationDB.getPrecioProducto(
+        _nit, idItem, _value_itemsListPrecio);
     if (data != false) {
       setState(() {
-       _precio =   double.parse(data[0]['precio']);
+        _precio = double.parse(data[0]['precio']);
         _itemSelect = data[0]['id_item'];
         _descuento = double.parse(data[0]['descuento_maximo']);
-        print("El de mierdad precio precio $_precio $_itemSelect $_descuento");
       });
-    }else{
-         showTopSnackBar(
-         context,
-         animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "No se obtuvo el precio de este producto",
-        ),
-      );
+    } else {
+      _showBarMsg('No se obtuvo el precio de este producto',false);
     }
   }
 
@@ -807,12 +754,57 @@ Future<void> searchFactura() async {
     });
   }
 
+  List<dynamic> _datPedido = [];
+  List<dynamic> _datDetallePedido = [];
+  //historial de pedido del cliente
+  Future<void> getHistorialPedidosClienteDetalle() async {
+    final data =
+        await OperationDB.getHistorialPedidosClienteBasico(id_tercero, _nit);
+    if (data != false) {
+      final dataD = await OperationDB.getHistorialPedidosClienteDetalle(
+          id_tercero, _nit, data[0]['numero']);
+      if (dataD != false) {
+        setState(() {
+          _datPedido = data;
+          _datDetallePedido = dataD;
+          _checkedCartera = false;
+          _checkedPedido = true;
+          _checkedRecibo = false;
+        });
+      }
+    } else {
+      _showBarMsg('No tiene pedidos este cliente',false);
+    }
+  }
+
+  List<dynamic> _datRecibo = [];
+  List<dynamic> _datDetalleRecibo = [];
+  //historial de recibo del cliente
+  Future<void> getHistorialReciboClienteDetalle() async {
+    final data =
+        await OperationDB.getHistorialReciboClienteBasico(id_tercero, _nit);
+    if (data != false) {
+      final dataD = await OperationDB.getHistorialReciboClienteDetalle(
+          id_tercero, _nit, data[0]['numero']);
+      if (dataD != false) {
+        setState(() {
+          _datRecibo = data;
+          _datDetalleRecibo = dataD;
+          _checkedCartera = false;
+          _checkedPedido = false;
+          _checkedRecibo = true;
+        });
+      }
+    } else {
+      _showBarMsg('No tiene recibos este cliente',false);
+    }
+  }
+
 //fin api///////////////////////
 
 //visual
 
   late DateTime _selectedDate = DateTime.now();
-
   //Method for showing the date picker
   void _pickDateDialog() {
     showDatePicker(
@@ -897,8 +889,8 @@ Future<void> searchFactura() async {
         body: Scaffold(
           key: _drawerscaffoldkey,
           drawer: _menu(context),
-          endDrawer:
-              _shoppingCart(context, _cartProductos, _cartProductos.length),
+          endDrawer: _shoppingCart(context),
+
           body: CustomScrollView(
             slivers: [
               SliverList(
@@ -920,6 +912,11 @@ Future<void> searchFactura() async {
                               : !_productosShow && !_productosShowCat
                                   ? TextField(
                                       controller: myControllerSearch,
+                                        onChanged: (text) {
+                                          if(text.isEmpty){
+                                            validateAndSubmit();
+                                          }
+                                        },
                                       decoration: InputDecoration(
                                         hintText: !_productosShow
                                             ? 'Buscar cliente'
@@ -1008,8 +1005,7 @@ Future<void> searchFactura() async {
     //historial
     setState(() {
       id_tercero = '${data['id_tercero']}';
-      nombre_tercero =
-          '${data['nombre_sucursal']}  ';
+      nombre_tercero = '${data['nombre_sucursal']}  ';
       direccion_tercero = '${data['direccion']}';
       tlf_tercero = '${data['telefono']}';
       id_empresa = '${data['id_empresa']}';
@@ -1028,7 +1024,7 @@ Future<void> searchFactura() async {
       nombre_tercero =
           '${data['nombre_completo'].toString()}  ${data['nombre_sucursal'].toString()} ';
       //forma_pago_tercero = '${data['forma_pago'].toString()}';
-   //   _value_itemsFormaPago = data['id_forma_pago'];
+      //   _value_itemsFormaPago = data['id_forma_pago'];
       id_empresa = '${data['id_empresa']}';
       id_suc_vendedor = '${data['id_suc_vendedor']}';
       id_sucursal_tercero = '${data['id_sucursal_tercero']}';
@@ -1047,29 +1043,94 @@ Future<void> searchFactura() async {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic)),
-                SizedBox(height: 10.0),
-                for (var i = 0; i < _count; i++) ...[
-                  _ItemClient('$_count', _datClient[i]),
-                ],
-              SizedBox(height: 30.0),
-                BtnForm(
+        SizedBox(height: 10.0),
+        SizedBox(
+          height: 535.0,
+          child: ListView.builder(
+            itemCount: _count ,
+              itemBuilder: (context, i) =>_ItemClient('$_count', _datClient[i]),
+            /*children: [
+              for (var i = 0; i < _count; i++) ...[
+                _ItemClient('$_count', _datClient[i]),
+              ],
+            ],*/
+          ),
+        ),
+        SizedBox(height: 10.0),
+        BtnForm(
             text: 'Crear cliente',
             color: Color(0xff0894FD),
             callback: () => {
                   setState(() {
                     getItemTypeIdentication();
                     getItemDepartamento();
-                    getItemClasificacion(); 
-                    getItemMedioContacto(); 
+                    getItemClasificacion();
+                    getItemMedioContacto();
                     getItemZona();
-                    getItemCiudad('76');
-                    getItemBarrio();
+                    //getItemCiudad('76');
+                    // getItemBarrio();
                     _clientShow = false;
                     _formShow = true;
                   })
                 }),
         SizedBox(height: 10.0),
       ],
+    );
+  }
+
+  Widget InputCallback(BuildContext context,hintText,iconCallback,callback,controller) {
+    final _size = MediaQuery.of(context).size;
+    return Padding(
+      padding: const EdgeInsets.only(top: 0.0),
+      child: Focus(
+        onFocusChange: (e) {
+          setState(() {
+            focus = e;
+          });
+        },
+        child: TextField(
+           controller: controller,
+           onChanged: (text) {
+             if(text.isEmpty){
+               callback();
+             }
+           },
+          decoration: InputDecoration(
+            hintText: hintText,
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.only(top: 20, bottom: 0, left: 15.0),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5.0),
+              borderSide: BorderSide(
+                color: Color(0xff0f538d),
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5.0),
+              borderSide: BorderSide(color: Color(0xffc7c7c7), width: 1.2),
+            ),
+            suffixIcon: GestureDetector(
+                onTap: () {
+                  if( controller.text.isNotEmpty){
+                    callback();
+                  }
+                },
+              child: Padding(
+                padding: const EdgeInsets.only(left: 17.0, right: 12.0),
+                child: Icon( iconCallback,
+                  color: focus ? Color(0xff0f538d) : Color(0xffc7c7c7),
+                ),
+              ),
+            ),
+            hintStyle: TextStyle(fontSize: 16.0, color: Color(0xffc7c7c7)),
+            labelStyle: TextStyle(
+                fontFamily: 'Roboto', fontSize: 15, color: Colors.black),
+            alignLabelWithHint: true,
+          ),
+        ),
+      ),
     );
   }
 
@@ -1099,15 +1160,23 @@ Future<void> searchFactura() async {
         SizedBox(
           height: 10.0,
         ),
-        InputCallback(
-            hintText: 'Buscar Categoria',
-            iconCallback: Icons.search,
-            callback: () => {}),
+        InputCallback(context,
+             'Buscar Categoria',
+             Icons.search,
+             searchClasificacionProductos,
+            myControllerBuscarCatego),
         SizedBox(
           height: 20.0,
         ),
-        _ItemProductos(data),
-        SizedBox(height: 15.0),
+        SizedBox(
+          height: 420.0,
+          child: ListView(
+            children: [
+              _ItemProductos(data),
+            ],
+          ),
+        ),
+        SizedBox(height: 10.0),
         Container(
           width: _size.width,
           height: 40.0,
@@ -1161,8 +1230,8 @@ Future<void> searchFactura() async {
                       onTap: () {
                         setState(() {
                           _productosShow = false;
-                          /*     _search = '@';
-                          searchClient(); */
+                          _productosShowCat = false;
+                          _formOrderShow = true;
                         });
                       },
                     ),
@@ -1206,8 +1275,9 @@ Future<void> searchFactura() async {
     );
   }
 
-  Widget _shoppingCart(BuildContext context, data, index) {
+  Widget _shoppingCart(BuildContext context) {
     final _size = MediaQuery.of(context).size;
+    final nombre = nombre_tercero.toUpperCase();
     return SafeArea(
       child: Container(
         width: _size.width,
@@ -1218,9 +1288,9 @@ Future<void> searchFactura() async {
         padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
         child: ListView(
           children: [
-            Column(
+            _cartProductos.length > 0 ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+               children:  [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1239,7 +1309,7 @@ Future<void> searchFactura() async {
                   ],
                 ),
                 SizedBox(height: 12.0),
-                Text('$nombre_tercero',
+                Text('$nombre',
                     style: TextStyle(
                         color: Colors.blue,
                         fontSize: 18.0,
@@ -1247,20 +1317,21 @@ Future<void> searchFactura() async {
                 SizedBox(
                   height: 12.0,
                 ),
-                Text(
+               Text(
                   'Búsqueda de productos en el carrito',
                   style: TextStyle(
                       color: Color(0xff0f538d),
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500),
-                ),
+                ) ,
                 SizedBox(
                   height: 10.0,
                 ),
-                InputCallback(
-                    hintText: 'Buscar producto',
-                    iconCallback: Icons.search,
-                    callback: () => {}),
+                InputCallback(context,
+                   'Buscar producto',
+                   Icons.search,
+                  _searchProducto,
+                  myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -1275,9 +1346,9 @@ Future<void> searchFactura() async {
                       borderRadius: BorderRadius.circular(5.0),
                       onTap: () => {
                         setState(() {
-                          print("volver a la categortia desde el carrito");
                           Navigator.pop(context);
                           _productosShowCat = false;
+                          _clientShow = false;
                           searchClasificacionProductos();
                         }),
                       },
@@ -1307,17 +1378,20 @@ Future<void> searchFactura() async {
                 SizedBox(
                   height: 15.0,
                 ),
-                SizedBox(
+              SizedBox(
                   height: 310.0,
-                  child: ListView(
-                    children: [
+                  child: ListView.builder(
+                      itemCount: _cartProductos.length,
+                      itemBuilder: (context, i) =>   _ItemCategoryOrderCart(_cartProductos[i], i),
+                    ),
+
+                  /*  children: [
                       for (var i = 0; i < data.length; i++) ...[
                         _ItemCategoryOrderCart(data[i], i),
                         SizedBox(height: 10.0),
-                      ]
-                    ],
-                  ),
-                ),
+                     ],
+                    ],*/
+                ) ,
                 SizedBox(height: 15.0),
                 TextField(
                     controller: myControllerObservacion,
@@ -1385,9 +1459,10 @@ Future<void> searchFactura() async {
                                 setState(() {
                                   print("vaciar carrito");
                                   removeCarrito();
-                                  _clientShow = true;
-                                  _productosShowCat = false;
-                                  _productosShow = false;
+
+                                  Navigator.of(context)
+                                      .pop(); // close the drawer
+                                  Navigator.pushNamed(context, 'home');
                                 }),
                               },
                             ),
@@ -1429,15 +1504,108 @@ Future<void> searchFactura() async {
                   ],
                 )
               ],
+            ):
+
+        Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Carrito de compras',
+                style: TextStyle(
+                    color: Color(0xff0f538d),
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.w700),
+              ),
+              Icon(
+                Icons.disabled_by_default_outlined,
+                color: Color(0xff0f538d),
+                size: 30.0,
+              )
+            ],
+          ),
+          SizedBox(height: 60.0),
+         SizedBox(width: 20.0),
+          SizedBox(
+            height: 400.0,
+            child:
+            new Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                new Card(
+                  elevation: 10,
+                  child: new Column(
+                    children: <Widget>[
+                      new Row(
+                        children: <Widget>[
+                          SizedBox(width: 50.0),
+                          new Container(
+                            child:  Image(
+                              height: 250.0,
+                              width: 250.0,
+                              image: AssetImage('assets/images/carrito_vacio.png'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20.0),
+                      new Row(
+                    children: [
+                          SizedBox(width: 88.0),
+                          Container(
+                              width: _size.width * 0.5 - 30,
+                              child: Container(
+                                width: _size.width,
+                                height: 41.0,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    color:
+                                         Color(0xff0894FD)
+                                         ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Salir',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      Navigator.pushNamed(context, 'home');
+                                    },
+                                  ),
+                                ),
+                              )),
+                        ],
+                      ),  SizedBox(height: 20.0),
+
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+          SizedBox(width: 20.0),
+        ],
         ),
-      ),
+        ]
+        ),
+        ),
     );
   }
 
   Widget _shoppingCat(BuildContext context, id) {
     final _size = MediaQuery.of(context).size;
+    final nombre = nombre_tercero.toUpperCase();
     return SafeArea(
       child: Container(
         width: _size.width,
@@ -1455,7 +1623,7 @@ Future<void> searchFactura() async {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Nuevo Pedido 2',
+                      'Nuevo Pedido',
                       style: TextStyle(
                           color: Color(0xff0f538d),
                           fontSize: 24.0,
@@ -1464,7 +1632,7 @@ Future<void> searchFactura() async {
                   ],
                 ),
                 SizedBox(height: 12.0),
-                Text('$nombre_tercero',
+                Text('$nombre',
                     style: TextStyle(
                         color: Colors.blue,
                         fontSize: 18.0,
@@ -1475,14 +1643,12 @@ Future<void> searchFactura() async {
                 SizedBox(
                   height: 10.0,
                 ),
-                InputCallback(
-                    hintText: 'Buscar producto',
-                    iconCallback: Icons.search,
-                    callback: () => {
-                          setState(() {
-                            print(" *-*-*-*  buscar productos*-*-*-*  ");
-                          })
-                        }),
+                InputCallback(context,
+                  'Buscar producto',
+                   Icons.search,
+                   searchProductosPedido,
+                  myControllerBuscarProd
+                    ),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -1598,11 +1764,9 @@ Future<void> searchFactura() async {
                               ),
                               onTap: () {
                                 setState(() {
-                                  myControllerOrdenCompra.clear();
                                   _productosShow = false;
                                   _productosShowCat = false;
-                                     _search = '@';
-                                  searchClient();
+                                  _formOrderShow = true;
                                 });
                               },
                             ),
@@ -1797,7 +1961,7 @@ Future<void> searchFactura() async {
                   onTap: () => Navigator.pushNamed(context, 'visiteds'),
                 ),
               ),
-                Container(
+              Container(
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
@@ -1818,7 +1982,14 @@ Future<void> searchFactura() async {
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
-                  onTap: () => Navigator.pushNamed(context, 'login'),
+                  onTap: () async {
+                    OperationDB.closeDB();
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                    preferences.clear();
+                    preferences.setInt("value", 0);
+                    Navigator.pushNamed(context, 'login');
+                  },
                   minLeadingWidth: 20,
                   leading: const Icon(
                     Icons.exit_to_app,
@@ -2007,9 +2178,7 @@ Future<void> searchFactura() async {
                 _btnHistory(context, 'Pedido',
                     _checkedPedido ? Color(0xff06538D) : Color(0xff0894FD), () {
                   setState(() {
-                    _checkedCartera = false;
-                    _checkedPedido = true;
-                    _checkedRecibo = false;
+                    getHistorialPedidosClienteDetalle();
                   });
                 }),
                 SizedBox(
@@ -2018,9 +2187,7 @@ Future<void> searchFactura() async {
                 _btnHistory(context, 'Recibo',
                     _checkedRecibo ? Color(0xff06538D) : Color(0xff0894FD), () {
                   setState(() {
-                    _checkedCartera = false;
-                    _checkedPedido = false;
-                    _checkedRecibo = true;
+                    getHistorialReciboClienteDetalle();
                   });
                 }),
               ],
@@ -2234,11 +2401,12 @@ Future<void> searchFactura() async {
                   ),
                   onTap: () {
                     setState(() {
-                      _checkedCartera = true;
+                      /* _checkedCartera = true;
                       _checkedPedido = false;
                       _checkedRecibo = false;
                       _formHistoryShow = false;
-                      _clientShow = false;
+                      _clientShow = false;*/
+                      Navigator.pushNamed(context, 'home');
                     });
                   }),
             ),
@@ -2250,6 +2418,7 @@ Future<void> searchFactura() async {
 
   Widget _totalHistoryPedido(BuildContext context) {
     final _size = MediaQuery.of(context).size;
+    final total_item = _datDetallePedido.length;
     return Container(
       width: _size.width,
       child: Column(
@@ -2272,7 +2441,9 @@ Future<void> searchFactura() async {
                       fontWeight: FontWeight.w500),
                 ),
                 Text(
-                  '\$ 347.281',
+                  '\$ ' +
+                      expresionRegular(
+                          double.parse(_datPedido[0]['total'].toString())),
                   style: TextStyle(
                       color: Color(0xff06538D),
                       fontSize: 17.0,
@@ -2332,8 +2503,8 @@ Future<void> searchFactura() async {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('6243',  
-                          style: TextStyle( 
+                      child: Text('${_datPedido[0]['numero']}',
+                          style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
                               fontWeight: FontWeight.w600)),
@@ -2369,7 +2540,7 @@ Future<void> searchFactura() async {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('11/12/21',
+                      child: Text('${_datPedido[0]['fecha']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2382,7 +2553,7 @@ Future<void> searchFactura() async {
           ),
           SizedBox(height: 10.0),
           Text(
-            'Este pedido tiene 5 items',
+            'Este pedido $total_item tiene items',
             style: TextStyle(
                 fontSize: 15.0,
                 fontWeight: FontWeight.w300,
@@ -2395,13 +2566,12 @@ Future<void> searchFactura() async {
             child: ListView(
               scrollDirection: Axis.vertical,
               children: [
-                ItemProductOrderHistory(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistory(callback: () {})
+                for (var i = 0; i < total_item; i++) ...[
+                  if (_datDetallePedido.isNotEmpty) ...[
+                    ItemProductOrderHistoryNew(_datDetallePedido[i], i),
+                    SizedBox(height: 10.0),
+                  ],
+                ],
               ],
             ),
           ),
@@ -2432,12 +2602,7 @@ Future<void> searchFactura() async {
                   ),
                   onTap: () {
                     setState(() {
-                      _checkedCartera = true;
-                      _checkedPedido = false;
-                      _checkedRecibo = false;
-                      _formHistoryShow = false;
-                      _clientShow = false;
-                      _productosShow = false;
+                      Navigator.pushNamed(context, 'home');
                     });
                   }),
             ),
@@ -2447,8 +2612,175 @@ Future<void> searchFactura() async {
     );
   }
 
+  Widget ItemProductOrderHistoryNew(data, i) {
+    final _size = MediaQuery.of(context).size;
+    return Container(
+      width: _size.width,
+      decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
+          borderRadius: BorderRadius.circular(5.0)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            // color: Colors.blue,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(4.0),
+                    topRight: Radius.circular(4.0)),
+                color: Color(0xffF4F4F4)),
+            width: _size.width,
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${data['descripcion_item']}',
+                  style: TextStyle(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xff707070),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 5.0),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Código',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('${data['id_item']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Cantidad',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('${data['cantidad']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Precio Unidad',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(
+                                  double.parse(data['precio'].toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Total',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(
+                                  double.parse(data['total'].toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 5.0),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _totalHistoryRecibo(BuildContext context) {
     final _size = MediaQuery.of(context).size;
+    final total_item = _datDetalleRecibo.length;
     return Container(
       width: _size.width,
       child: Column(
@@ -2471,7 +2803,9 @@ Future<void> searchFactura() async {
                       fontWeight: FontWeight.w500),
                 ),
                 Text(
-                  '\$ 347.281',
+                  '\$ ' +
+                      expresionRegular(
+                          double.parse(_datRecibo[0]['total'].toString())),
                   style: TextStyle(
                       color: Color(0xff06538D),
                       fontSize: 17.0,
@@ -2531,7 +2865,7 @@ Future<void> searchFactura() async {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('6243',
+                      child: Text('${_datRecibo[0]['numero']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2568,7 +2902,7 @@ Future<void> searchFactura() async {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('12/21/21',
+                      child: Text('${_datRecibo[0]['fecha']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2605,7 +2939,7 @@ Future<void> searchFactura() async {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('3 Días',
+                      child: Text('${_datRecibo[0]['dias']} Días',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2618,7 +2952,7 @@ Future<void> searchFactura() async {
           ),
           SizedBox(height: 10.0),
           Text(
-            'Este pedido tiene 5 items',
+            'Este recibo tiene $total_item items',
             style: TextStyle(
                 fontSize: 15.0,
                 fontWeight: FontWeight.w300,
@@ -2631,13 +2965,12 @@ Future<void> searchFactura() async {
             child: ListView(
               scrollDirection: Axis.vertical,
               children: [
-                ItemProductOrderHistoryRecibo(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: () {}),
-                SizedBox(height: 10.0),
-                ItemProductOrderHistoryRecibo(callback: () {}),
+                for (var i = 0; i < total_item; i++) ...[
+                  if (_datDetalleRecibo.isNotEmpty) ...[
+                    ItemProductOrderHistoryReciboNew(_datDetalleRecibo[i], i),
+                    SizedBox(height: 10.0),
+                  ],
+                ],
               ],
             ),
           ),
@@ -2668,16 +3001,128 @@ Future<void> searchFactura() async {
                   ),
                   onTap: () {
                     setState(() {
-                      _checkedCartera = true;
+                      /*   _checkedCartera = true;
                       _checkedPedido = false;
                       _checkedRecibo = false;
                       _formHistoryShow = false;
                       _clientShow = false;
-                      _productosShow = false;
+                      _productosShow = false;*/
+
+                      Navigator.pushNamed(context, 'home');
                     });
                   }),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget ItemProductOrderHistoryReciboNew(data, i) {
+    final _size = MediaQuery.of(context).size;
+    return Container(
+      width: _size.width,
+      decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
+          borderRadius: BorderRadius.circular(5.0)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Documento - cruce',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('${data['id_tipo_doc_cruce']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Número - Cruce',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text('${data['numero_cruce']}',
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Valor',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _size.width * 0.5 - 40,
+                      child: Text(
+                          '\$' +
+                              expresionRegular(
+                                  double.parse(data['debito'].toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          )
         ],
       ),
     );
@@ -2916,11 +3361,7 @@ Future<void> searchFactura() async {
                           color: Color(0xffCB1B1B),
                           callback: () {
                             setState(() {
-                              _clientShow = false;
-                              _formNewClientShow = false;
-                              _search = '@';
-                              removeCarritoRecibo();
-                              searchClient();
+                              Navigator.pushNamed(context, 'home');
                             });
                           }),
                     ),
@@ -3197,7 +3638,7 @@ Future<void> searchFactura() async {
               ),
               SizedBox(height: 20.0),
               _itemForm(context, 'Recibo N°', '$_value_automatico',
-                  myControllerNroRecibo, true,'number',false),
+                  myControllerNroRecibo, false, 'number', true,callback),
               InkWell(
                 onTap: () {
                   _pickDateDialog();
@@ -3219,14 +3660,17 @@ Future<void> searchFactura() async {
                 ),
               ),
               SizedBox(height: 10),
-              _itemForm(context, 'Nombre', '$nombre_tercero', null, false,'text',false),
+              _itemForm(context, 'Nombre', '$nombre_tercero', null, false,
+                  'text', false,callback),
               _itemForm(
                   context,
                   'Total cartera',
                   '\$ ' +
                       expresionRegular(double.parse(_saldoCartera.toString())),
                   null,
-                  false,'number',false),
+                  false,
+                  'number',
+                  false,callback),
               SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
@@ -3235,17 +3679,18 @@ Future<void> searchFactura() async {
                 type: SelectFormFieldType.dropdown, // or can be dialog
                 labelText: 'Forma de pago',
                 items: _itemsTipoPago,
-                onChanged: (val) =>   setState(() {
-                 _value_itemsTipoPago = val;
-                 if(_value_itemsTipoPago == '02'){
+                onChanged: (val) => setState(() {
+                  _value_itemsTipoPago = val;
+                  if (_value_itemsTipoPago == '02') {
                     isBanco = true;
                     isCheque = false;
-                    }
-                    if(_value_itemsTipoPago == '03'){
+                    myControllerNroCheque.clear();
+                  }
+                  if (_value_itemsTipoPago == '03') {
                     isCheque = true;
                     isBanco = false;
-                    }
-                 }), 
+                  }
+                }),
                 onSaved: (val) => setState(() => _valueSaved = val ?? ''),
                 validator: (val) {
                   setState(() => _valueToValidate = val ?? '');
@@ -3260,6 +3705,7 @@ Future<void> searchFactura() async {
                 type: SelectFormFieldType.dropdown, // or can be dialog
                 labelText: 'Banco',
                 items: _itemsBanco,
+                initialValue: _value_itemsBanco,
                 onChanged: (val) => setState(() => _value_itemsBanco = val),
                 onSaved: (val) => setState(() => _valueSaved = val ?? ''),
                 validator: (val) {
@@ -3267,8 +3713,8 @@ Future<void> searchFactura() async {
                   return null;
                 },
               ),
-              _itemForm(
-                  context, 'N° cheque', '00000', myControllerNroCheque, false,'number',isCheque),
+              _itemForm(context, 'N° cheque', '00000', myControllerNroCheque,
+                  false, 'number', isCheque,callback),
               SizedBox(height: 30.0),
               Container(
                   width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
@@ -3303,10 +3749,7 @@ Future<void> searchFactura() async {
                         ),
                         onTap: () {
                           setState(() {
-                            _clientShow = false;
-                            _formRecipeShow = false;
-                            _search = '@';
-                            searchClient();
+                            Navigator.pushNamed(context, 'home');
                           });
                         },
                       ),
@@ -3336,8 +3779,18 @@ Future<void> searchFactura() async {
                         ),
                         onTap: () {
                           setState(() {
-                            _formRecipeShow = false;
-                            _formNewClientShow = true;
+                            if (_value_itemsTipoPago == '') {
+                              _showBarMsg('Indique una forma de pago',false);
+                            } else if (_value_itemsTipoPago == '02' &&
+                                _value_itemsBanco == '') {
+                              _showBarMsg('Indique un banco',false);
+                            } else if (_value_itemsTipoPago == '03' &&
+                                myControllerNroCheque.text == '') {
+                              _showBarMsg('Indique el N° Cheque',false);
+                            } else {
+                              _formRecipeShow = false;
+                              _formNewClientShow = true;
+                            }
                           });
                         },
                       ),
@@ -3365,7 +3818,7 @@ Future<void> searchFactura() async {
         ),
         SizedBox(height: 20.0),
         _itemForm(context, 'Pedido', '$_value_automatico',
-            myControllerNroPedido, true,'number',false),
+            myControllerNroPedido, true, 'number', false,callback),
         InkWell(
           onTap: () {
             _pickDateDialog();
@@ -3380,16 +3833,14 @@ Future<void> searchFactura() async {
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
                 Text(
-                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'
-                    // DateFormat.dMMy().format(_selectedDate),
-                    ),
+                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
                 Icon(Icons.arrow_drop_down, color: Color(0xff06538D)),
               ],
             ),
           ),
         ),
-
-        _itemForm(context, 'Nombre', '$nombre_tercero', null, true,'text',false),
+        _itemForm(
+            context, 'Nombre', '$nombre_tercero', null, true, 'text', false,callback),
         SelectFormField(
           style: TextStyle(
               color: Color(0xff06538D),
@@ -3402,7 +3853,7 @@ Future<void> searchFactura() async {
           onChanged: (val) => setState(() => _value_DireccionFactura = val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
           validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
+            setState(() => _valueToValidate = val ?? 'Es requerido');
             return null;
           },
         ),
@@ -3419,13 +3870,14 @@ Future<void> searchFactura() async {
           onChanged: (val) => setState(() => _value_DireccionMercancia = val),
           onSaved: (val) => setState(() => _valueSaved = val ?? ''),
           validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
+            setState(() => _valueToValidate = val ?? 'Es requerido');
             return null;
           },
         ),
-        _itemForm(
-            context, 'Orden de compra', '', myControllerOrdenCompra, false,'text',true),
-        _itemForm(context, 'Forma de pago', '$forma_pago_tercero', null, true,'text',false),
+        _itemForm(context, 'Orden de compra', '', myControllerOrdenCompra,
+            false, 'text', false,callback),
+        _itemForm(context, 'Forma de pago', '$forma_pago_tercero', null, true,
+            'text', false,callback),
         SizedBox(height: 30.0),
         Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
         SizedBox(height: 30.0),
@@ -3443,223 +3895,234 @@ Future<void> searchFactura() async {
             'Cupo crédito',
             '\$ ' + expresionRegular(double.parse(limite_credito.toString())),
             null,
-            true,'number',false),
+            true,
+            'number',
+            false,callback),
         _itemSelectForm(
             context,
             'Total cartera',
             '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
             ''),
-           SizedBox(height: 20.0),
+        SizedBox(height: 20.0),
+        Column(
+          children: [
             Column(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Ver la última factura del cliente',
-                                    style: TextStyle(
-                                        fontSize: 16.0,
-                                        color: Color(0xff0f538d),
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  GestureDetector(
-                                    child: Icon(
-                                      Icons.keyboard_arrow_down,
-                                      color: Color(0xff06538D),
-                                      size: 18.0,
-                                    ),
-                                    onTap: () {
-                                     _datFactura.length > 0 ? showDialog<String>(
-                                        context: context,
-                                        builder: (BuildContext context) =>
-                                            Dialog(
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(
-                                                                10.0))),
-                                                child: Container(
-                                                  height: 510.0,
-                                                  width: 340.4,
-                                                           
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 20.0,
-                                                      vertical: 15.0),
-                                                  child: Column(
-                                                    children: [
-                                                      SizedBox(height: 10.0),
-                                                       Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [                                                      
-                                                          Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            Container(
-                                                              width: _size.width * 0.5 - 40,
-                                                              child: Row(
-                                                                children: [
-                                                                  Text(
-                                                                    'N° Factura', style: TextStyle(
-                                                                      color: Color(0xff06538D),
-                                                                      fontSize: 17.0,
-                                                                      fontWeight: FontWeight.w700),
-                                                               
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            Container(
-                                                              width: _size.width * 0.5 - 90,
-                                                              child: Text(
-                                                                  '${_datFactura[0]['numero']}',
-                                                                  style: TextStyle(
-                                                                       color: Color(0xff707070),
-                                                                      fontSize: 17.0,
-                                                                      fontWeight: FontWeight.w700),
-                                                                      ),
-                                                            ),
-                                                          ],
-                                                        ),   
-                                                        SizedBox(height: 15.0),
-                                                      Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            Container(
-                                                              width: _size.width * 0.5 - 40,
-                                                              child: Row(
-                                                                children: [
-                                                                  Text(
-                                                                    'Fecha de factura', style: TextStyle(
-                                                                      color: Color(0xff06538D),
-                                                                      fontSize: 17.0,
-                                                                      fontWeight: FontWeight.w700),
-                                                               
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            Container(
-                                                              width: _size.width * 0.5 - 90,
-                                                              child: Text(
-                                                               '${_datFactura[0]['fecha']}',
-                                                                  style: TextStyle(
-                                                                       color: Color(0xff707070),
-                                                                      fontSize: 17.0,
-                                                                      fontWeight: FontWeight.w700),
-                                                                      ),
-                                                            ),
-                                                          ],
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Ver la última factura del cliente',
+                      style: TextStyle(
+                          fontSize: 16.0,
+                          color: Color(0xff0f538d),
+                          fontWeight: FontWeight.w600),
+                    ),
+                    GestureDetector(
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Color(0xff06538D),
+                        size: 18.0,
+                      ),
+                      onTap: () {
+                        _datFactura.length > 0
+                            ? showDialog<String>(
+                                context: context,
+                                builder: (BuildContext context) => Dialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10.0))),
+                                    child: Container(
+                                      height: 510.0,
+                                      width: 340.4,
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 20.0, vertical: 15.0),
+                                      child: Column(
+                                        children: [
+                                          SizedBox(height: 10.0),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Container(
+                                                    width:
+                                                        _size.width * 0.5 - 40,
+                                                    child: Row(
+                                                      children: [
+                                                        Text(
+                                                          'N° Factura',
+                                                          style: TextStyle(
+                                                              color: Color(
+                                                                  0xff06538D),
+                                                              fontSize: 17.0,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700),
                                                         ),
-                                                        SizedBox(height: 20.0),
-                                                        for (var i = 0; i < _datFactura.length; i++) ...[
-                                                          _ItemProductOrder(_datFactura[i], i),
-
-                                                        ],
-                                                        SizedBox(height: 10.0),
                                                       ],
-                                                    ), 
-                                                       Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            Container(
-                                                              width: _size.width * 0.5 - 50,
-                                                              child: Row(
-                                                                children: [
-                                                                  Text(
-                                                                    'Total', style: TextStyle(
-                                                                      color: Color(0xff06538D),
-                                                                      fontSize: 17.0,
-                                                                      fontWeight: FontWeight.w700),
-                                                               
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            Container(
-                                                              width: _size.width * 0.5 - 110,
-                                                              child: Text( 
-                                                                  '\$ ' +  
-                                                                      expresionRegular(
-                                                                          double.parse(_datFactura[0]['total_fac'].toString())),  
-                                                                  style: TextStyle(
-                                                                       color: Color(0xff06538D),
-                                                                      fontSize: 17.0,
-                                                                      fontWeight: FontWeight.w700),
-                                                                      ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      SizedBox(
-                                                        height: 30.0,
-                                                      ),
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
-                                                        children: [ 
-                                                          Container(
-                                                            width: _size.width * 0.6 ,
-                                                            height: 40.0,
-                                                            decoration: BoxDecoration(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            5.0),
-                                                                color: Color(
-                                                                    0xff0894FD)),
-                                                            child: Material(
-                                                              color: Colors
-                                                                  .transparent,
-                                                              child: InkWell(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            5.0),
-                                                                child: Center(
-                                                                  child: Text(
-                                                                    'Aceptar',
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontSize:
-                                                                            18,
-                                                                        fontWeight:
-                                                                            FontWeight.w700),
-                                                                  ),
-                                                                ),
-                                                                onTap: () {
-                                                                  Navigator.pop(
-                                                                      context);
-                                                                },
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
+                                                    ),
                                                   ),
-                                                )),
-                                      ):   showTopSnackBar(
-                                       context,
-                                          animationDuration: const Duration(seconds: 1),
-                                       CustomSnackBar.error(
-                                         message: "Este cliente no tiene facturas.",
-                                       ),
-                                     );
-                                    },
-                                  )
-                                ],
-                              ), 
-                            ],
-                          ),
-                          SizedBox(height: 10.0),
-                        ],
-                      ),  
-             
+                                                  Container(
+                                                    width:
+                                                        _size.width * 0.5 - 90,
+                                                    child: Text(
+                                                      '${_datFactura[0]['numero']}',
+                                                      style: TextStyle(
+                                                          color:
+                                                              Color(0xff707070),
+                                                          fontSize: 17.0,
+                                                          fontWeight:
+                                                              FontWeight.w700),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 15.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Container(
+                                                    width:
+                                                        _size.width * 0.5 - 40,
+                                                    child: Row(
+                                                      children: [
+                                                        Text(
+                                                          'Fecha de factura',
+                                                          style: TextStyle(
+                                                              color: Color(
+                                                                  0xff06538D),
+                                                              fontSize: 17.0,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    width:
+                                                        _size.width * 0.5 - 90,
+                                                    child: Text(
+                                                      '${_datFactura[0]['fecha']}',
+                                                      style: TextStyle(
+                                                          color:
+                                                              Color(0xff707070),
+                                                          fontSize: 17.0,
+                                                          fontWeight:
+                                                              FontWeight.w700),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 20.0),
+                                              for (var i = 0;
+                                                  i < _datFactura.length;
+                                                  i++) ...[
+                                                _ItemProductOrder(
+                                                    _datFactura[i], i),
+                                              ],
+                                              SizedBox(height: 10.0),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Container(
+                                                width: _size.width * 0.5 - 50,
+                                                child: Row(
+                                                  children: [
+                                                    Text(
+                                                      'Total',
+                                                      style: TextStyle(
+                                                          color:
+                                                              Color(0xff06538D),
+                                                          fontSize: 17.0,
+                                                          fontWeight:
+                                                              FontWeight.w700),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Container(
+                                                width: _size.width * 0.5 - 110,
+                                                child: Text(
+                                                  '\$ ' +
+                                                      expresionRegular(double
+                                                          .parse(_datFactura[0]
+                                                                  ['total_fac']
+                                                              .toString())),
+                                                  style: TextStyle(
+                                                      color: Color(0xff06538D),
+                                                      fontSize: 17.0,
+                                                      fontWeight:
+                                                          FontWeight.w700),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 30.0,
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Container(
+                                                width: _size.width * 0.6,
+                                                height: 40.0,
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            5.0),
+                                                    color: Color(0xff0894FD)),
+                                                child: Material(
+                                                  color: Colors.transparent,
+                                                  child: InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            5.0),
+                                                    child: Center(
+                                                      child: Text(
+                                                        'Aceptar',
+                                                        style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w700),
+                                                      ),
+                                                    ),
+                                                    onTap: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    )),
+                              )
+                            : _showBarMsg('Este cliente no tiene facturas',false);
+                      },
+                    )
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 10.0),
+          ],
+        ),
         SizedBox(height: 10.0),
         Row(
           children: [
@@ -3686,6 +4149,8 @@ Future<void> searchFactura() async {
                       ),
                       onTap: () {
                         setState(() {
+                          _value_DireccionMercancia = '0';
+                          _value_DireccionFactura = '0';
                           _clientShow = false;
                           _formOrderShow = false;
                           _search = '@';
@@ -3718,7 +4183,10 @@ Future<void> searchFactura() async {
                         ),
                       ),
                       onTap: () {
-                        searchClasificacionProductos();
+                        (_value_DireccionMercancia.toString() != '0' &&
+                                _value_DireccionFactura.toString() != '0')
+                            ? searchClasificacionProductos()
+                            : _showBarMsg('Seleccione las direcciones',false);
                       },
                     ),
                   ),
@@ -3754,7 +4222,8 @@ Future<void> searchFactura() async {
             return null;
           },
         ),
-        _itemForm(context, 'N° de documento', '', myControllerNroDoc, false,'number',true),
+        _itemForm(context, 'N° de documento', '', myControllerNroDoc, false,
+            'number', true,searchDigitoVerif),
         CheckboxListTile(
             checkColor: Color(0xff06538D),
             title: Text(
@@ -3769,33 +4238,32 @@ Future<void> searchFactura() async {
               setState(() {
                 print(value);
                 isCheckedDV = !isCheckedDV;
-                isReadOnly = !isReadOnly;
+                isReadOnly = value!;
               });
             }),
-        _itemForm(context, 'DV.', 'PersonaNatural', myControllerDv, false,'text',isCheckedDV),
-        _itemForm(
-            context, 'Primer nombre', '', myControllerPrimerNombre, isReadOnly,'text',isCheckedDV),
+        _itemForm(context, 'DV.', '', myControllerDv, true,
+            'text', !isCheckedDV,callback),
+        _itemForm(context, 'Primer nombre', '', myControllerPrimerNombre,
+            !isReadOnly, 'name', isCheckedDV,callback),
         _itemForm(context, 'Segundo nombre', '', myControllerSegundoNombre,
-            isReadOnly,'text',isCheckedDV),
+            !isReadOnly, 'name', false,callback),
         _itemForm(context, 'Primer apellido', '', myControllerPrimerApellido,
-            isReadOnly,'text',isCheckedDV),
+            !isReadOnly, 'name', isCheckedDV,callback),
         _itemForm(context, 'Segundo apellido', '', myControllerSegundoApellido,
-            isReadOnly,'text',isCheckedDV),
+            !isReadOnly, 'name', false,callback),
+        _itemForm(context, 'Razón social', '', myControllerRazonSocial,
+            isCheckedDV, 'name', !isCheckedDV,callback),
+        _itemForm(context, 'Dirección', '', myControllerDireccion, false,
+            'text', true,false),
         _itemForm(
-            context, 'Razón social', '', myControllerRazonSocial, isCheckedDV,'text',!isCheckedDV),
-        _itemForm(context, 'Dirección', '', myControllerDireccion, false,'text',true),
-        _itemForm(context, 'Email', '', myControllerEmail, false,'email',true),
-        _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,'phone',true),
+            context, 'Email', '', myControllerEmail, false, 'email', true,callback),
+        _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,
+            'phone', true,callback ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Clasificación',
           items: _itemsClasification,
           onChanged: (val) => setState(() => _value_itemsClasification = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
-          validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
-            return null;
-          },
         ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
@@ -3820,26 +4288,21 @@ Future<void> searchFactura() async {
           },
         ),
         SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Departamento',
-          items: _itemsDepartamento,
-          onChanged: (val) => setState(() => _value_itemsDepartamento = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
-          validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
-            return null;
-          },
-        ),
+            type: SelectFormFieldType.dropdown, // or can be dialog
+            labelText: 'Departamento',
+            items: _itemsDepartamento,
+            onChanged: (val) => setState(
+                  () => {
+                    _value_itemsDepartamento = val,
+                    getItemCiudad(_value_itemsDepartamento)
+                  },
+                )),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Ciudad',
           items: _itemsCiudad,
-          onChanged: (val) => setState(() => _value_itemsCiudad = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
-          validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
-            return null;
-          },
+          onChanged: (val) => setState(() =>
+              {_value_itemsCiudad = val, getItemBarrio(_value_itemsCiudad)}),
         ),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
@@ -3912,11 +4375,10 @@ Future<void> searchFactura() async {
                       ),
                       onTap: () {
                         setState(() {
-                          _saveClient();
-                          _clientShow = false;
-                          _formShow = false;
+                          _value_itemsCiudad != '' && _value_itemsBarrio != ''
+                              ? _saveClient()
+                              :  _showBarMsg('La ciudad ó barrio no pueden estar vacios',false);
                         });
-                     
                       },
                     ),
                   ),
@@ -3928,16 +4390,17 @@ Future<void> searchFactura() async {
     );
   }
 
- 
-  Widget itemOrder(data,  ) {
-    final nombre =data['nombre'] !='' ? data['nombre']: data['nombre_sucursal'];
+  Widget itemOrder(
+    data,
+  ) {
+    final nombre = data['nombre_sucursal'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
-      child: Column( 
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3982,8 +4445,8 @@ Future<void> searchFactura() async {
                     ),
                     onTap: () => {
                           setState(() {
-                          //  _seePedido = i;
-                           // searchDetallePedido(data['numero']);
+                            //  _seePedido = i;
+                            // searchDetallePedido(data['numero']);
                           })
                         }),
               ],
@@ -4090,32 +4553,31 @@ Future<void> searchFactura() async {
     );
   }
 
-
-  Widget _itemForm(
-      BuildContext context, String label, String hintText, controller, enable,String type,bool isRequired ) {
+  Widget _itemForm(BuildContext context, String label, String hintText,
+      controller, enable, String type, bool isRequired , callback) {
     final _size = MediaQuery.of(context).size;
-    var typeInput ;
+    var typeInput;
     var cant;
-    switch(type) {
+    switch (type) {
       case 'number':
-        print('number!');
         typeInput = TextInputType.number;
         cant = 15;
         break; // The switch statement must be told to exit, or it will execute every case.
       case 'email':
-        print('email!');
         cant = 40;
         typeInput = TextInputType.emailAddress;
         break;
       case 'phone':
-        print('phone!');
         cant = 13;
         typeInput = TextInputType.phone;
         break;
       case 'text':
-        print('text!');
         cant = 30;
         typeInput = TextInputType.text;
+        break;
+      case 'name':
+        cant = 30;
+        typeInput = TextInputType.name;
         break;
     }
     return Row(
@@ -4132,12 +4594,24 @@ Future<void> searchFactura() async {
         ),
         Container(
           width: _size.width * 0.5 - 20,
+                child: Focus(
+                onFocusChange: (e) {
+                setState(() {
+                  if(callback != null && !e && controller.text.isNotEmpty ){
+                    print("EL CAMPO ES callback $e $callback");
+                    searchDigitoVerif();
+                    //focus = e;
+                  }
+                });
+                },
           child: TextField(
             readOnly: enable,
-            keyboardType : typeInput,
+            keyboardType: typeInput,
             inputFormatters: <TextInputFormatter>[
-              type =="number" ||  type =="phone" ? FilteringTextInputFormatter.digitsOnly :FilteringTextInputFormatter.singleLineFormatter,
-               LengthLimitingTextInputFormatter(cant)
+              type == "number" || type == "phone"
+                  ? FilteringTextInputFormatter.digitsOnly
+                  : FilteringTextInputFormatter.singleLineFormatter,
+              LengthLimitingTextInputFormatter(cant)
             ],
             controller: controller,
             style: TextStyle(
@@ -4145,8 +4619,8 @@ Future<void> searchFactura() async {
               fontSize: 14.0,
             ),
             decoration: InputDecoration(
-              errorText:
-              isRequired && controller.text.isEmpty ? 'Es requerido' : null,
+             errorText:
+                  isRequired && controller.text.isEmpty  ? 'Es requerido' : null,
               hintText: hintText,
               hintStyle: TextStyle(
                 color: Color(0xff707070),
@@ -4155,7 +4629,8 @@ Future<void> searchFactura() async {
               contentPadding: EdgeInsets.only(bottom: 0, top: 0),
             ),
           ),
-        )
+        ),
+        ),
       ],
     );
   }
@@ -4163,13 +4638,13 @@ Future<void> searchFactura() async {
   Widget _ItemProductOrder(data, i) {
     final _size = MediaQuery.of(context).size;
     return Container(
-       width: _size.width * 0.8,
+      width: _size.width * 0.8,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,        
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             decoration: BoxDecoration(
@@ -4181,7 +4656,7 @@ Future<void> searchFactura() async {
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
-              verticalDirection : VerticalDirection.down,
+              verticalDirection: VerticalDirection.down,
               children: [
                 Text(
                   '${data['descripcion_item']}',
@@ -4191,7 +4666,6 @@ Future<void> searchFactura() async {
                     color: Color(0xff707070),
                   ),
                 ),
-           
               ],
             ),
           ),
@@ -4202,7 +4676,7 @@ Future<void> searchFactura() async {
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.start, 
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Container(
                       width: _size.width * 0.5 - 60,
@@ -4226,7 +4700,7 @@ Future<void> searchFactura() async {
                               fontSize: 15.0,
                               fontWeight: FontWeight.w600)),
                     )
-                  ],                
+                  ],
                 ),
                 SizedBox(height: 10.0),
                 Row(
@@ -4328,7 +4802,7 @@ Future<void> searchFactura() async {
   }
 
   Widget _itemSelectForm(
-      BuildContext context, String label, String hintText, String title ) {
+      BuildContext context, String label, String hintText, String title) {
     final _size = MediaQuery.of(context).size;
     return Row(
       children: [
@@ -4374,8 +4848,7 @@ Future<void> searchFactura() async {
   }
 
   Widget _ItemClient(hintText, data) {
-   // print ("data de los clientessssssssss $data");
-    final nombre =data['nombre_sucursal'].toUpperCase() ;
+    final nombre = data['nombre_sucursal'].toUpperCase();
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -4570,8 +5043,9 @@ Future<void> searchFactura() async {
                           ),
                           onTap: () {
                             setState(() {
-                              print(data);
+                              print("-----qweqweqweqweqwe------ $data");
                               _submitDialog(context);
+
                               id_tercero = '${data['id_tercero']}';
                               nombre_tercero =
                                   '${data['nombre_sucursal'].toString()}  ';
@@ -4580,13 +5054,18 @@ Future<void> searchFactura() async {
                                   double.parse(data['limite_credito']);
                               listaPrecioTecero =
                                   '${data['lista_precio'].toString()}';
-                              _value_itemsFormaPago = data['id_forma_pago'];
+                              _value_itemsFormaPago =
+                                  data['id_forma_pago'] != ''
+                                      ? data['id_forma_pago']
+                                      : '01';
                               id_empresa = '${data['id_empresa']}';
                               id_suc_vendedor = '${data['id_suc_vendedor']}';
                               id_sucursal_tercero =
                                   '${data['id_sucursal_tercero']}';
                               limite_credito = '${data['limite_credito']}';
                               getConsecutivo(true);
+
+                              //   modalNuevoPedido(data);
                             });
                           },
                         ),
@@ -4667,8 +5146,6 @@ Future<void> searchFactura() async {
   }
 
   Widget _ItemProductos(data) {
-    print("imagen   $data[i]");
-
     return GridView.count(
       scrollDirection: Axis.vertical,
       primary: false,
@@ -4678,14 +5155,15 @@ Future<void> searchFactura() async {
       mainAxisSpacing: 10,
       crossAxisCount: 2,
       children: <Widget>[
-         for (var i = 0; i < _countClasificacion; i++) ...[
+        for (var i = 0; i < _countClasificacion; i++) ...[
           InkWell(
             child: Container(
               decoration: BoxDecoration(
-                image: DecorationImage(                    
-                image: AssetImage('assets/images/${data[i]['descripcion']}.png'),
-                    fit: BoxFit.cover,
-                  ),
+                image: DecorationImage(
+                  image:
+                      AssetImage('assets/images/${data[i]['descripcion']}.png'),
+                  fit: BoxFit.cover,
+                ),
                 borderRadius: BorderRadius.all(
                   Radius.circular(20.0),
                 ),
@@ -4693,9 +5171,7 @@ Future<void> searchFactura() async {
             ),
             onTap: () {
               setState(() {
-               print(
-                   "Tapped on id_clasificacion${data[i]['id_clasificacion']}");
-                idClasificacion = '${data[i]['id_clasificacion']}'; 
+                idClasificacion = '${data[i]['id_clasificacion']}';
                 _id_padre = idClasificacion;
                 selectProductoNivel();
               });
@@ -4708,7 +5184,8 @@ Future<void> searchFactura() async {
 
   Widget _ItemCategoryOrderState(i, data) {
     final _size = MediaQuery.of(context).size;
-    final saldo = data['saldo_inventario'] != 'null' ?  data['saldo_inventario']  : 0;
+    final saldo =
+        data['saldo_inventario'] != 'null' ? data['saldo_inventario'] : 0;
     return Container(
       width: _size.width,
       decoration: BoxDecoration(
@@ -4740,14 +5217,11 @@ Future<void> searchFactura() async {
                   items: _itemsListPrecio,
                   onChanged: (val) => setState(() => {
                         _value_itemsListPrecio = val,
-                        print("se busca el precio $_value_itemsListPrecio"),
-                        searchPrecioProductos('${data['id_item']}'),
+                      if(_value_itemsListPrecio!=''){
+                           searchPrecioProductos('${data['id_item']}'),
+                      }
                       }),
                   onSaved: (val) => print(val),
-                  /*    validator: (val) {
-                  setState(() => _valueToValidate = val ?? '');
-                  return null;
-                }, */
                 ),
                 SizedBox(height: 10.0),
                 Row(
@@ -4820,7 +5294,8 @@ Future<void> searchFactura() async {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text(expresionRegular(double.parse(saldo.toString())),                      
+                      child: Text(
+                          expresionRegular(double.parse(saldo.toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -4860,7 +5335,7 @@ Future<void> searchFactura() async {
                                       i,
                                       data['id_item'],
                                       data['descripcion'],
-                                     int.parse(data['saldo_inventario']));
+                                      int.parse(data['saldo_inventario']));
                                 }
                               : null,
                         ),
@@ -4877,7 +5352,9 @@ Future<void> searchFactura() async {
   }
 
   Widget _ItemCategoryOrderEdit(index, idItem, descripcion, cantidad) {
-   var nombre = descripcion.length > 35 ?  descripcion.substring(0, 33) +'...' : descripcion;
+    final nombre = descripcion.length > 35
+        ? descripcion.substring(0, 33) + '...'
+        : descripcion;
     final _size = MediaQuery.of(context).size;
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
     return Container(
@@ -4892,7 +5369,7 @@ Future<void> searchFactura() async {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 7.0, horizontal: 7.0),
-            child: Row(           
+            child: Row(
               children: [
                 Text(
                   '$nombre',
@@ -4911,7 +5388,7 @@ Future<void> searchFactura() async {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(    
+                Row(
                   children: [
                     Container(
                       width: _size.width * 0.5 - 40,
@@ -4938,7 +5415,7 @@ Future<void> searchFactura() async {
                   ],
                 ),
                 SizedBox(height: 10.0),
-                Row(                
+                Row(
                   children: [
                     Container(
                       width: _size.width * 0.5 - 40,
@@ -4956,7 +5433,8 @@ Future<void> searchFactura() async {
                             width: _size.width * 0.5 - 60,
                             child: Text(
                               'Unidades disponibles        ' +
-                                  expresionRegular(double.parse(cantidad.toString())),
+                                  expresionRegular(
+                                      double.parse(cantidad.toString())),
                               style: TextStyle(
                                   color: Color(0xff707070),
                                   fontSize: 15.0,
@@ -4968,7 +5446,7 @@ Future<void> searchFactura() async {
                     ),
                   ],
                 ),
-                SizedBox(height: 10.0),              
+                SizedBox(height: 10.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -4993,8 +5471,8 @@ Future<void> searchFactura() async {
                                   onTap: () {
                                     setState(() {
                                       if (_cantidadProducto > 0) {
+                                        _cantidadProducto = int.parse(myControllerCantidad.text);
                                         _cantidadProducto--;
-
                                         myControllerCantidad.text =
                                             _cantidadProducto.toString();
                                         print(
@@ -5003,15 +5481,13 @@ Future<void> searchFactura() async {
                                     });
                                   },
                                   child: Container(
-                                    //   Container(
-                                    width: 25.0,
+                                    width: 30.0,
                                     height: 30.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
                                         borderRadius: BorderRadius.only(
                                             topLeft: Radius.circular(15.0),
                                             bottomLeft: Radius.circular(15.0))),
-
                                     child:
                                         Icon(Icons.remove, color: Colors.white),
                                   )),
@@ -5021,10 +5497,11 @@ Future<void> searchFactura() async {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: _size.width * 0.5 - 160,
+                                width: _size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
+                                      textAlign: TextAlign.center,
                                       controller: myControllerCantidad,
                                       keyboardType: TextInputType.number,
                                       decoration: InputDecoration(
@@ -5032,22 +5509,20 @@ Future<void> searchFactura() async {
                                               borderSide: BorderSide(
                                                   width: 0.8,
                                                   color: Color(0xff707070))),
-                                          labelText:
-                                              _cantidadProducto.toString(),
-                                          hintText:'')),
+                                         )),
                                 ),
                               ),
                               InkWell(
                                   onTap: () {
                                     setState(() {
+                                      _cantidadProducto = int.parse(myControllerCantidad.text);
                                       _cantidadProducto++;
                                       myControllerCantidad.text =
                                           _cantidadProducto.toString();
-                                      print("cantidad suma $_cantidadProducto");
                                     });
                                   },
                                   child: Container(
-                                    width: 25.0,
+                                    width: 30.0,
                                     height: 30.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
@@ -5067,10 +5542,10 @@ Future<void> searchFactura() async {
                 ),
                 TextField(
                     controller: myControllerDescuentos,
-                    keyboardType: TextInputType.number,                    
+                    keyboardType: TextInputType.number,
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(3),
+                      LengthLimitingTextInputFormatter(50),
                     ],
                     decoration: InputDecoration(
                       disabledBorder: UnderlineInputBorder(
@@ -5115,12 +5590,13 @@ Future<void> searchFactura() async {
                                 ),
                               ),
                               Text("Continuar")
-                            ],                         
-                          ), 
-                           style:  ButtonStyle(
-                            //backgroundColor: Colors.blue,
+                            ],
                           ),
+                          style: ButtonStyle(
+                              //backgroundColor: Colors.blue,
+                              ),
                           onPressed: () {
+
                             _addProductoPedido(descripcion, idItem);
                           }),
                     )
@@ -5136,9 +5612,11 @@ Future<void> searchFactura() async {
 
   //listado de carrito
   Widget _ItemCategoryOrderCart(data, index) {
+    var cantidad = int.parse(data['cantidad'].toString());
+
+    print("_ItemCategoryOrderCart $data $cantidad");
     double total = 0.0;
-    print("listado de carrito $data");
-    total = data['precio'] * data['cantidad'];
+    total = data['total'];
 
     final _size = MediaQuery.of(context).size;
     return Container(
@@ -5165,8 +5643,7 @@ Future<void> searchFactura() async {
                 ),
                 IconButton(
                     onPressed: () {
-                      print("eliminar producto del carrito");
-                      _showDialog(context, index); 
+                      _showDialog(context, index);
                     },
                     icon: Icon(
                       Icons.do_disturb_on,
@@ -5209,7 +5686,10 @@ Future<void> searchFactura() async {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('\$ ' + expresionRegular(data['precio']),
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(
+                                  double.parse(data['precio'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5248,7 +5728,7 @@ Future<void> searchFactura() async {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text(expresionRegular(total),
+                      child: Text('\$ ' + expresionRegular(total),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5271,55 +5751,88 @@ Future<void> searchFactura() async {
                       ),
                     ),
                     Container(
-                        width: _size.width * 0.5 - 40,
+                        width: _size.width * 0.5 - 75,
                         child: Container(
                           width: _size.width,
                           height: 30.0,
                           child: Row(
                             children: <Widget>[
-                              Container(
-                                width: 35.0,
-                                height: 30.0,
-                                decoration: BoxDecoration(
-                                    color: Colors.blue,
-                                    borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(15.0),
-                                        bottomLeft: Radius.circular(15.0))),
-                                child: Icon(
-                                  Icons.remove,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              InkWell(
+                                  onTap: () {
+                                    print("resta en carrito");
+                                    setState(() {
+                                      if (cantidad > 1) {
+                                        cantidad = cantidad--;
+                                        OperationDB.updateCantidad(
+                                            _cartProductos[index]['id_item'],
+                                            _value_automatico,
+                                            false);
+                                        ObtieneCarrito(true);
+
+                                        print("nueva cantidad resta $cantidad");
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 25.0,
+                                    height: 30.0,
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(15.0),
+                                            bottomLeft: Radius.circular(15.0))),
+                                    child:
+                                        Icon(Icons.remove, color: Colors.white),
+                                  )),
                               Container(
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: _size.width * 0.5 - 110,
+                                width: _size.width * 0.5 - 160,
                                 height: 30.0,
                                 child: Center(
-                                    child: Text(
-                                  '${data['cantidad']}',
-                                  style: TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.w300),
-                                )),
-                              ),
-                              Container(
-                                width: 35.0,
-                                height: 30.0,
-                                decoration: BoxDecoration(
-                                    color: Colors.blue,
-                                    borderRadius: BorderRadius.only(
-                                        topRight: Radius.circular(15.0),
-                                        bottomRight: Radius.circular(15.0))),
-                                child: Icon(
-                                  Icons.add,
-                                  color: Colors.white,
+                                  child: Text(
+                                    cantidad.toString(),
+                                    style: TextStyle(
+                                        color: Color(0xff707070),
+                                        fontSize: 15.0,
+                                        fontWeight: FontWeight.w700),
+                                  ),
                                 ),
-                              )
+                              ),
+                              InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      if (cantidad >= 1) {
+                                        _submitDialog(context);
+                                        cantidad = cantidad++;
+                                        OperationDB.updateCantidad(
+                                            _cartProductos[index]['id_item'],
+                                            _value_automatico,
+                                            true);
+                                        ObtieneCarrito(true);
+
+                                        print("nueva cantidad suma $cantidad");
+                                        Navigator.pop(context);
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 25.0,
+                                    height: 30.0,
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.only(
+                                            topRight: Radius.circular(15.0),
+                                            bottomRight:
+                                                Radius.circular(15.0))),
+                                    child: Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                    ),
+                                  ))
                             ],
                           ),
                         )),
@@ -5349,8 +5862,10 @@ Future<void> searchFactura() async {
                   height: 40.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6.0),
-                       color: i == _checked? Color(0xff06538D) : Color(0xff0894FD)),
-                  // 
+                      color: i == _checked
+                          ? Color(0xff06538D)
+                          : Color(0xff0894FD)),
+                  //
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -5483,15 +5998,14 @@ Future<void> searchFactura() async {
                             ),
                           ),
                           onTap: () {
-                            print("Aceptar $index");
-                            _cartProductos.removeAt(index);
-                            print("Aceptar $_cartProductos");
+                            OperationDB.deleteProductoCarrito(
+                                _cartProductos[index]['id_item']);
                             setState(() {
-                              totalPedido = valorTotal(_cartProductos);
+                              _cartProductos.removeAt(index);
+                              totalPedido = valorTotal();
                               numeroAletra(totalPedido.toString());
                             });
-
-                            Navigator.of(context).pop();
+                            sendCarritoBD();
                             Navigator.pop(context);
                           },
                         ),
@@ -5505,72 +6019,212 @@ Future<void> searchFactura() async {
     );
   }
 
-  _addProductoPedido(   
-    String descripcion,
-    String idItem,
-  ) {
-    _cartProductos.add({
-      "descripcion": descripcion,
-      "id_item": idItem,
-      "precio": _precio,
-      "cantidad": _cantidadProducto ==1 ? _cantidadProducto :double.parse(myControllerCantidad.text),
-      "total_dcto": double.parse(myControllerDescuentos.text),
-      "dcto": double.parse(myControllerDescuentos.text),
-      "id_precio_item": _value_itemsListPrecio != ''
-          ? _value_itemsListPrecio
-          : listaPrecioTecero,
-    });
+  _addProductoPedido(String descripcion, String idItem) {
 
-      savePref( _cartProductos); //guarda en memoria local el carrito
+    var findById = (_cartProductos) => _cartProductos['id_item'] == idItem;
+    var result = _cartProductos.where(findById);
+    var cantidad =  int.parse(myControllerCantidad.text);
+    print("se filtra el listado de carrito $result la cantidad $cantidad");
 
-    Navigator.of(context).pop();
-    setState(() {
-      myControllerCantidad.clear();
-      myControllerDescuentos.clear();
-      myControllerDescuentos.text = '0';
-      _cantidadProducto = 1;
-      totalPedido = valorTotal(_cartProductos);
-      numeroAletra(totalPedido.toString());
-    });
+    if ( result.isEmpty) {
+      final cantidad =  int.parse(myControllerCantidad.text);
+
+    final total = double.parse(cantidad.toString()) * _precio;
+      print("No existe se agrega al carrito el producto $result");
+
+          _cartProductos.add({
+            "descripcion": descripcion,
+            "id_item": idItem,
+            "precio": _precio,
+            "cantidad": cantidad,
+            "total_dcto": double.parse(myControllerDescuentos.text),
+            "dcto": double.parse(myControllerDescuentos.text),
+            "id_precio_item": _value_itemsListPrecio != ''
+                ? _value_itemsListPrecio
+                : listaPrecioTecero,
+            "total": total
+          });
+
+        setState(() {
+          totalPedido = valorTotal();
+          numeroAletra(totalPedido.toString());
+            myControllerCantidad.clear();
+            myControllerDescuentos.clear();
+            myControllerDescuentos.text = '0';
+            myControllerCantidad.text = '1';
+            _cantidadProducto = 1;
+            sendCarritoBD();
+        });
+      Navigator.of(context).pop();
+      _showBarMsg('Producto Agregado',true);
+      } else{
+      _showBarMsg('Este producto existe en el carrito',false);
+     }
   }
 
-  String valorTotal(List<dynamic> _cartProductos) {
+  Future sendCarritoBD() async {
+    final totalCosto = double.parse(totalPedido) + double.parse(totalDescuento);
+
+    final carrito = Carrito(
+        nit: _nit,
+        id_tercero: '$id_tercero',
+        nombre_sucursal: '$nombre_tercero',
+        id_empresa: '$id_empresa',
+        id_tipo_doc: idPedidoUser,
+        id_vendedor: id_vendedor,
+        numero: int.parse(_value_automatico),
+        id_suc_vendedor: id_suc_vendedor,
+        fecha:
+            '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+        id_forma_pago: '$_value_itemsFormaPago',
+        id_precio_item: '$listaPrecioTecero',
+        id_direccion: _value_DireccionMercancia,
+        subtotal: '$totalSubTotal',
+        total_costo: totalCosto.toString(),
+        total_dcto: '$totalDescuento',
+        total: '$totalPedido',
+        orden_compra: myControllerOrdenCompra.text,
+        observacion: 'CARRITO',
+        letras: _letras,
+        id_direccion_factura: _value_DireccionFactura,
+        usuario: _user);
+    for (var i = 0; i < _cartProductos.length; i++) {
+      final carritodetalle = CarritoDet(
+          nit: _nit,
+          id_tercero: '$id_tercero',
+          numero: int.parse(_value_automatico),
+          descripcion: _cartProductos[i]['descripcion'],
+          id_item: _cartProductos[i]['id_item'],
+          cantidad: _cartProductos[i]['cantidad'].toString(),
+          precio: _cartProductos[i]['precio'].toString(),
+          total_dcto: _cartProductos[i]['total_dcto'].toString(),
+          dcto: _cartProductos[i]['dcto'].toString(),
+          id_precio_item: _cartProductos[i]['id_precio_item']);
+      //guardar el carrito en la BD ENVIADO
+      await OperationDB.insertCarrito(carrito, carritodetalle);
+    }
+  }
+
+  valorTotal() {
     double total = 0.0;
     double total_descuento = 0.0;
+    print("el valor todal toald $_cartProductos");
     for (int i = 0; i < _cartProductos.length; i++) {
       double descuento = 0.0;
       double totalProducto = 0.0;
-
-      totalProducto =
-          _cartProductos[i]['precio'] * _cartProductos[i]['cantidad'];
-      descuento = totalProducto * (_cartProductos[i]['total_dcto'] / 100);
+      totalProducto = double.parse(_cartProductos[i]['total'].toString());
+      // totalProducto =
+      //  _cartProductos[i]['precio'] * _cartProductos[i]['cantidad'];
+      descuento = double.parse(_cartProductos[i]['total_dcto'].toString());
 
       totalProducto = totalProducto - descuento;
       total_descuento = total_descuento + descuento;
       total = total + totalProducto;
     }
     totalDescuento = total_descuento.toStringAsFixed(2);
+    totalPedido = total.toStringAsFixed(2);
     print(total.toStringAsFixed(2));
     return total.toStringAsFixed(2);
   }
 
   void removeCarrito() {
+    OperationDB.deleteCarrito();
     _cartProductos = [];
     totalPedido = '0.00';
     totalSubTotal = '0.00';
     totalDescuento = '0.00';
     numeroAletra('');
   }
-  
-  savePref( _cartProductos) async {
-     final prefs = await SharedPreferences.getInstance();
-      String rawJson = convert.jsonEncode(_cartProductos); 
- 
-     setState(() {
-       prefs.setString('pedido_key', rawJson);
-       prefs.setString('id_tercero_pedido', id_tercero); 
-    });
+
+  modalNuevoPedido(data) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10.0))),
+          child: Container(
+            height: 210.0,
+            width: 300.0,
+            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+            child: Column(
+              children: [
+                SizedBox(height: 20.0),
+                Text(
+                  'Espera!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 20.0),
+                Text(
+                  'Tiene productos en el carrito, si continua estos se descartarán.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Color(0xff0894FD),
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 30.0),
+                Container(
+                  width: 110,
+                  height: 41.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5.0),
+                      color: Color(0xffCB1B1B)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Center(
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 110,
+                  height: 41.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5.0),
+                      color: Color(0xff0894FD)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Center(
+                        child: Text(
+                          'Continuar',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      onTap: () {
+                        //   removeCarrito();
+                        Navigator.of(context).pop();
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )),
+    );
   }
+
   modalSinPedido() {
     showDialog<String>(
       context: context,
@@ -5634,166 +6288,169 @@ Future<void> searchFactura() async {
   }
 
   Future createPedido() async {
-    final total_costo = double.parse(totalPedido) + double.parse(totalDescuento);
+    final total_costo =
+        double.parse(totalPedido) + double.parse(totalDescuento);
     var flag_pedido = true;
     var flag_pedido_det = true;
-    final nuevo_pedido = Pedido (
-             nit: _nit,
-            id_tercero: '$id_tercero',
-            id_empresa: '$id_empresa',
-            id_sucursal: "01",
-            id_tipo_doc: idPedidoUser,
-            numero: '$_value_automatico',
-            id_sucursal_tercero: "1",
-            id_vendedor: "16499705",
-            id_suc_vendedor: '$id_suc_vendedor',
-            fecha: '$_selectedDate',
-            vencimiento: '$_selectedDate',
-            fecha_entrega: '$_selectedDate',
-            fecha_trm: '$_selectedDate',
-            id_forma_pago: '$_value_itemsFormaPago',
-            id_precio_item: '$listaPrecioTecero',
-            id_direccion: _value_DireccionMercancia,
-            id_moneda: "COLP",
-            trm: "1",
-            subtotal: '$totalSubTotal',
-            total_costo: total_costo.toString(),
-            total_iva: "1900",
-            total_dcto: '$totalDescuento',
-            total: '$totalPedido',
-            total_item: "10000",
-            orden_compra: myControllerOrdenCompra.text,
-            estado: "PENDIENTE",
-            flag_autorizado: "SI",
-            comentario: "PRUEBA",
-            observacion: myControllerObservacion.text,
-            letras: _letras,
-            id_direccion_factura: _value_DireccionFactura,
-            usuario: _user,
-            id_tiempo_entrega: "22",
-            flag_enviado: "NO"
-    );
-    flag_pedido = await  OperationDB.insertPedido(nuevo_pedido);
+    var dia = (_selectedDate.day).toString();
+    var mes = (_selectedDate.month).toString();
+    final ano = _selectedDate.year;
 
-     for (var i = 0; i < _cartProductos.length; i++) { 
-      final total_dcto =  (_cartProductos[i]['precio'] *  _cartProductos[i]['cantidad']) * (_cartProductos[i]['total_dcto'] / 100);
-      final subtotal = _cartProductos[i]['precio'] * _cartProductos[i]['cantidad'];
-      final total =  (_cartProductos[i]['precio'] * _cartProductos[i]['cantidad']) - ((_cartProductos[i]['precio'] *
-              _cartProductos[i]['cantidad']) *     (_cartProductos[i]['total_dcto'] / 100));
-                 final nuevo_pedido_det = PedidoDet (               
-                  nit: _nit,
-                  id_empresa: '$id_empresa',
-                  id_sucursal: "01",
-                  id_tipo_doc: idPedidoUser,
-                  numero: '$_value_automatico',
-                  consecutivo: i + 1,
-                  id_item: _cartProductos[i]['id_item'],
-                  descripcion_item: _cartProductos[i]['descripcion'],
-                  id_bodega: "01",
-                  cantidad: _cartProductos[i]['cantidad'].toString(),
-                  precio: _cartProductos[i]['precio'].toString(),
-                  precio_lista: "10000",
-                  tasa_iva: "19",
-                  total_iva: "1900",
-                  tasa_dcto_fijo: "0",
-                  total_dcto_fijo: "0",
-                  total_dcto: total_dcto.toString(),
-                  costo: "7500",
-                  subtotal: subtotal.toString(),
-                  total:  total.toString(),
-                  total_item: "10000",
-                  id_unidad: "Und",
-                  cantidad_kit: "0",
-                  cantidad_de_kit: "0",
-                  recno: "0",
-                  id_precio_item: _cartProductos[i]['id_precio_item'],
-                  factor: "1",
-                  id_impuesto_iva: "IVA19",
-                  total_dcto_adicional: "0",
-                  tasa_dcto_adicional: "0",
-                  id_kit: "",
-                  precio_kit: "0",
-                  tasa_dcto_cliente: "0",
-                  total_dcto_cliente: "0"
-                  );
-            flag_pedido_det = await  OperationDB.insertPedidoDet(nuevo_pedido_det);
-            await OperationDB.getPedidoDetNum(_value_automatico);
-      };
-        if(flag_pedido && flag_pedido_det) {
-              showDialog<String>(
-                context: context,
-                builder: (BuildContext context) => Dialog(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                    child: Container(
-                      height: 283.0,
-                      width: 283.0,
-                      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                      child: Column(
-                        children: [
-                          SizedBox(height: 20.0),
-                          Image(
-                            height: 90.0,
-                            image: AssetImage('assets/images/icon-check.png'),
-                          ),
-                          SizedBox(height: 20.0),
-                          Text(
-                            'Creación de pedido exitoso',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: Color(0xff06538D),
-                                fontSize: 22.0,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 30.0),
-                          Container(
-                            width: 90,
-                            height: 41.0,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Color(0xff0894FD)),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: Center(
-                                  child: Text(
-                                    'Aceptar',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                onTap: () {
-                                  removeCarrito();
-                                  setState(() {
-                                    _clientShow = true;
-                                    _productosShowCat = false;
-                                    _productosShow = false;
-                                  });
-                                  Navigator.pop(context);
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-              );
-             await OperationDB.updateConsecutivo(int.parse(_value_automatico),_nit,idPedidoUser);
-             isOnline ? await createPedidoAPI() : '';
-        } else {
-            showTopSnackBar(
-              context,
-                 animationDuration: const Duration(seconds: 1),
-              CustomSnackBar.error(
-                message: "Error en la creacion del pedido local",
-              ),
-            );
+    dia = dia.length == 1 ? '0$dia' : dia;
+    mes = mes.length == 1 ? '0$mes' : mes;
+
+    final fecha_final = '$ano-$mes-$dia';
+
+    final nuevo_pedido = Pedido(
+        nit: _nit,
+        id_tercero: '$id_tercero',
+        id_empresa: '$id_empresa',
+        id_sucursal: "01",
+        id_tipo_doc: idPedidoUser,
+        numero: '$_value_automatico',
+        id_sucursal_tercero: "1",
+        id_vendedor: id_vendedor,
+        id_suc_vendedor: '$id_suc_vendedor',
+        fecha: fecha_final,
+        vencimiento: fecha_final,
+        fecha_entrega: fecha_final,
+        fecha_trm: fecha_final,
+        id_forma_pago: '$_value_itemsFormaPago',
+        id_precio_item: '$listaPrecioTecero',
+        id_direccion: _value_DireccionMercancia,
+        id_moneda: "COLP",
+        trm: "1",
+        subtotal: '$totalSubTotal',
+        total_costo: total_costo.toString(),
+        total_iva: "1900",
+        total_dcto: '$totalDescuento',
+        total: '$totalPedido',
+        total_item: "0",
+        orden_compra: myControllerOrdenCompra.text,
+        estado: "PENDIENTE",
+        flag_autorizado: "SI",
+        comentario: "PRUEBA",
+        observacion: myControllerObservacion.text,
+        letras: _letras,
+        id_direccion_factura: _value_DireccionFactura,
+        usuario: _user,
+        id_tiempo_entrega: "22",
+        flag_enviado: "NO");
+    flag_pedido = await OperationDB.insertPedido(nuevo_pedido,true);
+    await OperationDB.editarPedido(_value_automatico);
+
+    for (var i = 0; i < _cartProductos.length; i++) {
+      final subtotal = double.parse(_cartProductos[i]['precio'].toString()) *
+          double.parse(_cartProductos[i]['cantidad'].toString());
+      final total = (double.parse(_cartProductos[i]['precio'].toString()) *
+              double.parse(_cartProductos[i]['cantidad'].toString())) -
+          double.parse(_cartProductos[i]['dcto'].toString());
+      final nuevo_pedido_det = PedidoDet(
+          nit: _nit,
+          id_empresa: '$id_empresa',
+          id_sucursal: "01",
+          id_tipo_doc: idPedidoUser,
+          numero: '$_value_automatico',
+          consecutivo: i + 1,
+          id_item: _cartProductos[i]['id_item'],
+          descripcion_item: _cartProductos[i]['descripcion'],
+          id_bodega: "01",
+          cantidad: _cartProductos[i]['cantidad'].toString(),
+          precio: _cartProductos[i]['precio'].toString(),
+          precio_lista: "0",
+          tasa_iva: "19",
+          total_iva: "0",
+          tasa_dcto_fijo: "0",
+          total_dcto_fijo: "0",
+          total_dcto: _cartProductos[i]['total_dcto'].toString(),
+          costo: "0",
+          subtotal: subtotal.toString(),
+          total: total.toString(),
+          total_item: "0",
+          id_unidad: "Und",
+          cantidad_kit: "0",
+          cantidad_de_kit: "0",
+          recno: "0",
+          id_precio_item: _cartProductos[i]['id_precio_item'],
+          factor: "1",
+          id_impuesto_iva: "IVA19",
+          total_dcto_adicional: "0",
+          tasa_dcto_adicional: "0",
+          id_kit: "",
+          precio_kit: "0",
+          tasa_dcto_cliente: "0",
+          total_dcto_cliente: "0");
+      flag_pedido_det = await OperationDB.insertPedidoDet(nuevo_pedido_det);
+    }
+    ;
+    if (flag_pedido && flag_pedido_det) {
+      await OperationDB.updateConsecutivo(
+          int.parse(_value_automatico), _nit, idPedidoUser, id_empresa);
+      isOnline ? await createPedidoAPI() : modalExitosa();
+    } else {
+      _showBarMsg('Error en la creacion del pedido local',false);
     }
   }
- 
+
+  void modalExitosa() async {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10.0))),
+          child: Container(
+            height: 283.0,
+            width: 283.0,
+            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+            child: Column(
+              children: [
+                SizedBox(height: 20.0),
+                Image(
+                  height: 90.0,
+                  image: AssetImage('assets/images/icon-check.png'),
+                ),
+                SizedBox(height: 20.0),
+                Text(
+                  'Creación de pedido exitoso',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 30.0),
+                Container(
+                  width: 90,
+                  height: 41.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5.0),
+                      color: Color(0xff0894FD)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Center(
+                        child: Text(
+                          'Aceptar',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      onTap: () {
+                        removeCarrito();
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, 'home');
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )),
+    );
+  }
 
   Future createPedidoAPI() async {
     final response = await http.post(
@@ -5811,7 +6468,7 @@ Future<void> searchFactura() async {
             "id_tipo_doc": idPedidoUser,
             "numero": '$_value_automatico',
             "id_sucursal_tercero": "1",
-            "id_vendedor": "16499705",
+            "id_vendedor": id_vendedor,
             "id_suc_vendedor": '$id_suc_vendedor',
             "fecha": '$_selectedDate',
             "vencimiento": '$_selectedDate',
@@ -5825,10 +6482,10 @@ Future<void> searchFactura() async {
             "subtotal": '$totalSubTotal',
             "total_costo":
                 double.parse(totalPedido) + double.parse(totalDescuento),
-            "total_iva": "1900",
+            "total_iva": "0",
             "total_dcto": '$totalDescuento',
             "total": '$totalPedido',
-            "total_item": "10000",
+            "total_item": "0",
             "orden_compra": myControllerOrdenCompra.text,
             "estado": "PENDIENTE",
             "flag_autorizado": "SI",
@@ -5838,7 +6495,7 @@ Future<void> searchFactura() async {
             "id_direccion_factura": _value_DireccionFactura,
             "usuario": _user,
             "id_tiempo_entrega": "22",
-            "flag_enviado": "NO",
+            "flag_enviado": "SI",
             "app_movil": true,
             "pedido_det": [
               for (var i = 0; i < _cartProductos.length; i++) ...[
@@ -5857,21 +6514,20 @@ Future<void> searchFactura() async {
                   "precio": _cartProductos[i]['precio'],
                   "precio_lista": "10000",
                   "tasa_iva": "19",
-                  "total_iva": "1900",
+                  "total_iva": "0",
                   "tasa_dcto_fijo": "0",
                   "total_dcto_fijo": "0",
-                  "total_dcto": (_cartProductos[i]['precio'] *
-                          _cartProductos[i]['cantidad']) *
-                      (_cartProductos[i]['total_dcto'] / 100),
-                  "costo": "7500",
-                  "subtotal": _cartProductos[i]['precio'] *
-                      _cartProductos[i]['cantidad'],
-                  "total": (_cartProductos[i]['precio'] *
-                          _cartProductos[i]['cantidad']) -
-                      ((_cartProductos[i]['precio'] *
-                              _cartProductos[i]['cantidad']) *
-                          (_cartProductos[i]['total_dcto'] / 100)),
-                  "total_item": "10000",
+                  "total_dcto": _cartProductos[i]['total_dcto'].toString(),
+                  "costo": "0",
+                  "subtotal": double.parse(
+                          _cartProductos[i]['precio'].toString()) *
+                      double.parse(_cartProductos[i]['cantidad'].toString()),
+                  "total":
+                      (double.parse(_cartProductos[i]['precio'].toString()) *
+                              double.parse(
+                                  _cartProductos[i]['cantidad'].toString())) -
+                          double.parse(_cartProductos[i]['dcto'].toString()),
+                  "total_item": "0",
                   "id_unidad": "Und",
                   "cantidad_kit": "0",
                   "cantidad_de_kit": "0",
@@ -5898,17 +6554,14 @@ Future<void> searchFactura() async {
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 201 && success) {
-
-      //actyualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI
-       
+      await OperationDB.updatePedidoFlag(_value_automatico, _nit);
+      //actualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI
+      print("actualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI");
+      modalExitosa();
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "Error en la creacion del pedido",
-        ),
-      );
+      removeCarrito();
+      print("error en la creacion del pedido online $msg");
+      _showBarMsg('Error en la creacion del pedido $msg',false);
     }
   }
 
@@ -5979,15 +6632,16 @@ Future<void> searchFactura() async {
   }
 
   Future<void> searchDocumentPend(data) async {
-    final response = 
-        await http.get(
-            Uri.parse("$_url/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
+    final response = await http.get(
+        Uri.parse("$_url/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       _dataDocumentPend = jsonResponse['data'];
+      print(
+          "----------_dataDocumentPend_dataDocumentPend $_dataDocumentPend--- ");
 
       getConsecutivo(false);
       setState(() {
@@ -5996,17 +6650,11 @@ Future<void> searchFactura() async {
         _formRecipeShow = true;
       });
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
+       _showBarMsg('$msg',false);
     }
   }
 
-  //descuentos poara el recibo
+  //descuentos poara el recibo  //cambiar a bd
   Future<void> searchConcepto() async {
     print("buscar lso descuentos");
     final response = await http.get(Uri.parse("$_url/concepto_all"));
@@ -6021,13 +6669,7 @@ Future<void> searchFactura() async {
         _formNewClientShowDescuento = true;
       });
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
+      _showBarMsg('Error no se obtuvo el concepto  $msg',false);
     }
   }
 
@@ -6594,7 +7236,7 @@ Future<void> searchFactura() async {
     );
   }
 
-  Widget _listDescuento(BuildContext context, data, i) { 
+  Widget _listDescuento(BuildContext context, data, i) {
     final _size = MediaQuery.of(context).size;
     return Column(
       children: [
@@ -6658,7 +7300,6 @@ Future<void> searchFactura() async {
             IconButton(
                 onPressed: () {
                   print("eliminar producto del carrito");
-                  //  _showDialog(context, i);
                   _showDialogDescuento(context, i);
                 },
                 icon: Icon(
@@ -6756,20 +7397,6 @@ Future<void> searchFactura() async {
                   ),
                 ],
               )
-
-        /*      Row(
-              
-                children: [ 
-                  _itemForm(
-                      context,
-                      'Valor:',
-                      '\$ ' +
-                          expresionRegular(
-                              double.parse(filterAbonoDescuento(i).toString())),
-                      null,
-                      false),
-                ],
-              ), */
       ],
     );
   }
@@ -6993,7 +7620,7 @@ Future<void> searchFactura() async {
               "cuota": _documentosPagados[i]['cuota'].toString(),
               "dias": _documentosPagados[i]['dias'].toString(),
               "id_tercero": id_tercero,
-              "id_vendedor": "16499706",
+              "id_vendedor": id_vendedor,
               "id_sucursal_tercero": id_sucursal_tercero,
               "fecha":
                   '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
@@ -7025,13 +7652,7 @@ Future<void> searchFactura() async {
       print("createRecibo");
       createReciboCartera();
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "Error en la creacion del recibo cuentas_por_tercero $msg",
-        ),
-      );
+      _showBarMsg('Error en la creacion del recibo cuentas_por_tercero  $msg',false);
     }
   }
 
@@ -7091,7 +7712,7 @@ Future<void> searchFactura() async {
                 "descripcion": _value_itemsTipoPago == '01'
                     ? 'Pago en Efectivo por el valor de $totalReciboPagado '
                     : ' ',
-                "id_vendedor": "6220948",
+                "id_vendedor": id_vendedor,
                 "id_forma_pago": _value_itemsTipoPago,
                 "documento_forma_pago": "",
                 "distribucion": "FP",
@@ -7127,7 +7748,7 @@ Future<void> searchFactura() async {
                   "debito": '0',
                   "credito": _documentosPagados[i]['monto_pagar'],
                   "descripcion": ' Abonó el documento',
-                  "id_vendedor": "6220948",
+                  "id_vendedor": id_vendedor,
                   "id_forma_pago": "",
                   "documento_forma_pago": "",
                   "distribucion": "DC",
@@ -7145,7 +7766,6 @@ Future<void> searchFactura() async {
                       int.parse(_documentosPagados[i]['cuota'].toString()),
                   "id_banco": _value_itemsBanco
                 },
-           
                 for (var i = 0; i < _dataDescuentoAgregados.length; i++) ...[
                   {
                     "consecutivo": conse = conse + 1,
@@ -7164,7 +7784,7 @@ Future<void> searchFactura() async {
                     "credito": "0",
                     "descripcion":
                         'Pago de descuento ${_dataDescuentoAgregados[i]['monto_descontar']} ',
-                    "id_vendedor": "6220948",
+                    "id_vendedor": id_vendedor,
                     "id_forma_pago": '',
                     "documento_forma_pago": "",
                     "distribucion": "CN",
@@ -7251,7 +7871,7 @@ Future<void> searchFactura() async {
                             ),
                           ),
                           onTap: () {
-                            removeCarrito();
+                            //  removeCarrito();
                             setState(() {
                               _clientShow = true;
                               _productosShowCat = false;
@@ -7270,13 +7890,7 @@ Future<void> searchFactura() async {
         );
       }
     } else {
-      showTopSnackBar(
-        context,
-           animationDuration: const Duration(seconds: 1),
-        CustomSnackBar.error(
-          message: "Error en la creacion del recibo",
-        ),
-      );
+      _showBarMsg('Error en la creacion del recibo',false);
     }
   }
 
@@ -7296,8 +7910,20 @@ Future<void> searchFactura() async {
           convert.jsonDecode(response.body) as Map<String, dynamic>;
       setState(() {
         _letras = jsonResponse['letras'];
-      });
-      print("asdasd $_letras");
+      });  
     }
   }
+
+  void _showBarMsg(msg,bool type) {
+    showTopSnackBar(
+      context,
+      animationDuration: const Duration(seconds: 1),
+      type ? CustomSnackBar.info(
+        message: msg,
+      ):CustomSnackBar.error(
+        message: msg,
+      ) ,
+    );
+  }
+
 }

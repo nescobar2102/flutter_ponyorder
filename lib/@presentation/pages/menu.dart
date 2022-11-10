@@ -75,14 +75,16 @@ class MenuPage extends StatelessWidget {
               width: _size.width,
               color: Color(0xff06538D),
               child: ListTile(
-                 onTap: () async {
- 
+                 onTap: () async { 
+                        // OperationDB.closeDB(),
+                     
+              
                                SharedPreferences preferences =
                         await SharedPreferences.getInstance();
                        preferences.clear();
                       preferences.setInt("value", 0);
                         Navigator.pushNamed(context, 'login');
-                        Navigator.pushNamed(context, 'login');
+                   
                         
                         }, 
                 contentPadding:

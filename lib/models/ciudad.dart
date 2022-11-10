@@ -119,3 +119,41 @@ class Depto {
     return 'Depto {id_pais: $id_pais, id_depto: $id_depto, nombre: $nombre,nit: $nit }';
   }
 }
+
+
+class Pais { 
+ 
+  final String id_pais;
+  final String ie_pais;  
+  final String nacionalidad;
+  final String nombre; 
+  final String nit; 
+
+  const Pais(
+      {
+      required this.id_pais,
+      required this.ie_pais,  
+      required this.nacionalidad,   
+      required this.nombre,
+      required this.nit
+       });
+
+  // Convert a Dog into a Map. The keys must correspond to the names of the
+  // columns in the database.
+  Map<String, dynamic> toMap() {
+    return {
+      'id_pais': id_pais,
+      'ie_pais': ie_pais, 
+      'nacionalidad': nacionalidad,       
+      'nombre': nombre, 
+      'nit': nit
+    };
+  }  
+
+  // Implement toString to make it easier to see information about
+  // each dog when using the print statement.
+  @override
+  String toString() {
+    return 'Pais {id_pais: $id_pais,  nombre: $nombre, ie_pais :$ie_pais, nacionalidad:$nacionalidad,nit: $nit }';
+  }
+}

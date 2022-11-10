@@ -16,6 +16,9 @@ import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
+import '../../db/operationDB.dart';
+import '../../models/recibo_caja.dart';
+
 class ReceiptsPage extends StatefulWidget {
   @override
   State<ReceiptsPage> createState() => _ReceiptsPageState();
@@ -29,14 +32,14 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       new GlobalKey<ScaffoldState>();
 
 //api
-    String _url = 'http://178.62.80.103:5000';
- // String _url = 'http://10.0.2.2:3000';
+  String _url = 'http://178.62.80.103:5000';
   late Object _body;
   late String _search = '@';
   late int _count;
   String _user = '';
   String _nit = '';
   String idReciboUser = '';
+  String id_vendedor = '';
   List<dynamic> _datRecibo = [];
   bool focus = false;
   //datepicker
@@ -66,6 +69,11 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       }
     });
   }
+  String id_sucursal_tercero_cliente = '';
+  String id_forma_pago_cliente = '';
+  String id_precio_item_cliente = '';
+  String id_lista_precio_cliente = '';
+  String id_suc_vendedor_cliente = '';
 
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -73,7 +81,13 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       idReciboUser = (prefs.getString('idReciboUser') ?? '');
-      print("el usuario es $_user $_nit");
+      id_vendedor = (prefs.getString('id_vendedor') ?? '');
+      id_sucursal_tercero_cliente = (prefs.getString('id_sucursal_tercero') ?? '');
+      id_forma_pago_cliente = (prefs.getString('id_forma_pago') ?? '');
+      id_precio_item_cliente = (prefs.getString('id_precio_item') ?? '');
+      id_lista_precio_cliente = (prefs.getString('id_lista_precio') ?? '');
+      id_suc_vendedor_cliente = (prefs.getString('id_suc_vendedor') ?? '');
+      print("el usuario es $_user $_nit $id_vendedor");
       if (_nit != '') {
         searchRecibo();
       }
@@ -91,23 +105,12 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
   Future<void> searchRecibo() async {
     _search = myControllerSearch.text;
 
-    _body = {
-      "id_tipo_doc": idReciboUser,
-      "fecha1": fecha1,
-      "fecha2": fecha2,
-      "search": (_search.isNotEmpty && _search != '') ? _search : '@',
-    };
-
-    final response =
-        await http.post(Uri.parse("$_url/historial_recibos"), body: (_body));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _datRecibo = jsonResponse['data'];
-      print(_datRecibo);
-      _count = jsonResponse['count'];
+    final search_ = (_search.isNotEmpty && _search != '') ? _search : '@';
+    final data = await OperationDB.getHistorialRecibo(
+        idReciboUser, fecha1, fecha2, search_);
+    if (data != false) {
+      _datRecibo = data;
+      _count = _datRecibo.length;
       setState(() {
         if (_count > 0) {
           _showItems = true;
@@ -122,7 +125,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: msg,
+          message: "No existen registros",
         ),
       );
     }
@@ -180,7 +183,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                 ),
               ),
             ),
-            actions: [
+           /* actions: [
               GestureDetector(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15.0),
@@ -195,7 +198,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                             ? Navigator.pop(context)
                             : _drawerscaffoldkey.currentState!.openEndDrawer()
                       })
-            ],
+            ],*/
             title: Text(
               'Recibos de caja',
               style: TextStyle(
@@ -215,7 +218,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
           body: Scaffold(
             key: _drawerscaffoldkey,
             drawer: _menu(context),
-            endDrawer: _shoppingCart(context),
+           // endDrawer: _shoppingCart(context),
             body: CustomScrollView(
               slivers: [
                 SliverList(
@@ -359,10 +362,18 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic)),
-        for (var i = 0; i < _datRecibo.length; i++) ...[
-          _ItemReceipts(_datRecibo[i], i),
-          SizedBox(height: 10.0),
-        ],
+        SizedBox(height: 10.0),
+        SizedBox(
+          height: 535.0,
+          child: ListView(
+            children: [
+              for (var i = 0; i < _datRecibo.length; i++) ...[
+                 _ItemReceipts(_datRecibo[i], i),
+                SizedBox(height: 10.0),
+              ],
+            ],
+          ),
+        ),       
       ],
     );
   }
@@ -377,22 +388,10 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
           cancelText: 'CANCEL',
           confirmText: 'OK',
           onCancel: () {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text(
-                'Selection Cancelled',
-              ),
-              duration: Duration(milliseconds: 500),
-            ));
+            Navigator.pop(context); 
           },
           onSubmit: (Object? value) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text(
-                'Selection Confirmed',
-              ),
-              duration: Duration(milliseconds: 500),
-            ));
+            Navigator.pop(context); 
             searchRecibo();
           },
           selectionMode: DateRangePickerSelectionMode.range,
@@ -402,6 +401,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
   }
 
   Widget _ItemReceipts(data, i) {
+       final nombre = data['nombre'].toUpperCase();
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -422,7 +422,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
             width: _size.width,
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: Text(
-              '${data['nombre']}',
+                '$nombre',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
@@ -922,7 +922,31 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
-                  onTap: () => Navigator.pushNamed(context, 'login'),
+                  minLeadingWidth: 20,
+                  leading: const Icon(
+                    Icons.remove_red_eye,
+                    color: Color(0xff767676),
+                    size: 28.0,
+                  ),
+                  title: Text(
+                    'Sincronizacion',
+                    style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
+                  ),
+                  onTap: () => Navigator.pushNamed(context, 'data'),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                color: Color(0xfff4f4f4),
+                child: ListTile(
+                  onTap: () async {
+                    OperationDB.closeDB();
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                    preferences.clear();
+                    preferences.setInt("value", 0);
+                    Navigator.pushNamed(context, 'login');
+                  },
                   minLeadingWidth: 20,
                   leading: const Icon(
                     Icons.exit_to_app,

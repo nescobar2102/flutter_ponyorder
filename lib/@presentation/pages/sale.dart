@@ -106,14 +106,26 @@ class _SalePageState extends State<SalePage> {
       );
     }
   }
- 
+  
+  String id_sucursal_tercero_cliente = '';
+  String id_forma_pago_cliente = '';
+  String id_precio_item_cliente = '';
+  String id_lista_precio_cliente = '';
+  String id_suc_vendedor_cliente = '';
+  
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
-      id_vendedor = '16499706';
-      print("el usuario es $_user $_nit");
+      id_vendedor = (prefs.getString('id_vendedor') ?? '');
+      id_sucursal_tercero_cliente = (prefs.getString('id_sucursal_tercero') ?? '');
+      id_forma_pago_cliente = (prefs.getString('id_forma_pago') ?? '');
+      id_precio_item_cliente = (prefs.getString('id_precio_item') ?? '');
+      id_lista_precio_cliente = (prefs.getString('id_lista_precio') ?? '');
+      id_suc_vendedor_cliente = (prefs.getString('id_suc_vendedor') ?? '');
+      print("el usuario es $_user $_nit $id_vendedor");
+
       if (_nit != '') {
         searchBalanceApi();
         searchSaleApi();             
@@ -148,7 +160,7 @@ class _SalePageState extends State<SalePage> {
                 ),
               ),
             ),
-            actions: [
+          /*  actions: [
               GestureDetector(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15.0),
@@ -163,7 +175,7 @@ class _SalePageState extends State<SalePage> {
                             ? Navigator.pop(context)
                             : _drawerscaffoldkey.currentState!.openEndDrawer()
                       })
-            ],
+            ],*/
             title: Text(
               'Cuota de venta',
               style: TextStyle(
@@ -183,7 +195,7 @@ class _SalePageState extends State<SalePage> {
           body: Scaffold(
             key: _drawerscaffoldkey,
             drawer: _menu(context),
-            endDrawer: _shoppingCart(context),
+          //  endDrawer: _shoppingCart(context),
             body: CustomScrollView(
               slivers: [
                 SliverList(
@@ -446,8 +458,144 @@ class _SalePageState extends State<SalePage> {
         SizedBox(
           height: 10.0,
         ),
-        
-         for (var i = 0; i < _count; i++) ...[          
+        SizedBox(
+          height: 310.0,
+          child: ListView(
+            children: [
+              for (var i = 0; i < _count; i++) ...[
+                Container(
+                  width: _size.width,
+                  padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Color(0xffC7C7C7),
+                      ),
+                      borderRadius: BorderRadius.circular(8.0)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_datSale[i]['nombre']}',
+                            style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xff06538D)),
+                          ),
+                          SizedBox(
+                            height: 12.0,
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10.0,
+                                height: 10.0,
+                                color: Color(0xff707070),
+                              ),
+                              SizedBox(
+                                width: 12.0,
+                              ),
+                              Text(
+                                'Meta',
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14.0),
+                              ),
+                              SizedBox(
+                                width: 15.0,
+                              ),
+                              Text(
+                                '\$ ' + expresionRegular(double.parse(_datSale[i]['cuota'].toString())),
+                                style: TextStyle(
+                                    color: Color(0xff707070),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14.0),
+                              )
+                            ],
+                          ),
+                          SizedBox(
+                            height: 10.0,
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10.0,
+                                height: 10.0,
+                                color: Color(0xff0091CE),
+                              ),
+                              SizedBox(
+                                width: 12.0,
+                              ),
+                              Text(
+                                'Venta',
+                                style: TextStyle(
+                                    color: Color(0xff0091CE),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14.0),
+                              ),
+                              SizedBox(
+                                width: 15.0,
+                              ),
+                              Text(
+                                '\$ ' + expresionRegular(double.parse(_datSale[i]['venta'].toString())),
+                                style: TextStyle(
+                                    color: Color(0xff0091CE),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14.0),
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                      SizedBox(
+                        width: 100.0,
+                        height: 100.0,
+                        child :   DashedCircularProgressBar.aspectRatio(
+                          aspectRatio: 2, // width ÷ height
+                          valueNotifier: ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
+                          progress:double.parse(_datSale[i]['porcentaje'].toString()),
+                          startAngle: 225,
+                          sweepAngle: 270,
+                          foregroundColor: Colors.blue,
+                          backgroundColor: const Color(0xffeeeeee),
+                          foregroundStrokeWidth: 15,
+                          backgroundStrokeWidth: 15,
+                          animation: true,
+                          seekSize: 6,
+                          seekColor: const Color(0xffeeeeee),
+                          child: Center(
+                            child: ValueListenableBuilder(
+                                valueListenable:  ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
+                                builder: (_, double value, __) => Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${value.toInt()}%',
+                                      style: TextStyle(
+                                          color: Colors.blue,
+                                          fontSize: 26.0,
+                                          fontWeight: FontWeight.w600
+                                      ),
+                                    ),
+                                  ],
+                                )
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10.0),
+              ]
+            ],
+          ),
+        ),
+     /*    for (var i = 0; i < _count; i++) ...[
         Container(
           width: _size.width,
           padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
@@ -578,7 +726,7 @@ class _SalePageState extends State<SalePage> {
        SizedBox(
           height: 10.0,
         ), 
-      ],            
+      ],*/
       ],
     );
   }
@@ -934,7 +1082,14 @@ class _SalePageState extends State<SalePage> {
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
-                  onTap: () => Navigator.pushNamed(context, 'login'),
+                 onTap: () async { 
+                   // OperationDB.closeDB();              
+                            SharedPreferences preferences =
+                    await SharedPreferences.getInstance();
+                    preferences.clear();
+                  preferences.setInt("value", 0);
+                    Navigator.pushNamed(context, 'login');
+                    }, 
                   minLeadingWidth: 20,
                   leading: const Icon(
                     Icons.exit_to_app,

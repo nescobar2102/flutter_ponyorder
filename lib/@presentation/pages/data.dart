@@ -28,6 +28,7 @@ import '../../models/precio_item.dart';
 import '../../models/zona.dart';
 import '../../models/medio_contacto.dart';
 import '../../models/pedido.dart';
+import '../../models/recibo_caja.dart';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -61,11 +62,9 @@ class LoginPages extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPages> {
  String _url = 'http://178.62.80.103:5000';
-  // String _url = 'http://10.0.2.2:3000';
 
   bool focus = false;
   bool isOnline = false;
-  bool _isLoading = false;
 
   Future<Null> _submitDialog(BuildContext context) async {
     return await showDialog<Null>(
@@ -83,6 +82,15 @@ class _LoginPageState extends State<LoginPages> {
           );
         });
   }
+
+ void _showError(msg) {
+   showTopSnackBar(
+     context,
+     CustomSnackBar.error(
+       message: msg,
+     ),
+   );
+ }
 
   Future<bool> hasNetwork() async {
     try {
@@ -118,16 +126,11 @@ class _LoginPageState extends State<LoginPages> {
             id_tipo_doc_pe: data[i]['id_tipo_doc_pe'],
             id_tipo_doc_rc: data[i]['id_tipo_doc_rc']);
         print("manda a inserta usuariosssss $user");
-        //   await OperationDB.insertUser(user) ;
+   
       }
       await getCuotaVentaSincronizacion();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de usuarios",
-        ),
-      );
+      _showError('Error en la sincronizacion de usuarios');
     }
   }
 
@@ -146,20 +149,13 @@ class _LoginPageState extends State<LoginPages> {
               id_tipo_pago: data[i]['id_tipo_pago'],
               descripcion: data[i]['descripcion'],
               nit: data[i]['nit']);
-
           await OperationDB.insertTipoPago(tipo_pago);
         }
       }
-
-      await getEmpresaSincronizacion();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de tipo de pago",
-        ),
-      );
+      _showError('Error en la sincronizacion de tipo de pago');
     }
+    await getEmpresaSincronizacion();
     final allTipoPago = await OperationDB.getTipoPago();
     print("muestra todos los getTipoPago  $allTipoPago");
   }
@@ -197,21 +193,41 @@ class _LoginPageState extends State<LoginPages> {
               id_empresa: data[i]['id_empresa'],
               estado: data[i]['estado'].toString(),
               nit: data[i]['nit']);
-
           await OperationDB.insertEmpresa(empresa);
         }
       }
-      await getCiudadSincronizacion();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de Empresa",
-        ),
-      );
+      _showError('Error en la sincronizacion de Empresa');
     }
+    await getPaisSincronizacion();
     final allEmpresa = await OperationDB.getEmpresa();
     print("muestra todos los getEmpresa    $allEmpresa");
+  }
+
+ 
+  Future getPaisSincronizacion() async {
+    final response = await http.get(Uri.parse("$_url/pais_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final pais = Pais(
+              id_pais: data[i]['id_pais'],
+              ie_pais: data[i]['ie_pais'] != null ? data[i]['ie_pais']  : '',
+              nacionalidad: data[i]['nacionalidad'],
+              nombre: data[i]['nombre'],
+              nit: data[i]['nit']);
+          await OperationDB.insertPais(pais);
+        }
+      }
+    } else {
+      _showError('Error en la sincronizacion de Pais');
+    }
+    await getCiudadSincronizacion();
+ 
   }
 
   /////api obtiene todo las empresas de la bd postgres
@@ -230,19 +246,13 @@ class _LoginPageState extends State<LoginPages> {
               id_ciudad: data[i]['id_ciudad'],
               nombre: data[i]['nombre'],
               nit: data[i]['nit']);
-
           await OperationDB.insertCiudad(ciudad);
         }
       }
-      await getTipoDocSincronizacion();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de Ciudad",
-        ),
-      );
+      _showError('Error en la sincronizacion de Ciudad');
     }
+    await getTipoDocSincronizacion();
     final allCiudad = await OperationDB.getCiudad();
     print("muestra todos los getCiudad    $allCiudad");
   }
@@ -267,16 +277,10 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de Zona",
-        ),
-      );
+      _showError('Error en la sincronizacion de Zona');
     }
     final allZona = await OperationDB.getZona();
     print("muestra todos los getZona  $allZona");
-
     await getMedioContactoSincronizacion();
   }
 
@@ -297,12 +301,7 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de MedioContacto",
-        ),
-      );
+      _showError('Error en la sincronizacion de MedioContacto');
     }
     final allMedio = await OperationDB.getMedioContacto();
     print("muestra todos los getMedioContacto  $allMedio");
@@ -318,19 +317,14 @@ class _LoginPageState extends State<LoginPages> {
       var data = jsonResponse['data'];
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
-          final tipo_identity = TipoIdentificacion(
+          final tipoIdentity = TipoIdentificacion(
               id_tipo_identificacion: data[i]['value'],
               descripcion: data[i]['label'] );
-          await OperationDB.insertTipoIdentificacion(tipo_identity);
+          await OperationDB.insertTipoIdentificacion(tipoIdentity);
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de TipoIdentificacion",
-        ),
-      );
+      _showError('Error en la sincronizacion de TipoIdentificacion');
     }
     final alltipo_identity= await OperationDB.getTipoIdentificacion();
     print("muestra todos los getTipoIdentificacion  $alltipo_identity");
@@ -347,26 +341,20 @@ class _LoginPageState extends State<LoginPages> {
       var data = jsonResponse['data'];
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
-          final tipo_empresa = TipoEmpresa(
+          final tipoEmpresa = TipoEmpresa(
               id_tipo_empresa: data[i]['id_tipo_empresa'],
               descripcion: data[i]['descripcion'] ,
                  nit: data[i]['nit']);
-          await OperationDB.insertTipoEmpresa(tipo_empresa);
+          await OperationDB.insertTipoEmpresa(tipoEmpresa);
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de tipo_empresa",
-        ),
-      );
+      _showError('Error en la sincronizacion de  tipo_empresa');
     }
     final alltipo_empresa= await OperationDB.getTipoEmpresa();
     print("muestra todos los getTipoEmpresa  $alltipo_empresa");
     await getBarrio();
   }
- 
 
   Future getBarrio() async { 
     final response = await http.get(Uri.parse("$_url/barrio_all"));
@@ -388,12 +376,7 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de barrio",
-        ),
-      );
+      _showError('Error en la sincronizacion de barrio');
     }
     final allbarrio= await OperationDB.getBarrio();
     print("muestra todos los getBarrio  $allbarrio");
@@ -418,18 +401,12 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de insertDepto",
-        ),
-      );
+      _showError('Error en la sincronizacion de insertDepto');
     }
     final alldepto= await OperationDB.getDepto();
     print("muestra todos los getDepto  $alldepto");
     await getPedido();
   }
-
 
   Future getPedido() async {  
     final response = await http.get(Uri.parse("$_url/pedido_all"));
@@ -458,25 +435,19 @@ class _LoginPageState extends State<LoginPages> {
               letras:data[i]['letras'], id_direccion_factura:data[i]['id_direccion_factura'],
               usuario:data[i]['usuario'],  id_tiempo_entrega:data[i]['id_tiempo_entrega'].toString(),
               flag_enviado:data[i]['flag_enviado'], nit:data[i]['nit']              );
-          await OperationDB.insertPedido(pedido);
+          await OperationDB.insertPedido(pedido,false);
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de insertPedido",
-        ),
-      );
+      _showError('Error en la sincronizacion de insertPedido');
     }
     final allPedido= await OperationDB.getPedido();
     print("muestra todos los getPedido  $allPedido");
     await getPedidoDet();
   }
 
-
   Future getPedidoDet() async {
-    //ULTIMO
+
     final response = await http.get(Uri.parse("$_url/pedido_det_all"));
     var jsonResponse =
     convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -505,36 +476,264 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de getPedidoDet",
-        ),
-      );
+      _showError('Error en la sincronizacion de getPedidoDet');
     }
     final ALLPEDIDODET= await OperationDB.getPedidoDet();
     print("muestra todos los getPedidoDet  $ALLPEDIDODET");
+   await  getCuentaTercero();
   }
 
+ Future getCuentaTercero() async  {
+      final response = await http.get(Uri.parse("$_url/cuentaportercero_all"));
+      var jsonResponse =
+      convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var success = jsonResponse['success'];
+      if (response.statusCode == 200 && success) {
+        var data = jsonResponse['data'];
+        if (data.length > 0) {
+          for (int i = 0; i < data.length; i++) {
+            final cuenta_tercero = CuentaTercero(
+                id_empresa:data[i]['id_empresa'],
+                id_sucursal: data[i]['id_sucursal'],
+                tipo_doc: data[i]['tipo_doc'],
+                numero: data[i]['numero'] ,
+                cuota: data[i]['cuota'],
+                dias: data[i]['dias'],
+                id_tercero: data[i]['id_tercero'].toString(),
+                id_vendedor:  data[i]['id_vendedor'].toString(),
+                id_sucursal_tercero:  data[i]['id_sucursal_tercero'],
+                fecha:  data[i]['fecha'],
+                vencimiento:  data[i]['vencimiento'],
+                credito:  data[i]['credito'].toString(),
+                dctomax:  data[i]['dctomax'].toString(),
+                debito:  data[i]['debito'].toString(),
+                id_destino:  data[i]['id_destino'],
+                id_proyecto:  data[i]['id_proyecto'],
+                nit:  data[i]['nit'],
+                id_empresa_cruce:  data[i]['id_empresa_cruce'],
+                id_sucursal_cruce :  data[i]['id_sucursal_cruce'],
+                tipo_doc_cruce:  data[i]['tipo_doc_cruce'],
+                numero_cruce:  data[i]['numero_cruce'],
+                cuota_cruce:  data[i]['cuota_cruce']
+            );
+            await OperationDB.insertCuentaTercero(cuenta_tercero);
+          }
+        }
+      } else {
+        _showError('Error en la sincronizacion de cuenta tercero');
+      }
+      await getCarteraProveedores();
+ }
 
 
-  Future searchTercero() async {
-    print("buscar el searchTercero");
+ Future getCarteraProveedores() async  {    
+   final response = await http.get(Uri.parse("$_url/carteraproveedores_all"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final cartera = CarteraProveedores(
+             id_empresa:data[i]['id_empresa'],
+             id_sucursal: data[i]['id_sucursal'],
+             id_tipo_doc : data[i]['id_tipo_doc'],
+             numero: data[i]['numero'] ,
+             fecha: data[i]['fecha'],
+             total:data[i]['total'].toString(),
+             vencimiento:data[i]['vencimiento'],
+             letras:data[i]['letras'],
+             id_moneda:data[i]['id_moneda'],
+             id_tercero: data[i]['id_tercero'].toString(),            
+             id_sucursal_tercero:  data[i]['id_sucursal_tercero'],
+             id_recaudador:data[i]['id_recaudador'].toString(),
+             fecha_trm:data[i]['fecha_trm'],
+              trm:data[i]['trm'].toString(),
+              observaciones:data[i]['observaciones'],
+              usuario:data[i]['usuario'],
+              flag_enviado:data[i]['flag_enviado'],
+               nit:  data[i]['nit'],
+         
+         );
+         await OperationDB.insertCarteraProveedores(cartera);
+         await getCarteraProveedoresDet(cartera.id_empresa,cartera.numero,cartera.nit);
+       }
+     }
 
+   } else {
+     _showError('Error en la sincronizacion de cartera proveedores');
+   }
+   await getAuxiliar();
+ }
+
+  
+ Future getCarteraProveedoresDet(id_empresa,numero,nit) async  {
+   final response = await http.get(Uri.parse("$_url/carteraproveedoresdet_all/$id_empresa/$numero/$nit"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final carteraDet = CarteraProveedoresDet(
+             id_empresa:data[i]['id_empresa'],
+             id_sucursal: data[i]['id_sucursal'],
+             id_tipo_doc : data[i]['id_tipo_doc'],
+             numero: data[i]['numero'],
+             consecutivo: data[i]['consecutivo'],
+             id_empresa_cruce:data[i]['id_empresa_cruce'],
+             id_sucursal_cruce:data[i]['id_sucursal_cruce'],
+             id_tipo_doc_cruce:data[i]['id_tipo_doc_cruce'],
+             numero_cruce:data[i]['numero_cruce'],
+             debito:data[i]['debito'].toString(),
+             credito: data[i]['credito'].toString(),
+             id_vendedor:data[i]['id_vendedor'].toString(),
+             id_forma_pago: data[i]['id_forma_pago'],
+             documento_forma_pago:data[i]['documento_forma_pago'],
+             cuota: data[i]['cuota'].toString(),
+             distribucion:data[i]['distribucion'],
+             descripcion: data[i]['descripcion'],
+             id_suc_recaudador:data[i]['id_suc_recaudador'],
+             total_factura:data[i]['total_factura'].toString(),
+             id_concepto:data[i]['id_concepto'],
+             id_moneda:data[i]['id_moneda'],
+             id_destino:data[i]['id_destino'],
+             id_proyecto:data[i]['id_proyecto'],
+             cuota_cruce:data[i]['cuota_cruce'],
+             id_banco:data[i]['id_banco'],
+             fecha: data[i]['fecha'],             
+             vencimiento:data[i]['vencimiento'],   
+             id_tercero: data[i]['id_tercero'].toString(),            
+             id_sucursal_tercero:  data[i]['id_sucursal_tercero'],
+             id_recaudador:data[i]['id_recaudador'].toString(),
+             fecha_trm:data[i]['fecha_trm'],
+             trm:data[i]['trm'].toString(),
+             nit:  data[i]['nit']         
+         );
+         await OperationDB.insertCarteraProveedoresDet(carteraDet);
+       }
+     }
+   } else {
+     _showError('Error en la sincronizacion dec cartera proveedores det');
+   }
+ }
+
+ Future getAuxiliar() async  {
+   final response = await http.get(Uri.parse("$_url/auxiliar_all"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final auxiliar = Auxiliar(
+             id_auxiliar:data[i]['id_auxiliar'],
+             descripcion: data[i]['descripcion'],
+             flag_flujo_caja : data[i]['flag_flujo_caja'],
+             id_tipo_cuenta : data[i]['id_tipo_cuenta'],
+             nit: data[i]['nit']
+         );
+         await OperationDB.insertAuxiliar(auxiliar);
+       }
+     }
+   } else {
+     _showError('Error en la sincronizacion de auxiliar');
+   }
+   await getConcepto();
+ }
+
+ Future getConcepto() async  {
+
+   final response = await http.get(Uri.parse("$_url/concepto_all"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final concepto = Concepto(
+           id_concepto:data[i]['id_concepto'],
+           descripcion: data[i]['descripcion'],
+           naturalezacta : data[i]['naturalezacta'],
+           id_auxiliar : data[i]['id_auxiliar'],
+           nit:  data[i]['nit']
+         );
+         await OperationDB.insertConcepto(concepto);
+       }
+     }
+
+   } else {
+     _showError('Error en la sincronizacion de conceptos');
+   }
+   await getBanco();
+ }
+
+
+ Future getBanco() async  {
+   print("banco");
+   final response = await http.get(Uri.parse("$_url/banco_all"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final banco = Banco(
+             id_banco:data[i]['id_banco'],
+             descripcion: data[i]['descripcion'],
+             nit:  data[i]['nit']
+         );
+         await OperationDB.insertBanco(banco);
+       }
+     }
+   } else {
+     _showError('Error en la sincronizacion de banco');
+   }
+   await getFormaPago();
+ }
+
+ Future getFormaPago() async  {
+   print("getFormaPago");
+   //ULTIMO
+   final response = await http.get(Uri.parse("$_url/formapago_all"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final formapago = FormaPago(
+             id_forma_pago:data[i]['id_forma_pago'],
+             descripcion: data[i]['descripcion'],
+             id_precio_item:  data[i]['id_precio_item'],
+             nit: data[i]['nit'],
+         );
+         await OperationDB.insertFormaPago(formapago);
+       }
+     }
+   } else {
+     _showError('Error en la sincronizacion de formapago');
+   }
+ }
+
+ Future searchTercero() async {
     final response = await http.get(Uri.parse("$_url/tercero_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    print("------response $success");
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
-      print("------response data data $data");
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final tercero = Tercero(
               id_tercero: data[i]['id_tercero'].toString(),
-              id_sucursal_tercero: data[i]['id_sucursal_tercero'],
+              id_sucursal_tercero: data[i]['id_sucursal_tercero'].toString(),
               id_tipo_identificacion: data[i]['id_tipo_identificacion'],
               dv: data[i]['dv'],
               nombre: data[i]['nombre'],
@@ -575,36 +774,25 @@ class _LoginPageState extends State<LoginPages> {
               e_mail_fe:
                   data[i]['e_mail_fe'] != null ? data[i]['e_mail_fe'] : '',
               nit: data[i]['nit']);
-          print("manda a inserta tercerosssssssss  $tercero");
           await OperationDB.insertTercero(tercero);
         }
       }
-
-      await searchTerceroCliente();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "error en la sincronizacion de tercero",
-        ),
-      );
+      _showError('Error en la sincronizacion de tercero');
     }
+    await searchTerceroCliente();
     final allTercero = await OperationDB.getTercero();
-    print("muestra todos los TERCEROss    $allTercero");
+    print("muestra todos los TERCEROS   $allTercero");
+    Navigator.pop(context);
   }
 
   Future searchTerceroCliente() async {
-    print("buscar el tercero cliente");
-
     final response = await http.get(Uri.parse("$_url/cliente_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    print("------response $success");
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
-
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final tercero_cliente = TerceroCliente(
@@ -652,33 +840,22 @@ class _LoginPageState extends State<LoginPages> {
               dcto_adicional: data[i]['dcto_adicional'],
               numero_facturas_vencidas: data[i]['numero_facturas_vencidas'],
               nit: data[i]['nit']);
-          print("manda a inserta tercero_clientessssss  $tercero_cliente");
           await OperationDB.insertTerceroCliente(tercero_cliente);
         }
       }
-
-      await searchTerceroDireccion();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "error en la sincronizacion de tercero cliente",
-        ),
-      );
+      _showError('Error en la sincronizacion de tercero cliente');
     }
+    await searchTerceroDireccion();
     final allTerceroCliente = await OperationDB.getTerceroCliente();
     print("muestra todos los TERCERO CLIENTE  $allTerceroCliente");
   }
 
   Future searchTerceroDireccion() async {
-    print("buscar el tercero direccion");
-
     final response = await http.get(Uri.parse("$_url/direccion_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    print("------response $success");
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
@@ -694,32 +871,25 @@ class _LoginPageState extends State<LoginPages> {
               telefono: data[i]['telefono'],
               tipo_direccion: data[i]['tipo_direccion'],
               nit: data[i]['nit']);
-          print("manda a inserta tercero_clientessssss  $tercero_direccion");
           await OperationDB.insertTerceroDireccion(tercero_direccion);
         }
       }
-
-      await getTipoPagoSincronizacion();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "error en la sincronizacion de tercero direccion",
-        ),
-      );
+      _showError('Error en la sincronizacion de tercero direccion');
     }
+    await getTipoPagoSincronizacion();
     final allTerceroDireccion = await OperationDB.getTerceroDireccion();
     print("muestra todos los TERCERO DIRECCION  $allTerceroDireccion");
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getCuotaVentaSincronizacion() async {
+    _submitDialog(context);
     print("ingresa a la cuota venta");
     final response = await http.get(Uri.parse("$_url/cuotaventas_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       print("la data que se obtiene de la api $data");
@@ -743,24 +913,16 @@ class _LoginPageState extends State<LoginPages> {
       }
       await searchTercero();
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de cuota venta",
-        ),
-      );
+      _showError('Error en la sincronizacion de cuota venta');
     }
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getTipoDocSincronizacion() async {
-    //consecutivo
-    print("ingresa a tipo doc");
     final response = await http.get(Uri.parse("$_url/tipodoc_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
@@ -781,25 +943,17 @@ class _LoginPageState extends State<LoginPages> {
             "muestra todos los registro de tipodoc desde dataaaaa $allTipoDoc");
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de tipodoc",
-        ),
-      );
+      _showError('Error en la sincronizacion de tipodoc');
     }
     await getFacturaSincronizacion();
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getFacturaSincronizacion() async {
-    //consecutivo
-    print("ingresa a factura");
     final response = await http.get(Uri.parse("$_url/factura_app_movil"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
@@ -822,26 +976,17 @@ class _LoginPageState extends State<LoginPages> {
             "muestra todos los registro de factura desde dataaaaa $allFactura");
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de factura",
-        ),
-      );
+      _showError('Error en la sincronizacion de factura');
     }
-
     await getCalsificacionItemSincronizacion();
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getCalsificacionItemSincronizacion() async {
-    //consecutivo
-    print("ingresa a getCalsificacionItemSincronizacion");
     final response = await http.get(Uri.parse("$_url/clasificacionItems_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
@@ -860,7 +1005,6 @@ class _LoginPageState extends State<LoginPages> {
                 ? data[i]['imagen'].toString()
                 : '',
           );
-          print("manda a inserta claitem $claitem");
           await OperationDB.insertClasificacionItem(claitem);
         }
         final allClasiItem = await OperationDB.getClasificacionItem();
@@ -868,30 +1012,22 @@ class _LoginPageState extends State<LoginPages> {
             "muestra todos los registro de clasificac desde dataaaaa $allClasiItem");
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de clasificac",
-        ),
-      );
+      _showError('Error en la sincronizacion de getClasificacionItem');
     }
     await getPrecioItemSincronizacion();
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getPrecioItemSincronizacion() async {
-    //consecutivo
-    print("ingresa a getPrecioItemSincronizacion");
     final response = await http.get(Uri.parse("$_url/precioitem_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
-          final precioitem = PrecioItems(
+          final precioItem = PrecioItems(
             id_precio_item: data[i]['id_precio_item'].toString(),
             descripcion: data[i]['descripcion'].toString(),
             vigencia_desde: data[i]['vigencia_desde'].toString(),
@@ -908,38 +1044,30 @@ class _LoginPageState extends State<LoginPages> {
                 : '',
             nit: data[i]['nit'],
           );
-          print("manda a inserta insertPrecioItem $precioitem");
-          await OperationDB.insertPrecioItem(precioitem);
+          print("manda a inserta insertPrecioItem $precioItem");
+          await OperationDB.insertPrecioItem(precioItem);
         }
         final allPrecioItem = await OperationDB.getPrecioItem();
         print(
             "muestra todos los registro de insertPrecioItem desde dataaaaa $allPrecioItem");
-        await getPrecioItemDetSincronizacion();
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de factura",
-        ),
-      );
+      _showError('Error en la sincronizacion de getPrecioItem');
     }
+    await getPrecioItemDetSincronizacion();
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getPrecioItemDetSincronizacion() async {
-    //consecutivo
-    print("ingresa a getPrecioItemDetSincronizacion");
     final response = await http.get(Uri.parse("$_url/precioitemdet_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
-          final precioitemDet = PrecioItemsDet(
+          final precioItemDet = PrecioItemsDet(
             precio: data[i]['precio'].toString(),
             id_precio_item: data[i]['id_precio_item'].toString(),
             id_item: data[i]['id_item'].toString(),
@@ -953,37 +1081,28 @@ class _LoginPageState extends State<LoginPages> {
                 : '',
             nit: data[i]['nit'],
           );
-          print("manda a inserta insertPrecioItemDet $precioitemDet");
-          await OperationDB.insertPrecioItemDet(precioitemDet);
+          print("manda a inserta insertPrecioItemDet $precioItemDet");
+          await OperationDB.insertPrecioItemDet(precioItemDet);
         }
         final allPrecioItemDet = await OperationDB.getPrecioItemDet();
         print(
             "muestra todos los registro de insertPrecioItem DERdesde dataaaaa $allPrecioItemDet");
-        await getItemSincronizacion();
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de factura",
-        ),
-      );
+      _showError('Error en la sincronizacion de getPrecioItemDer');
     }
+    await getItemSincronizacion();
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getItemSincronizacion() async {
-    //consecutivo
-    print("ingresa a getItemSincronizacion");
     final response = await http.get(Uri.parse("$_url/item_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
-       // await OperationDB.deleteItem();
         for (int i = 0; i < data.length; i++) {
           final item = Items(
             id_item: data[i]['id_item'].toString(),
@@ -1014,12 +1133,7 @@ class _LoginPageState extends State<LoginPages> {
         print("muestra todos los registro de item dataaaaa $allItem");
       }
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizacion de factura",
-        ),
-      );
+      _showError('Error en la sincronizacion de getItem');
     }
     await getZonaSincronizacion();
   }
@@ -1042,26 +1156,6 @@ class _LoginPageState extends State<LoginPages> {
         context,
         CustomSnackBar.error(
           message: "Error en la sincronizaciond e ",
-        ),
-      );
-    }
-  }
-
-  /////api
-  Future getItems() async {
-    final response = await http.get(Uri.parse("$_url/item_all"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      print("object object $data");
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizaciond Items ",
         ),
       );
     }

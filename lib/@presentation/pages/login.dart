@@ -5,14 +5,11 @@ import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/safe_area_values.dart';
-import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
  
 import '../../db/operationDB.dart';
 import '../../models/usuario.dart';
-import '../../models/sale.dart';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -47,19 +44,20 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   Duration get loginTime => Duration(milliseconds: 2250);
   LoginStatus _loginStatus = LoginStatus.notSignIn;
-    String _url = 'http://178.62.80.103:5000';
- // String _url = 'http://10.0.2.2:3000';
-  //String _url = 'http://localhost:3000';
+  String _url = 'http://178.62.80.103:5000';
   final myControllerUsers = TextEditingController();
   final myControllerPassword = TextEditingController();
 
   late String _user, _password;
 
   bool focus = false;
+  bool focusPass = false;
   bool isOnline = false;
   bool _isLoading = false;
   final String hintText = '';
-  bool _validate = false;
+  bool _validate = true;
+  bool _validatePass = true;
+  bool _passwordVisible = false;
 
   Future<Null> _submitDialog(BuildContext context) async {
     return await showDialog<Null>(
@@ -82,48 +80,39 @@ class _LoginPageState extends State<LoginPage> {
   void validateAndSubmit() async {
     _user = myControllerUsers.text;
     _password = myControllerPassword.text;
- 
-    _user.isEmpty ? _validate = true : _validate = false;
-    _password.isEmpty ? _validate = true : _validate = false;
 
-     // !_validate && isOnline ? await loginApi() : null;
-      if (!_validate) {
+    _user.isEmpty ? _validate = false : _validate = true;
+    _password.isEmpty ? _validatePass = false : _validatePass = true;
+      if (_validate && _validatePass) {
         _submitDialog(context);
-        print("busca el usuario en BD");
-        if (myControllerUsers.text.isNotEmpty &&
-            myControllerPassword.text.isNotEmpty) {
-          final user =  await OperationDB.getLogin(
-              myControllerUsers.text, myControllerPassword.text);
-          if (user != null) {
-            print("RESULTADO el usuario en BD $user");
-           setState(() {
-            savePref(1, myControllerUsers.text, user[0]['nit'],
-                user[0]['id_tipo_doc_pe'], user[0]['id_tipo_doc_rc']); 
-                
-            _loginStatus = LoginStatus.signIn;
-            });
-            showTopSnackBar(
-              context,
-              CustomSnackBar.info(message: "Bienvenido, OFFLINE"),
-            );
-            Navigator.pushNamed(context, 'home');
+          final user =  await OperationDB.getLogin(_user.trim());
+          if (user != false) {
+            final pass =  await OperationDB.getLoginPassw(_user.trim(),_password.trim());
+            if (pass) {
+                    setState(() {
+                        savePref(1, _user.trim(), user[0]['nit'],
+                            user[0]['id_tipo_doc_pe'], user[0]['id_tipo_doc_rc']);
+
+                        _loginStatus = LoginStatus.signIn;
+                        });
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, 'home');
+                } else {
+                  Navigator.pop(context);
+                  _showBarMsg("Clave Inválida",false);
+                }
           } else {
             Navigator.pop(context);
-            showTopSnackBar(
-              context,
-              CustomSnackBar.error(message: "Credenciales inválidas"),
-            );
+            _showBarMsg("Usuario no existe",false);
           }
-        } else {
-          showTopSnackBar(
-            context,
-            CustomSnackBar.info(
-              message: 'Ingrese las credenciales',
-            ),
-          );
+      }else {
+        if(!_validate){
+          _showBarMsg("Ingrese el usuario",true);
+        }else
+        if(!_validatePass){
+          _showBarMsg("Ingrese la clave",true);
         }
       }
-   // });
   }
 
   Future<bool> hasNetwork() async {
@@ -143,11 +132,6 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       value = preferences.getInt("value");
       _loginStatus = value == 1 ? LoginStatus.signIn : LoginStatus.notSignIn;
-      print('_loginStatus body: $_loginStatus');
-
-      if (_loginStatus == LoginStatus.signIn) {
-        // Navigator.pushNamed(context, 'home');
-      }
     });
   }
 
@@ -161,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    super.initState(); 
+    super.initState();   
     getUsuariosSincronizacion();    
     getPref();
   }
@@ -193,55 +177,7 @@ class _LoginPageState extends State<LoginPage> {
       print("Allusuaruis $allUsuarios");
       } 
     } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: msg,
-        ),
-      );
-    }
-   // getCuotaVentaSincronizacion();
-  }
- 
-
-  //Login desde apiRest
-  Future<void> loginApi() async {
-    _submitDialog(context);
-    print("busca en la APIREST y valida el usuario");
-    if (myControllerUsers.text.isNotEmpty &&
-        myControllerPassword.text.isNotEmpty) {
-      final response = await http.post(Uri.parse("$_url/login"),
-          body: ({
-            'username': myControllerUsers.text,
-            'password': myControllerPassword.text
-          }));
-      var jsonResponse =
-          convert.jsonDecode(response.body) as Map<String, dynamic>;
-      var success = jsonResponse['success'];
-      var msg = jsonResponse['msg'];
-      if (response.statusCode == 200 && success) {
-        var data = jsonResponse['data'];
-        savePref(1, myControllerUsers.text, data[0]['nit'],
-            data[0]['id_tipo_doc_pe'], data[0]['id_tipo_doc_rc']);
-        _loginStatus = LoginStatus.signIn;
-        showTopSnackBar(
-          context,
-          CustomSnackBar.info(message: "Bienvenido, ONLINE"),
-        );
-        Navigator.pushNamed(context, 'home');
-      } else {
-        showTopSnackBar(
-          context,
-          CustomSnackBar.error(message: msg),
-        );
-      }
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.info(
-          message: 'Ingrese las credenciales',
-        ),
-      );
+      _showBarMsg(msg,false);
     }
   }
 
@@ -315,24 +251,94 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget textFormField(hintText, controller, icon, _isObscure, maxLength) {
+  Widget textFormFieldPass(hintText, controller, icon,  maxLength) {
     final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
       child: Focus(
         onFocusChange: (e) {
           setState(() {
+            print("eee $e");
+            focusPass = e;
+          });
+        },
+        child: TextField(
+          controller: controller,
+          autofocus: false,
+          textInputAction: TextInputAction.done,
+            onSubmitted: (String str){
+              setState((){
+                validateAndSubmit();
+              });
+            },
+          style: TextStyle(fontSize: 16.5),
+          obscureText: !_passwordVisible,
+          decoration: InputDecoration(
+            errorText:
+            focusPass  && controller.text.isEmpty ? 'Es requerido' : null,
+            hintText: hintText,
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.only(top: 30, bottom: 0),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5.0),
+              borderSide: BorderSide(
+                color: Color(0xff0090ce),
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5.0),
+              borderSide: BorderSide(color: Color(0xffc7c7c7), width: 1.2),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 17.0, right: 12.0),
+              child: Icon(
+                icon,
+                color: focusPass ? Color(0xff0090ce) : Color(0xffc7c7c7),
+              ),
+            ),
+            hintStyle: TextStyle(fontSize: 17.0, color: Color(0xffc7c7c7)),
+            labelStyle: TextStyle(
+                fontFamily: 'Roboto', fontSize: 15, color: Colors.black),
+            alignLabelWithHint: true,
+            suffixIcon: InkWell(
+              onTap: _togglePasswordView,
+              child: Icon(
+                  _passwordVisible ? Icons.visibility : Icons.visibility_off),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _togglePasswordView() {
+    setState(() {
+      _passwordVisible = !_passwordVisible;
+    });
+  }
+  
+  Widget textFormField(hintText, controller, icon,  maxLength) {
+    final _size = MediaQuery.of(context).size;
+    return Padding(
+      padding: const EdgeInsets.only(top: 0.0),
+      child: Focus(
+        onFocusChange: (e) {
+          setState(() {
+            print("eee usuario $e");
             focus = e;
           });
         },
         child: TextField(
           controller: controller,
-          autofocus: true,
+          autofocus: false,
           style: TextStyle(fontSize: 16.5),
-          obscureText: _isObscure,
+          obscureText: false,
+          textInputAction: TextInputAction.next,
           decoration: InputDecoration(
             errorText:
-                _validate && controller.text.isEmpty ? 'Es requerido' : null,
+             focus  && controller.text.isEmpty ? 'Es requerido' : null,
             hintText: hintText,
             fillColor: Colors.white,
             filled: true,
@@ -404,17 +410,17 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 5.0),
               textFormField('Ingrese su usuario', myControllerUsers,
-                  Icons.account_circle, false, 20),
+                  Icons.account_circle,  20 ),
               SizedBox(height: 25.0),
               Text(
                 'Contraseña',
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 5.0),
-              textFormField('* * * * * * * *', myControllerPassword,
-                  Icons.vpn_key, true, 20),
+              textFormFieldPass('* * * * * * * *', myControllerPassword,
+                  Icons.vpn_key, 20),
               SizedBox(
-                height: 40.0,
+                height: 20.0,
               ),
               showPrimaryButton(),
             ],
@@ -435,4 +441,18 @@ class _LoginPageState extends State<LoginPage> {
       prefs.setString("idReciboUser", idReciboUser);
     });
   }
+
+
+  void _showBarMsg(msg,bool type) {
+    showTopSnackBar(
+      context,
+      animationDuration: const Duration(seconds: 1),
+      type ? CustomSnackBar.info(
+        message: msg,
+      ):CustomSnackBar.error(
+        message: msg,
+      ) ,
+    );
+  }
+
 }

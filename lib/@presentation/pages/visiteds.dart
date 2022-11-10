@@ -4,24 +4,19 @@ import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'dart:convert' as convert;
-import 'package:http/http.dart' as http;
+
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/safe_area_values.dart';
-import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 import 'package:flutter/material.dart';
 import '../../db/operationDB.dart';
+
 class VisitedsPage extends StatefulWidget {
   @override
   _VisitedsPageState createState() => _VisitedsPageState();
 }
 
 class _VisitedsPageState extends State<VisitedsPage> {
-  bool _showItems = false;
-    String _url = 'http://178.62.80.103:5000';
- // String _url = 'http://10.0.2.2:3000';
   late String id_vendedor;
   late String fecha1;
   late int _count;
@@ -29,21 +24,18 @@ class _VisitedsPageState extends State<VisitedsPage> {
   String _nit = '';
   List<dynamic> _datVisits = [];
 
-  bool? _checked = false;
+  late int selectedRadio;
+  bool _showItems = false;
+  bool _isSelected = true;
+  bool _isSelected2 = false;
+
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
 
   Future searchVisitados() async {
-    /*final response =
-        await http.get(Uri.parse("$_url/visitados/$id_vendedor/$fecha1"));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {*/
-    final data=  await OperationDB.getVisitados(id_vendedor,fecha1);
-    if (data != false ) {
+    final orden = selectedRadio == 1 ? 'ASC' : 'DESC';
+    final data = await OperationDB.getVisitados(id_vendedor, fecha1, orden);
+    if (data != false) {
       setState(() {
         _datVisits = data;
         _count = data.length;
@@ -52,9 +44,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
     } else {
       showTopSnackBar(
         context,
-        CustomSnackBar.error(
-          message: "No existen visitas para hoy"
-        ),
+        CustomSnackBar.error(message: "No existen visitas para hoy"),
       );
     }
   }
@@ -64,6 +54,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
     fecha1 = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
     _count = 0;
     super.initState();
+    selectedRadio = 1;
     _loadDataUserLogin();
   }
 
@@ -72,8 +63,8 @@ class _VisitedsPageState extends State<VisitedsPage> {
     setState(() {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
-      id_vendedor = '16499705';
-      print("el usuario es $_user $_nit");
+      id_vendedor = (prefs.getString('id_vendedor') ?? '');
+      print("el usuario es $_user $_nit $id_vendedor");
       if (_nit != '') {
         searchVisitados();
       }
@@ -107,7 +98,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
               ),
             ),
           ),
-          actions: [
+          /*  actions: [
             GestureDetector(
                 child: Padding(
                   padding: const EdgeInsets.only(right: 15.0),
@@ -122,7 +113,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                           ? Navigator.pop(context)
                           : _drawerscaffoldkey.currentState!.openEndDrawer()
                     })
-          ],
+          ],*/
           title: Text(
             'Visitados',
             style: TextStyle(
@@ -142,7 +133,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
         body: Scaffold(
           key: _drawerscaffoldkey,
           drawer: _menu(context),
-          endDrawer: _shoppingCart(context),
+          //  endDrawer: _shoppingCart(context),
           body: CustomScrollView(
             slivers: [
               SliverList(
@@ -206,46 +197,59 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                                     .bold),
                                                       ),
                                                       SizedBox(height: 30.0),
-                                                      CheckboxListTile(
-                                                          title: Text(
-                                                            'Más reciente al más antiguo',
-                                                            style: TextStyle(
-                                                                color: Color(
-                                                                    0xff06538D),
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w400,
-                                                                fontSize: 16.0),
-                                                          ),
-                                                          value: this._checked,
-                                                          onChanged:
-                                                              (bool? value) {
+                                                      SizedBox(
+                                                        child: RadioListTile(
+                                                          value: 1,
+                                                          groupValue:
+                                                              selectedRadio,
+                                                          activeColor:
+                                                              Colors.blue,
+                                                          title: const Text(
+                                                              "Más reciente al más antiguo"),
+                                                          onChanged: (val) {
+                                                            print(
+                                                                "Radio1 $val");
                                                             setState(() {
-                                                              print(value);
-                                                              this._checked =
-                                                                  value;
+                                                              selectedRadio =
+                                                                  val as int;
+                                                              _isSelected =
+                                                                  true;
+                                                              _isSelected2 =
+                                                                  !_isSelected;
+                                                              print(
+                                                                  "Radio111 $val $selectedRadio");
                                                             });
-                                                          }),
-                                                      CheckboxListTile(
-                                                          title: Text(
-                                                            'Más antiguo al más reciente',
-                                                            style: TextStyle(
-                                                                color: Color(
-                                                                    0xff06538D),
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w400,
-                                                                fontSize: 16.0),
-                                                          ),
-                                                          value: this._checked,
-                                                          onChanged:
-                                                              (bool? value) {
+                                                          },
+                                                          selected: _isSelected,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        child: RadioListTile(
+                                                          value: 2,
+                                                          title: const Text(
+                                                              "Más antiguo al más reciente"),
+                                                          groupValue:
+                                                              selectedRadio,
+                                                          activeColor:
+                                                              Colors.blue,
+                                                          onChanged: (val) {
+                                                            print(
+                                                                "Radio2 $val");
                                                             setState(() {
-                                                              print(value);
-                                                              this._checked =
-                                                                  value;
+                                                              selectedRadio =
+                                                                  val as int;
+                                                              _isSelected2 =
+                                                                  true;
+                                                              _isSelected =
+                                                                  !_isSelected2;
+                                                              print(
+                                                                  "Radio2222 $val $selectedRadio");
                                                             });
-                                                          }),
+                                                          },
+                                                          selected:
+                                                              _isSelected2,
+                                                        ),
+                                                      ),
                                                       SizedBox(
                                                         height: 30.0,
                                                       ),
@@ -327,8 +331,11 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                                   ),
                                                                 ),
                                                                 onTap: () {
-                                                                  Navigator.pop(
-                                                                      context);
+                                                                  setState(() {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                    searchVisitados();
+                                                                  });
                                                                 },
                                                               ),
                                                             ),
@@ -405,7 +412,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
   }
 
   Widget _itemVisiteds(data) {
-    final nombre = data['nombre'] !='' ? data['nombre']: data['nombre_sucursal'];
+    final nombre = data['nombre_sucursal'].toUpperCase();
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -846,7 +853,31 @@ class _VisitedsPageState extends State<VisitedsPage> {
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
-                  onTap: () => Navigator.pushNamed(context, 'login'),
+                  minLeadingWidth: 20,
+                  leading: const Icon(
+                    Icons.remove_red_eye,
+                    color: Color(0xff767676),
+                    size: 28.0,
+                  ),
+                  title: Text(
+                    'Sincronizacion',
+                    style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
+                  ),
+                  onTap: () => Navigator.pushNamed(context, 'data'),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                color: Color(0xfff4f4f4),
+                child: ListTile(
+                  onTap: () async {
+                    OperationDB.closeDB();
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                    preferences.clear();
+                    preferences.setInt("value", 0);
+                    Navigator.pushNamed(context, 'login');
+                  },
                   minLeadingWidth: 20,
                   leading: const Icon(
                     Icons.exit_to_app,

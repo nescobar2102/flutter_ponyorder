@@ -264,3 +264,148 @@ class PedidoDet {
         'total_dcto_adicional:$total_dcto_adicional,  tasa_dcto_adicional:$tasa_dcto_adicional, id_kit:$id_kit, precio_kit:$precio_kit, tasa_dcto_cliente:$tasa_dcto_cliente,'
         'total_dcto_cliente:$total_dcto_cliente, nit:$nit}';  }
 }
+
+
+//modelo del carrito de
+ 
+
+class Carrito {  
+
+    final String  id_empresa ; 
+    final String  id_tipo_doc ;
+    final int  numero ;
+    final String nombre_sucursal;
+    final String  id_tercero ; 
+    final String  id_vendedor ;
+    final String  id_suc_vendedor ;
+    final String  fecha ; 
+    final String  id_forma_pago ;
+    final String  id_precio_item ;
+    final String  id_direccion ;     
+    final String  subtotal ;
+    final String  total_costo; 
+    final String  total_dcto;
+    final String  total; 
+    final String  orden_compra; 
+    final String  observacion;
+    final String  letras;
+    final String  id_direccion_factura;
+    final String  usuario;   
+    final String  nit;
+
+  const Carrito(
+      {
+        required this.id_empresa , required this.nombre_sucursal,
+        required this.id_tipo_doc ,
+        required this.numero ,
+        required this.id_tercero , 
+        required this.id_vendedor ,
+        required this.id_suc_vendedor ,
+        required this.fecha , 
+        required this.id_forma_pago ,
+        required this.id_precio_item ,
+        required this.id_direccion ,  
+        required this.subtotal ,
+        required this.total_costo, 
+        required this.total_dcto,
+        required this.total, 
+        required this.orden_compra, 
+        required this.observacion,
+        required this.letras,
+        required this.id_direccion_factura,
+        required this.usuario, 
+        required this.nit
+  });
+
+  // Convert a Dog into a Map. The keys must correspond to the names of the
+  // columns in the database.
+  Map<String, dynamic> toMap() {
+    return {
+      'id_empresa':id_empresa, 
+      'nombre_sucursal':nombre_sucursal,
+      'id_tipo_doc':id_tipo_doc,
+      'numero':numero,
+      'id_tercero':id_tercero, 
+      'id_vendedor':id_vendedor,
+      'id_suc_vendedor':id_suc_vendedor,
+      'fecha':fecha, 
+      'id_forma_pago':id_forma_pago,
+      'id_precio_item':id_precio_item,
+      'id_direccion':id_direccion, 
+      'subtotal':subtotal,
+      'total_costo':total_costo, 
+      'total_dcto':total_dcto,
+      'total':total, 
+      'orden_compra':orden_compra,  
+      'observacion':observacion,
+      'letras':letras,
+      'id_direccion_factura':id_direccion_factura,
+      'usuario':usuario,      
+      'nit':nit
+    };
+  }
+
+  // Implement toString to make it easier to see information about
+  // each dog when using the print statement.
+  @override
+  String toString() {
+     return 'Carrito {   id_empresa:$id_empresa,  nombre_sucursal:$nombre_sucursal, id_tipo_doc:$id_tipo_doc, numero:$numero,  id_tercero:$id_tercero,'
+      '  id_vendedor:$id_vendedor, id_suc_vendedor:$id_suc_vendedor,  fecha:$fecha,  '
+      '  id_forma_pago:$id_forma_pago, id_precio_item:$id_precio_item, id_direccion:$id_direccion,'
+      '  subtotal:$subtotal,  total_costo:$total_costo,  total_dcto:$total_dcto,total:$total,'
+      '  orden_compra:$orden_compra  ,  observacion:$observacion, letras:$letras, id_direccion_factura:$id_direccion_factura, usuario:$usuario,  nit:$nit}';  }
+}
+  
+    
+class CarritoDet { 
+ 
+    final int  numero ; 
+    final String  id_item ;
+    final String  descripcion; 
+    final String  id_tercero ;
+    final String  precio ;
+    final String  cantidad ;
+    final String  total_dcto ;
+    final String  dcto ; 
+    final String  id_precio_item; 
+    final String  nit;
+ 
+  const CarritoDet(
+      { 
+        required this.numero , 
+        required this.id_item ,
+        required this.descripcion, 
+        required this.id_tercero ,
+        required this.precio , 
+        required this.cantidad ,
+        required this.total_dcto ,
+        required this.dcto,
+        required this.id_precio_item, 
+        required this.nit, 
+        });
+
+        // Convert a Dog into a Map. The keys must correspond to the names of the
+        // columns in the database.
+        Map<String, dynamic> toMap() {
+          return {
+     
+        'numero':numero, 
+        'id_item':id_item,
+        'descripcion':descripcion, 
+        'id_tercero':id_tercero,      
+        'precio':precio,
+        'cantidad':cantidad,   
+        'total_dcto':total_dcto,
+        'dcto':dcto,      
+        'id_precio_item':id_precio_item,         
+        'nit':nit
+    };
+  }
+
+  // Implement toString to make it easier to see information about
+  // each dog when using the print statement.
+  @override
+  String toString() {
+     return 'CarritoDet { numero:$numero, id_item:$id_item, descripcion:$descripcion,id_tercero:$id_tercero, '
+     ' cantidad:$cantidad, precio:$precio,  total_dcto:$total_dcto, dcto:$dcto, id_precio_item:$id_precio_item,  nit:$nit}';  }
+}
