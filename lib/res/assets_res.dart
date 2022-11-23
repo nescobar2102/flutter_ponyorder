@@ -6,4 +6,5 @@ class AssetsRes {
   static const String CARRITO = 'assets/images/carrito.png';
   static const String CARRITO1 = 'assets/images/carrito1.png';
   static const String CARRITO_VACIO = 'assets/images/carrito_vacio.png';
+  static const String PRODUCTO_SIN_IMAGEN = 'assets/images/producto-sin-imagen.png';
 }

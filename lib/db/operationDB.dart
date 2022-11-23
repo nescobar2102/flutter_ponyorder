@@ -20,9 +20,6 @@ import '../models/medio_contacto.dart';
 import '../models/pedido.dart';
 import '../models/recibo_caja.dart';
 
-import 'dart:io' as io;
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import 'package:sqflite/sqlite_api.dart';
 
@@ -40,10 +37,39 @@ class OperationDB {
     //await deleteDatabase(path);
 
     const tableUsuario = """
-            CREATE TABLE IF NOT EXISTS usuario(id INTEGER PRIMARY KEY, usuario TEXT, password TEXT,nit TEXT,id_tipo_doc_pe TEXT,id_tipo_doc_rc TEXT)
-      ;""";
+                  
+   CREATE TABLE IF NOT EXISTS usuario
+(
+    nit TEXT NOT NULL,
+    correo_electronico TEXT,
+    usuario TEXT NOT NULL,
+    nombre TEXT,
+    flag_activo TEXT,
+    clave TEXT,
+    flag_cambia_fp TEXT DEFAULT 'NO',  
+    flag_cambia_lp TEXT DEFAULT 'NO',  
+    flag_edita_cliente TEXT DEFAULT 'NO',  
+    flag_edita_dcto TEXT DEFAULT 'NO',  
+    id_tipo_doc_pe TEXT,
+    id_tipo_doc_rc TEXT,
+    id_bodega TEXT,
+    edita_consecutivo_rc TEXT DEFAULT 'NO',  
+    edita_fecha_rc TEXT DEFAULT 'NO',  
+    id_tipo_doc_fac TEXT,
+    flag_mobile TEXT,
+    PRIMARY KEY (nit, usuario) 
+);""";
     const tableCuotaVenta = """
-            CREATE TABLE IF NOT EXISTS  cuota_venta( id INTEGER PRIMARY KEY AUTOINCREMENT, venta TEXT, cuota TEXT, id_linea TEXT, nombre TEXT, nit TEXT,id_vendedor TEXT,id_suc_vendedor INTEGER)
+            CREATE TABLE IF NOT EXISTS 
+            cuota_venta(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            venta TEXT,
+            cuota TEXT, 
+            id_linea TEXT,
+            nombre TEXT,
+            nit TEXT,
+            id_vendedor TEXT,
+            id_suc_vendedor INTEGER)
       ;""";
     const tableBanco = """
           CREATE TABLE IF NOT EXISTS
@@ -63,7 +89,7 @@ class OperationDB {
                   id_barrio TEXT NOT NULL,
                   nombre TEXT,
                   nit TEXT NOT NULL,
-               PRIMARY KEY("id_pais","id_depto","id_ciudad","id_barrio") 
+               PRIMARY KEY("id_pais","id_depto","id_ciudad","id_barrio","nit") 
               )
      ;""";
     const tableCiudad = """       
@@ -74,7 +100,7 @@ class OperationDB {
               id_ciudad TEXT NOT NULL,
               nombre TEXT,
               nit TEXT NOT NULL ,
-          PRIMARY KEY("id_pais","id_depto","id_ciudad") 
+          PRIMARY KEY("id_pais","id_depto","id_ciudad","nit") 
           )
       ;""";
     const tableclasificacion_item = """   
@@ -88,7 +114,7 @@ class OperationDB {
               nit TEXT NOT NULL,
               foto TEXT ,
               imagen TEXT,   
-              PRIMARY KEY("id_clasificacion") 
+              PRIMARY KEY("id_clasificacion", "nit") 
           )
       ;""";
     const tableConceptos = """   
@@ -99,7 +125,7 @@ class OperationDB {
                   naturalezacta TEXT,
                   nit TEXT NOT NULL,
                   id_auxiliar TEXT ,
-                  PRIMARY KEY("id_concepto") 
+                  PRIMARY KEY("id_concepto","nit") 
               )
       ;""";
        const tableAuxiliar = """   
@@ -110,7 +136,7 @@ class OperationDB {
                   flag_flujo_caja TEXT DEFAULT 'NO',                
                   id_tipo_cuenta TEXT , 
                   nit TEXT NOT NULL,
-                  PRIMARY KEY("id_auxiliar") 
+                  PRIMARY KEY("id_auxiliar","nit") 
               )
       ;""";
     const tablecuentas_por_tercero = """   
@@ -137,7 +163,8 @@ class OperationDB {
             id_sucursal_cruce TEXT,
             tipo_doc_cruce TEXT,
             numero_cruce integer,
-            cuota_cruce integer 
+            cuota_cruce integer,
+           PRIMARY KEY("id_empresa","id_sucursal","tipo_doc","numero","nit") 
         )
       ;""";
 
@@ -148,7 +175,7 @@ class OperationDB {
           id_depto TEXT NOT NULL,
           nombre TEXT,
           nit TEXT NOT NULL ,
-           PRIMARY KEY("id_pais","id_depto") 
+           PRIMARY KEY("id_pais","id_depto","nit") 
       )
             ;""";
     const tableEmpresa = """   
@@ -202,7 +229,9 @@ class OperationDB {
           id_empresa TEXT,
           id_sucursal integer,
           id_tipo_doc TEXT,
-          cantidad TEXT
+          cantidad TEXT,
+          nit TEXT NOT NULL,
+         PRIMARY KEY("nit") 
       ) 
    ;""";
 
@@ -213,7 +242,7 @@ class OperationDB {
           descripcion TEXT,
           id_precio_item TEXT,
           nit TEXT NOT NULL ,
-          PRIMARY KEY("id_forma_pago") 
+          PRIMARY KEY("id_forma_pago","nit") 
       )
    ;""";
 
@@ -238,7 +267,7 @@ class OperationDB {
         flag_dcto_volumen  TEXT,
         nit TEXT NOT NULL,
         saldo_inventario TEXT  ,
-        PRIMARY KEY("id_item") 
+        PRIMARY KEY("id_item","nit") 
     ) 
    ;""";
 
@@ -252,7 +281,7 @@ class OperationDB {
         tasa_dcto  TEXT ,
         ultima_actualizacion  TEXT ,
         nit TEXT NOT NULL,
-        PRIMARY KEY("id_item","consecutivo") 
+        PRIMARY KEY("id_item","consecutivo","nit") 
       )
    ;""";
     const tableMedioContacto = """   
@@ -261,7 +290,7 @@ class OperationDB {
         id_medio_contacto TEXT NOT NULL,
         descripcion TEXT,
         nit TEXT NOT NULL ,
-        PRIMARY KEY("id_medio_contacto" ) 
+        PRIMARY KEY("id_medio_contacto","nit" ) 
     )
    ;""";
     const tablePais = """   
@@ -313,7 +342,7 @@ CREATE TABLE IF NOT EXISTS  pedido
     id_tiempo_entrega integer,
     flag_enviado TEXT,
     nit TEXT NOT NULL,
-    PRIMARY KEY( "id_empresa","id_tercero","numero","id_sucursal","id_tipo_doc")
+    PRIMARY KEY( "id_empresa","numero","id_sucursal","id_tipo_doc","nit")
 )
    ;""";
 
@@ -354,7 +383,7 @@ CREATE TABLE IF NOT EXISTS  pedido_det
     tasa_dcto_cliente integer ,
     total_dcto_cliente integer ,
     nit  TEXT NOT NULL ,
-    PRIMARY KEY("id_empresa","numero","id_sucursal","id_tipo_doc","consecutivo")
+    PRIMARY KEY("id_empresa","numero","id_sucursal","id_tipo_doc","consecutivo","nit")
     )  
      ;""";
 
@@ -378,7 +407,7 @@ CREATE TABLE IF NOT EXISTS  pedido_kit
     total TEXT DEFAULT '0',    
     precio_kit TEXT DEFAULT 0,     
     nit  TEXT NOT NULL ,
-    PRIMARY KEY( "id_empresa","numero","id_sucursal","id_tipo_doc","consecutivo")
+    PRIMARY KEY( "id_empresa","numero","id_sucursal","id_tipo_doc","consecutivo","nit")
 )   ;""";
 
 
@@ -394,7 +423,7 @@ CREATE TABLE IF NOT EXISTS  precio_item
     flag_iva_incluido  TEXT,
     flag_lista_base  TEXT,
     nit TEXT NOT NULL ,
-    PRIMARY KEY( "id_precio_item")  
+    PRIMARY KEY( "id_precio_item","nit")  
 ) ;""";
 
     const tablePrecioItemDet = """  
@@ -408,7 +437,7 @@ CREATE TABLE IF NOT EXISTS precio_item_det
     id_moneda TEXT ,
     id_unidad_compra TEXT NOT NULL,
     nit TEXT NOT NULL ,
-    PRIMARY KEY( "id_precio_item","id_item","id_talla","id_unidad_compra")  
+    PRIMARY KEY( "id_precio_item","id_item","id_talla","id_unidad_compra","nit")  
 ) ;""";
 
     const tableTercero = """  
@@ -445,7 +474,7 @@ CREATE TABLE IF NOT EXISTS  tercero
     telefono_celular TEXT  ,
     e_mail_fe  TEXT  ,
     nit  TEXT  NOT NULL,
-    PRIMARY KEY("id_tercero","id_sucursal_tercero")
+    PRIMARY KEY("id_tercero","id_sucursal_tercero","nit")
 ) ;""";
 
     const tableTerceroCliente = """  
@@ -477,7 +506,7 @@ CREATE TABLE IF NOT EXISTS  tercero_cliente
     dcto_adicional TEXT  ,
     numero_facturas_vencidas TEXT  ,
     nit TEXT NOT NULL,
-    PRIMARY KEY("id_tercero","id_sucursal_tercero")
+    PRIMARY KEY("id_tercero","id_sucursal_tercero","nit")
 ) ;""";
 
     const tableTerceroDireccion = """  
@@ -493,7 +522,7 @@ CREATE TABLE IF NOT EXISTS tercero_direccion
     id_depto  TEXT,
     tipo_direccion  TEXT,
     nit TEXT NOT NULL ,
-    PRIMARY KEY("id_tercero","id_sucursal_tercero","id_direccion")
+    PRIMARY KEY("id_tercero","id_sucursal_tercero","id_direccion","nit")
 ) ;""";
     const tableTipoDoc = """  
 CREATE TABLE IF NOT EXISTS  tipo_doc
@@ -505,7 +534,7 @@ CREATE TABLE IF NOT EXISTS  tipo_doc
     consecutivo integer NOT NULL,
     descripcion TEXT,
     nit TEXT NOT NULL ,
-    PRIMARY KEY("id_empresa","id_sucursal","id_tipo_doc")
+    PRIMARY KEY("id_empresa","id_sucursal","id_tipo_doc","nit")
 ) ;""";
     const tableTipoEmpresa = """  
 CREATE TABLE IF NOT EXISTS  tipo_empresa
@@ -513,14 +542,15 @@ CREATE TABLE IF NOT EXISTS  tipo_empresa
     id_tipo_empresa TEXT NOT NULL,
     descripcion TEXT,
     nit TEXT NOT NULL,
-    PRIMARY KEY("id_tipo_empresa")
+    PRIMARY KEY("id_tipo_empresa","nit")
 ) ;""";
     const tableTipoIdenti = """  
 CREATE TABLE IF NOT EXISTS tipo_identificacion
 (
     id_tipo_identificacion TEXT NOT NULL,
     descripcion TEXT,
-    PRIMARY KEY("id_tipo_identificacion")
+    nit TEXT NOT NULL ,
+    PRIMARY KEY("id_tipo_identificacion","nit")
 ) ;""";
     const tableTipoPago = """  
 CREATE TABLE IF NOT EXISTS tipo_pago
@@ -528,7 +558,7 @@ CREATE TABLE IF NOT EXISTS tipo_pago
     id_tipo_pago TEXT NOT NULL,
     descripcion TEXT,
     nit TEXT NOT NULL ,
-    PRIMARY KEY("id_tipo_pago")
+    PRIMARY KEY("id_tipo_pago","nit")
 ) ;""";
     const tableTipoPagoDet = """  
 CREATE TABLE IF NOT EXISTS tipo_pagodet
@@ -539,7 +569,7 @@ CREATE TABLE IF NOT EXISTS tipo_pagodet
     tasa TEXT,
     nit  TEXT NOT NULL,
     id_auxiliar TEXT,
-    PRIMARY KEY("id_tipo_pago","cuota")
+    PRIMARY KEY("id_tipo_pago","cuota","nit")
 ) ;""";
     const tableZona = """  
 CREATE TABLE IF NOT EXISTS zona
@@ -550,7 +580,7 @@ CREATE TABLE IF NOT EXISTS zona
     nivel integer,
     es_padre TEXT,
     nit TEXT NOT NULL ,
-      PRIMARY KEY("id_zona") 
+    PRIMARY KEY("id_zona","nit") 
 ) ;""";
     const tableKit = """
   CREATE TABLE IF NOT EXISTS kit
@@ -564,7 +594,7 @@ CREATE TABLE IF NOT EXISTS zona
       fecha_final TEXT,
       ultima_actualizacion TEXT,
       nit TEXT NOT NULL ,
-       PRIMARY KEY("id_kit")   
+       PRIMARY KEY("id_kit","nit")   
   ) ;""";
     const tableKitDet = """
 CREATE TABLE IF NOT EXISTS  kit_det
@@ -581,7 +611,7 @@ CREATE TABLE IF NOT EXISTS  kit_det
     total TEXT ,
     ultima_actualizacion TEXT ,
     nit TEXT  NOT NULL ,
-     PRIMARY KEY("id_kit", "id_item")   
+    PRIMARY KEY("id_kit", "id_item","nit")   
 );""";
 
     const tableCarteraProveedores = """
@@ -605,11 +635,11 @@ CREATE TABLE IF NOT EXISTS  cartera_proveedores
     usuario TEXT,
     flag_enviado TEXT DEFAULT 'NO',
     nit TEXT NOT NULL ,
-    PRIMARY KEY("id_empresa","id_sucursal","id_tipo_doc","numero")
+    PRIMARY KEY("id_empresa","id_sucursal","id_tipo_doc","numero","nit")
 );""";
 
     const tableCarteraProveedoresDet = """
-CREATE TABLE IF NOT EXISTS CARTERA_PROVEEDORES_DET
+CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 (
     id_empresa TEXT NOT NULL,
     id_sucursal TEXT NOT NULL,
@@ -644,77 +674,77 @@ CREATE TABLE IF NOT EXISTS CARTERA_PROVEEDORES_DET
     cuota_cruce integer,
     id_banco TEXT ,
     nit TEXT  NOT NULL ,
-     PRIMARY KEY("id_empresa","id_sucursal","id_tipo_doc","numero","consecutivo") 
+    PRIMARY KEY("id_empresa","id_sucursal","id_tipo_doc","numero","consecutivo","nit") 
 );""";
 
-    const viewCartera = """
- CREATE VIEW SALDO_CARTERA AS 
-SELECT CT.ID_EMPRESA,
-CT.ID_SUCURSAL,
-CT.TIPO_DOC,
-CT.NUMERO,
-CT.CUOTA,
---CAST (round(julianday( (date(( NOW) ), 'localtime') ) -(round(julianday(CT.VENCIMIENTO, '+' || TC.DIAS_GRACIA, || ' days', 'localtime') ) )  ) as DIAS_VENCIDOS,
---CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(CT.VENCIMIENTO, 'localtime') ) )  )  as DIAS,
-CT.ID_TERCERO,
-CT.ID_VENDEDOR,
-CT.ID_SUCURSAL_TERCERO,
-CT.FECHA,
-TC.DIAS_GRACIA,
-CT.VENCIMIENTO,
-CT.CREDITO,
---CT.ID_AUXILIAR,
-CT.DCTOMAX,
-CT.DEBITO,
-CT.ID_DESTINO,
-CT.ID_PROYECTO
-FROM CUENTAS_POR_TERCERO CT
-INNER JOIN
-TERCERO_CLIENTE TC ON (CT.ID_TERCERO = TC.ID_TERCERO AND
-CT.ID_SUCURSAL_TERCERO = TC.ID_SUCURSAL_TERCERO)
-GROUP BY CT.ID_EMPRESA,
-CT.ID_SUCURSAL,
-CT.TIPO_DOC,
-CT.NUMERO,
-CT.CUOTA,
-CT.ID_TERCERO,
-CT.ID_VENDEDOR,
-CT.ID_SUCURSAL_TERCERO,
-CT.FECHA,
-TC.DIAS_GRACIA,
-CT.VENCIMIENTO,
---CT.ID_AUXILIAR,
-CT.DCTOMAX,
-CT.CUOTA_CRUCE,
-CT.ID_DESTINO,
-CT.ID_PROYECTO
-HAVING SUM(CT.DEBITO) < -0.01 OR
-SUM(CT.DEBITO) > 0.01
-UNION ALL
-SELECT C.ID_EMPRESA,
-C.ID_SUCURSAL,
-C.ID_TIPO_DOC_CRUCE,
-C.NUMERO_CRUCE,
-C.CUOTA_CRUCE,
---CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(C.VENCIMIENTO, '+'  || TC.DIAS_GRACIA, || 'days', 'localtime') ) ) ) as  DIAS_VENCIDOS,
---CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(C.VENCIMIENTO, 'localtime') ) )  ) as  DIAS,
-C.ID_TERCERO,
-C.ID_VENDEDOR,
-C.ID_SUCURSAL_TERCERO,
-C.FECHA,
-TC.DIAS_GRACIA,
-C.VENCIMIENTO,
-C.CREDITO,
---C.ID_AUXILIAR,
-0,
-C.DEBITO,
-C.ID_DESTINO,
-C.ID_PROYECTO
-FROM CARTERA_PROVEEDORES_DET C
-INNER JOIN
-TERCERO_CLIENTE TC ON (C.ID_TERCERO = TC.ID_TERCERO AND
-C.ID_SUCURSAL_TERCERO = TC.ID_SUCURSAL_TERCERO)
-WHERE C.DISTRIBUCION = 'DC';""";
+      const viewCartera = """
+   CREATE VIEW SALDO_CARTERA AS 
+  SELECT CT.ID_EMPRESA,
+  CT.ID_SUCURSAL,
+  CT.TIPO_DOC,
+  CT.NUMERO,
+  CT.CUOTA,
+  --CAST (round(julianday( (date(( NOW) ), 'localtime') ) -(round(julianday(CT.VENCIMIENTO, '+' || TC.DIAS_GRACIA, || ' days', 'localtime') ) )  ) as DIAS_VENCIDOS,
+  --CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(CT.VENCIMIENTO, 'localtime') ) )  )  as DIAS,
+  CT.ID_TERCERO,
+  CT.ID_VENDEDOR,
+  CT.ID_SUCURSAL_TERCERO,
+  CT.FECHA,
+  TC.DIAS_GRACIA,
+  CT.VENCIMIENTO,
+  CT.CREDITO,
+  --CT.ID_AUXILIAR,
+  CT.DCTOMAX,
+  CT.DEBITO,
+  CT.ID_DESTINO,
+  CT.ID_PROYECTO
+  FROM CUENTAS_POR_TERCERO CT
+  INNER JOIN
+  TERCERO_CLIENTE TC ON (CT.ID_TERCERO = TC.ID_TERCERO AND
+  CT.ID_SUCURSAL_TERCERO = TC.ID_SUCURSAL_TERCERO)
+  GROUP BY CT.ID_EMPRESA,
+  CT.ID_SUCURSAL,
+  CT.TIPO_DOC,
+  CT.NUMERO,
+  CT.CUOTA,
+  CT.ID_TERCERO,
+  CT.ID_VENDEDOR,
+  CT.ID_SUCURSAL_TERCERO,
+  CT.FECHA,
+  TC.DIAS_GRACIA,
+  CT.VENCIMIENTO,
+  --CT.ID_AUXILIAR,
+  CT.DCTOMAX,
+  CT.CUOTA_CRUCE,
+  CT.ID_DESTINO,
+  CT.ID_PROYECTO
+  HAVING SUM(CT.DEBITO) < -0.01 OR
+  SUM(CT.DEBITO) > 0.01
+  UNION ALL
+  SELECT C.ID_EMPRESA,
+  C.ID_SUCURSAL,
+  C.ID_TIPO_DOC_CRUCE,
+  C.NUMERO_CRUCE,
+  C.CUOTA_CRUCE,
+  --CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(C.VENCIMIENTO, '+'  || TC.DIAS_GRACIA, || 'days', 'localtime') ) ) ) as  DIAS_VENCIDOS,
+  --CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(C.VENCIMIENTO, 'localtime') ) )  ) as  DIAS,
+  C.ID_TERCERO,
+  C.ID_VENDEDOR,
+  C.ID_SUCURSAL_TERCERO,
+  C.FECHA,
+  TC.DIAS_GRACIA,
+  C.VENCIMIENTO,
+  C.CREDITO,
+  --C.ID_AUXILIAR,
+  0,
+  C.DEBITO,
+  C.ID_DESTINO,
+  C.ID_PROYECTO
+  FROM CARTERA_PROVEEDORES_DET C
+  INNER JOIN
+  TERCERO_CLIENTE TC ON (C.ID_TERCERO = TC.ID_TERCERO AND
+  C.ID_SUCURSAL_TERCERO = TC.ID_SUCURSAL_TERCERO)
+  WHERE C.DISTRIBUCION = 'DC';""";
 
     const tableCarrito = """ CREATE TABLE carrito (
 	id_tercero	TEXT,
@@ -738,7 +768,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
 	id_direccion_factura	TEXT,
 	usuario	TEXT,
   nit TEXT,
-  PRIMARY KEY( "id_tercero","numero")
+  PRIMARY KEY("id_tercero","numero")
 ) ;""";
 
     const tableCarritoDet = """ CREATE TABLE carrito_detalle (
@@ -806,25 +836,6 @@ WHERE C.DISTRIBUCION = 'DC';""";
     await database.insert('usuario', usuario.toMap());
   }
 
-  // Obtiene todos los usuarios
-  static Future<List<Usuario>> usuariosAll() async {
-    Database database = await _openDB();
-    final List<Map<String, dynamic>> usuarioMap =
-        await database.query('usuario');
-
-    return List.generate(usuarioMap.length, (i) {
-      return Usuario(
-        id: usuarioMap[i]['id'],
-        usuario: usuarioMap[i]['usuario'],
-        password: usuarioMap[i]['password'],
-        nit: usuarioMap[i]['nit'],
-        id_tipo_doc_pe: usuarioMap[i]['id_tipo_doc_pe'],
-        id_tipo_doc_rc: usuarioMap[i]['id_tipo_doc_rc'],
-      );
-    });
-  }
-  //GET THE NO:OF NOTES
-
   /// Simple query with sqflite helper
   static Future getLogin(String usuario ) async {
     Database database = await _openDB();
@@ -840,7 +851,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future getLoginPassw(String usuario, String password) async {
     Database database = await _openDB();
     final res = await database.rawQuery(
-        "SELECT * FROM usuario WHERE usuario = '$usuario' and password = '$password'");
+        "SELECT * FROM usuario WHERE usuario = '$usuario' and clave = '$password'");
     if (res.isNotEmpty) {
       return true;
     } else {
@@ -857,19 +868,19 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future getClient(String nit, String search) async {
     Database database = await _openDB();
     var sql =
-        " SELECT tercero.id_tercero,tercero.id_sucursal_tercero, usuario,id_tipo_identificacion,tercero.dv,tercero.telefono,ciudad.nombre AS ciudad,tercero.direccion,"
+        " SELECT tercero.id_tercero,tercero.id_sucursal_tercero, usuario,id_tipo_identificacion,tercero.dv,tercero.telefono,tercero.telefono_celular,ciudad.nombre AS ciudad,tercero.direccion,"
         " tercero.primer_nombre || ' ' || primer_apellido AS nombre_completo ,"
         " nombre_sucursal,e_mail,tercero.nit,limite_credito,tercero.id_forma_pago, "
         " id_suc_vendedor,id_empresa, tercero_cliente.id_precio_item as lista_precio "
         " FROM tercero JOIN tercero_cliente ON tercero_cliente.id_tercero=tercero.id_tercero AND tercero.nit=tercero_cliente.nit "
         " JOIN ciudad ON tercero.id_ciudad=ciudad.id_ciudad AND tercero.nit=ciudad.nit"
         " JOIN empresa ON empresa.nit=tercero.nit"
-        " WHERE tercero.nit ='$nit' AND vendedor='NO'";
+        " WHERE tercero.nit ='$nit' AND vendedor='NO' and cliente='SI'";
 
-    if (search.isNotEmpty && search != "@" && search != '') {
+      if (search.isNotEmpty && search != "@" && search != '') {
       sql += ' AND nombre_sucursal LIKE "%$search%" ';
     }
-    sql += ' ORDER BY 1 ASC ';
+      sql += ' ORDER BY 1 ASC LIMIT 20 ';
 
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
@@ -887,6 +898,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     " id_precio_item, id_lista_precio,id_suc_vendedor from tercero INNER JOIN  tercero_cliente"
     " ON tercero.id_tercero=tercero_cliente.id_tercero"
     " where usuario='$user' and tercero.nit='$nit'   AND cliente ='NO' limit 1 ";
+    print("-----------*-*-*-*- $sql *-******-*-");
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
       return res;
@@ -897,7 +909,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
 
   static Future<bool> insertCliente(Cliente cliente) async {
     Database database = await _openDB();
-    var flag = await validaInsertCliente(cliente.id_tercero);
+    var flag = await validaInsertCliente(cliente.id_tercero,cliente.nit);
     if (flag) {
       final res = await database.rawQuery(
           " select id_tipo_empresa from empresa where  nit ='${cliente.nit}'  ");
@@ -906,10 +918,10 @@ WHERE C.DISTRIBUCION = 'DC';""";
       await database.rawInsert("INSERT INTO tercero("
           " id_tercero,id_sucursal_tercero,id_tipo_identificacion, dv, nombre, direccion, id_pais, id_depto,id_forma_pago,id_lista_precio,"
           " id_ciudad, id_barrio, telefono,id_actividad,fecha_creacion,nombre_sucursal,"
-          " primer_apellido, segundo_apellido, primer_nombre, segundo_nombre,flag_persona_nat,estado_tercero,e_mail,nit,id_tipo_empresa)"
+          " primer_apellido, segundo_apellido, primer_nombre, segundo_nombre,flag_persona_nat,estado_tercero,e_mail,nit,id_tipo_empresa,usuario)"
           " VALUES (${cliente.id_tercero},${cliente.id_sucursal_tercero},${cliente.id_tipo_identificacion}, ${cliente.dv},'${cliente.nombre}','${cliente.direccion}',${cliente.id_pais}, ${cliente.id_depto},'${cliente.id_forma_pago}','${cliente.id_lista_precio}',"
           " ${cliente.id_ciudad}, ${cliente.id_barrio}, ${cliente.telefono}, '${cliente.id_actividad}','${cliente.fecha_creacion}', '${cliente.nombre_sucursal}',"
-          " '${cliente.primer_apellido}', '${cliente.segundo_apellido}', '${cliente.primer_nombre}','${cliente.segundo_nombre}', '${cliente.flag_persona_nat}', 'ACTIVO','${cliente.e_mail}',${cliente.nit},'${id_tipo_empresa}')");
+          " '${cliente.primer_apellido}', '${cliente.segundo_apellido}', '${cliente.primer_nombre}','${cliente.segundo_nombre}', '${cliente.flag_persona_nat}', 'ACTIVO','${cliente.e_mail}',${cliente.nit},'${id_tipo_empresa}', '${cliente.usuario}')");
 
       await database.rawInsert("INSERT INTO tercero_cliente("
           " id_tercero, id_sucursal_tercero,id_forma_pago,id_precio_item ,id_vendedor,id_suc_vendedor,id_medio_contacto, id_zona,nit,limite_credito )"
@@ -931,21 +943,21 @@ WHERE C.DISTRIBUCION = 'DC';""";
   }
 
   //insertar los tercero que viene de la api
-  static Future<bool> validaInsertCliente(String tercero) async {
+  static Future<bool> validaInsertCliente(String tercero, String nit) async {
     var flag = false;
     Database database = await _openDB();
     final res = await database
-        .rawQuery("SELECT * FROM tercero WHERE id_tercero = '$tercero' ");
+        .rawQuery("SELECT * FROM tercero WHERE id_tercero = '$tercero' and nit='$nit' ");
     if (res.isEmpty) {
       flag = true;
     }
     final res1 = await database.rawQuery(
-        "SELECT * FROM tercero_cliente WHERE id_tercero = '$tercero' ");
+        "SELECT * FROM tercero_cliente WHERE id_tercero = '$tercero' and nit='$nit'");
     if (res1.isEmpty) {
       flag = true;
     }
     final res2 = await database.rawQuery(
-        "SELECT * FROM tercero_direccion WHERE id_tercero = '$tercero' ");
+        "SELECT * FROM tercero_direccion WHERE id_tercero = '$tercero' and nit='$nit' ");
     if (res2.isEmpty) {
       flag = true;
     }
@@ -967,8 +979,22 @@ WHERE C.DISTRIBUCION = 'DC';""";
   //insertar las cuotas de venta
   static Future<void> insertCuotaVenta(Sale sale) async {
     Database database = await _openDB();
-    await database.insert('cuota_venta', sale.toMap());
+    var id_linea = sale.id_linea;
+    var nit = sale.nit;
+    var id_vendedor = sale.id_vendedor;
+    final res = await database.rawQuery(
+        "SELECT * FROM cuota_venta WHERE id_linea = '$id_linea' and id_vendedor= '$id_vendedor' and nit = '$nit' ");
+    if (res.isEmpty) {
+      await database.insert('cuota_venta', sale.toMap());
+    } else {
+      await database.update(
+        'cuota_venta', sale.toMap(),
+        where: "id_linea = ? and id_vendedor= ? and nit = ? ",
+        whereArgs: [id_linea,id_vendedor,nit],
+      );
+    }
   }
+
 
   // Obtiene todos las cuota venta
   static Future<List<Sale>> cuotaventaAll() async {
@@ -997,7 +1023,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future getCBalance(
       String nit, String id_vendedor, String fecha) async {
     Database database = await _openDB();
-    final res = await database.rawQuery(
+   var sql =
         " select  sum (venta) as total_venta,sum(cuota ) as total_cuota,(sum (venta) *100 / sum(cuota) ) as balance_general,'MES' as tipo "
         " from cuota_venta  where id_vendedor='$id_vendedor' "
         " union "
@@ -1005,8 +1031,9 @@ WHERE C.DISTRIBUCION = 'DC';""";
         " from pedido where id_vendedor='$id_vendedor'  and nit='$nit'  and  fecha='$fecha' "
         " union "
         " select sum(credito) as total_ventas_dia, 0,0,'DIA_RECIBO'  as tipo "
-        " from cuentas_por_tercero where id_vendedor='$id_vendedor'  and nit='$nit' and  fecha='$fecha' and nit = '$nit' and id_vendedor = '$id_vendedor'");
-
+        " from cuentas_por_tercero where id_vendedor='$id_vendedor'  and nit='$nit' and  fecha='$fecha' and nit = '$nit' and id_vendedor = '$id_vendedor'" ;
+    final res = await database.rawQuery(sql);
+    print("cuota s$sql");
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -1035,7 +1062,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     final res = await database.rawQuery(
         " select numero, fecha, total_fac ,id_item , descripcion_item , precio, cantidad,  total  from factura"
         " where id_tercero= '$id_tercero' order by  numero desc ");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return false;
@@ -1048,7 +1075,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database
         .rawQuery("SELECT * FROM tercero WHERE id_tercero = '$idTercero' ");
-    if (res.length == 0) {
+    if (res.isEmpty) {
       await database.insert('tercero', tercero.toMap());
     }
     return true;
@@ -1061,7 +1088,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         "SELECT * FROM tercero_cliente WHERE id_tercero = '$idTercero' ");
-    if (res.length == 0) {
+    if (res.isEmpty) {
       await database.insert('tercero_cliente', tercerocliente.toMap());
     } else {
       await database.update(
@@ -1200,7 +1227,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database
         .rawQuery("SELECT * FROM ciudad WHERE id_ciudad = '$id_ciudad' and nit = '$nit'");
-    if (res.length == 0) {
+    if (res.isEmpty) {
       await database.insert('ciudad', ciudad.toMap());
       return true;
     } else {
@@ -1212,7 +1239,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future getCiudad() async {
     Database database = await _openDB();
     final res = await database.rawQuery("SELECT count(*) FROM ciudad ");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return null;
@@ -1223,7 +1250,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         " SELECT id_ciudad as value, nombre as label from ciudad WHERE nit = '$nit' and  id_depto ='$id_depto' ");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return false;
@@ -1246,7 +1273,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database
         .rawQuery("SELECT * FROM zona WHERE id_zona = '$id_zona' ");
-    if (res.length == 0) {
+    if (res.isEmpty) {
       await database.insert('zona', zona.toMap());
       return true;
     } else {
@@ -1258,7 +1285,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future getZona() async {
     Database database = await _openDB();
     final res = await database.rawQuery("SELECT count(*) FROM zona ");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return null;
@@ -1269,7 +1296,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         " select id_zona as value, descripcion as label  FROM zona WHERE nit = $nit ");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return false;
@@ -1282,7 +1309,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         "SELECT * FROM medio_contacto WHERE id_medio_contacto = '$id_medio_contacto' ");
-    if (res.length == 0) {
+    if (res.isEmpty) {
       await database.insert('medio_contacto', medio_contacto.toMap());
       return true;
     } else {
@@ -1294,7 +1321,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future getMedioContacto() async {
     Database database = await _openDB();
     final res = await database.rawQuery("SELECT count(*) FROM medio_contacto");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return null;
@@ -1305,7 +1332,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         " select id_medio_contacto as value, descripcion as label from medio_contacto WHERE nit = $nit ");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return false;
@@ -1315,10 +1342,11 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future<bool> insertTipoIdentificacion(
       TipoIdentificacion tipoident) async {
     var id_tipo_identificacion = tipoident.id_tipo_identificacion;
+    var nit = tipoident.nit;
     Database database = await _openDB();
     final res = await database.rawQuery(
-        "SELECT * FROM tipo_identificacion WHERE id_tipo_identificacion = '$id_tipo_identificacion' ");
-    if (res.length == 0) {
+        "SELECT * FROM tipo_identificacion WHERE id_tipo_identificacion = '$id_tipo_identificacion' and nit = '$nit' ");
+    if (res.isEmpty) {
       await database.insert('tipo_identificacion', tipoident.toMap());
       return true;
     } else {
@@ -1331,18 +1359,18 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res =
         await database.rawQuery("SELECT count(*) FROM tipo_identificacion");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return null;
     }
   }
 
-  static Future getTipoIdentificacionList() async {
+  static Future getTipoIdentificacionList(nit) async {
     Database database = await _openDB();
     final res = await database.rawQuery(
-        " select id_tipo_identificacion as value, descripcion as label from tipo_identificacion  ORDER BY descripcion ASC ");
-    if (res.length > 0) {
+        " select id_tipo_identificacion as value, descripcion as label from tipo_identificacion  where nit= '$nit' ORDER BY descripcion ASC ");
+    if (res.isNotEmpty) {
       return res;
     } else {
       return false;
@@ -1355,7 +1383,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         "SELECT * FROM tipo_empresa WHERE id_tipo_empresa = '$id_tipo_empresa' and nit = '$nit'");
-    if (res.length == 0) {
+    if (res.isEmpty) {
       await database.insert('tipo_empresa', tipoempresa.toMap());
       return true;
     } else {
@@ -1367,7 +1395,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
   static Future getTipoEmpresa() async {
     Database database = await _openDB();
     final res = await database.rawQuery("SELECT count(*) FROM tipo_empresa");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return null;
@@ -1378,7 +1406,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         " select id_tipo_empresa value, descripcion as label from tipo_empresa  where nit='$nit'");
-    if (res.length > 0) {
+    if (res.isNotEmpty) {
       return res;
     } else {
       return false;
@@ -1391,7 +1419,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
     final res = await database.rawQuery(
         "SELECT * FROM barrio WHERE id_barrio = '$id_barrio' and nit = '$nit'");
-    if (res.length == 0) {
+    if (res.isEmpty) {
       await database.insert('barrio', barrio.toMap());
       return true;
     } else {
@@ -1410,10 +1438,20 @@ WHERE C.DISTRIBUCION = 'DC';""";
     }
   }
 
+  static Future getListPrecio(String nit ) async {
+    Database database = await _openDB();
+    final res = await database.rawQuery(
+        " select id_precio_item as value, descripcion as label FROM precio_item where nit='$nit' ");
+    if (res.isNotEmpty) {
+      return res;
+    } else {
+      return false;
+    }
+  }
   static Future getBarrioList(String nit, String ciudad) async {
     Database database = await _openDB();
     final res = await database.rawQuery(
-        " select id_barrio as value, nombre as label FROM barrio  where nit='$nit'  and id_ciudad = $ciudad");
+        " select id_barrio as value, nombre as label FROM barrio  where nit='$nit'  and id_ciudad = '$ciudad'");
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -1490,7 +1528,6 @@ WHERE C.DISTRIBUCION = 'DC';""";
   }
 
   //pantalla de pedido
-  //insertar getConsecutivoTipoDoc
   static Future getConsecutivoTipoDoc(
       String nit, String id_tipo_doc, String id_empresa) async {
     Database database = await _openDB();
@@ -1508,7 +1545,8 @@ WHERE C.DISTRIBUCION = 'DC';""";
     final res = await database.rawQuery(
         " SELECT  0  as value,'Seleccione' as label "
         " UNION "
-        " SELECT  id_direccion  as value,direccion as label FROM tercero_direccion WHERE id_tercero= '$id_tercero' and  nit ='$nit' ");
+        " SELECT  id_direccion  as value,direccion as label FROM "
+            "tercero_direccion WHERE id_tercero= '$id_tercero' and  nit ='$nit' ");
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -1614,7 +1652,8 @@ WHERE C.DISTRIBUCION = 'DC';""";
     var idItem = precio.id_item;
     Database database = await _openDB();
     final res = await database.rawQuery(
-        "SELECT * FROM precio_item_det WHERE id_precio_item = '$idPrecioItem' and nit = '$nit'  and id_item = '$idItem'");
+        "SELECT * FROM precio_item_det WHERE id_precio_item = '$idPrecioItem'"
+            " and nit = '$nit'  and id_item = '$idItem'");
     if (res.isEmpty) {
       await database.insert('precio_item_det', precio.toMap());
     } else {
@@ -1682,15 +1721,57 @@ WHERE C.DISTRIBUCION = 'DC';""";
     }
   }
 
+
+  //insertar las factura que viene de la api
+  static Future<bool> insertKit(Kit kit) async {
+    var nit = kit.nit;
+    var id_kit = kit.id_kit;
+    Database database = await _openDB();
+    final res = await database.rawQuery(
+        "SELECT * FROM kit WHERE id_kit = '$id_kit' and nit = '$nit' ");
+    if (res.isEmpty) {
+      await database.insert('kit', kit.toMap());
+    } else {
+      await database.update(
+        'kit', kit.toMap(),
+        where: "id_kit = ? and nit = ?",
+        whereArgs: [id_kit,nit],
+      );
+    }
+    return true;
+  }
+
+  static Future<bool> insertKitDet(KitDet kitdet ) async {
+    var nit = kitdet.nit;
+    var id_kit = kitdet.id_kit;
+    var id_item = kitdet.id_item;
+    Database database = await _openDB();
+    final res = await database.rawQuery(
+        "SELECT * FROM kit_det WHERE id_kit = '$id_kit' and id_item = '$id_item' and nit = '$nit' ");
+    if (res.isEmpty) {
+      await database.insert('kit_det', kitdet.toMap());
+    } else {
+      await database.update(
+        'kit_det', kitdet.toMap(),
+        where: "id_kit = ? and id_item = ? and nit = ?",
+        whereArgs: [id_kit,id_item,nit],
+      );
+    }
+    return true;
+  }
+
+
   static Future<bool> insertPedido(Pedido pedido,bool origen) async {
     var numero = pedido.numero;
     var nit = pedido.nit;
     var id_tipo_doc = pedido.id_tipo_doc;
     var id_tercero = pedido.id_tercero;
-
+    var idEmpresa = pedido.id_empresa;
+    var idSucursal = pedido.id_sucursal;
     Database database = await _openDB();
     final res = await database.rawQuery(
-        " SELECT * FROM pedido WHERE  id_tipo_doc ='$id_tipo_doc' and numero='$numero' and nit= '$nit'");
+        " SELECT * FROM pedido WHERE id_empresa ='$idEmpresa' and id_sucursal='$idSucursal' and id_tipo_doc ='$id_tipo_doc'"
+        " and numero='$numero' and nit= '$nit'");
     final resTercero = await database.rawQuery(
         " SELECT * FROM tercero WHERE id_tercero='$id_tercero' AND nit='$nit'");
     if (res.isEmpty && resTercero.isNotEmpty) {
@@ -1698,7 +1779,7 @@ WHERE C.DISTRIBUCION = 'DC';""";
     } else {
       if(origen) {
         await database.update('pedido', pedido.toMap(),
-          where: "numero = ?", whereArgs: [numero]);
+          where: "numero = ? and nit = ?", whereArgs: [numero,nit]);
       }
     }
     return true;
@@ -1720,7 +1801,8 @@ WHERE C.DISTRIBUCION = 'DC';""";
     Database database = await _openDB();
 
     final res = await database.rawQuery(
-        "UPDATE tipo_doc SET consecutivo='$nuevo_conse'  WHERE id_tipo_doc='$id_tipo_doc' AND nit='$nit' and id_empresa='$id_empresa' ");
+        "UPDATE tipo_doc SET consecutivo='$nuevo_conse'  WHERE id_tipo_doc='$id_tipo_doc' "
+            "AND nit='$nit' and id_empresa='$id_empresa' ");
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -1728,21 +1810,28 @@ WHERE C.DISTRIBUCION = 'DC';""";
     }
   }
 
-  static Future<bool> insertPedidoDet(PedidoDet pedidodet) async {
+  static Future<bool> insertPedidoDet(PedidoDet pedidodet,bool origen) async {
     var numero = pedidodet.numero;
     var idItem = pedidodet.id_item;
     var nit = pedidodet.nit;
-
+    var idEmpresa = pedidodet.id_empresa;
+    var idSucursal = pedidodet.id_sucursal;
+    var consecutivo = pedidodet.consecutivo;
+    var id_tipo_doc = pedidodet.id_tipo_doc;
     Database database = await _openDB();
+
     final res = await database.rawQuery(
-        " SELECT * FROM pedido_det WHERE id_item='$idItem' and  numero='$numero' and nit= '$nit'");
+        " SELECT * FROM pedido_det WHERE id_empresa ='$idEmpresa' and id_sucursal='$idSucursal' and id_tipo_doc ='$id_tipo_doc'"
+            " and numero='$numero' and  id_item='$idItem' and consecutivo= '$consecutivo' and nit= '$nit'");
     final resPedido = await database.rawQuery(
-        " SELECT * FROM pedido WHERE numero='$numero' AND nit='$nit'");
+        " SELECT * FROM pedido WHERE numero='$numero' AND nit='$nit' and id_empresa ='$idEmpresa' and id_sucursal='$idSucursal' and id_tipo_doc ='$id_tipo_doc'");
     if (res.isEmpty && resPedido.isNotEmpty) {
        await database.insert('pedido_det', pedidodet.toMap());
     } else {
-      await database.update('pedido_det', pedidodet.toMap(),
-          where: "numero = ? and id_item = ?", whereArgs: [numero, idItem]);
+      if(origen) {
+        await database.update('pedido_det', pedidodet.toMap(),
+            where: "numero = ? and id_item = ? and nit = ?", whereArgs: [numero, idItem,nit]);
+        }
     }
     return true;
   }
@@ -1803,7 +1892,8 @@ WHERE C.DISTRIBUCION = 'DC';""";
     var id_precio_item = pedidodet.id_precio_item;
     Database database = await _openDB();
     final res = await database.rawQuery(
-        " SELECT * FROM pedido_det WHERE id_item='$id_item' and  id_tipo_doc ='$id_tipo_doc' and numero='$numero' and nit= '$nit' and consecutivo = '$consecutivo'");
+        " SELECT * FROM pedido_det WHERE id_item='$id_item' and  id_tipo_doc ='$id_tipo_doc' "
+            "and numero='$numero' and nit= '$nit' and consecutivo = '$consecutivo'");
     if (res.isEmpty) {
       await database.insert('pedido_det', pedidodet.toMap());
     } else {
@@ -1894,7 +1984,7 @@ print("*-*-*-*-* $sql");
 
     var sql =
         " select   id_item,descripcion_item, cast(cantidad as int) as cantidad, precio, "
-        "  pedido_det.total_dcto ,pedido_det.total  from pedido_det  "
+        "  pedido_det.total_dcto ,cantidad * precio  as total_prod from pedido_det  "
         "  INNER JOIN pedido on pedido.numero= pedido_det.numero and pedido_det.numero= '$numero' "
         " WHERE pedido.nit ='$nit' and pedido.id_tercero = '$idTercero' ";
 
@@ -1936,15 +2026,37 @@ print("*-*-*-*-* $sql");
     }
   }
 
+  static Future getCarteraRecibo(idTercero,id_sucursal_tercero) async {
+    Database database = await _openDB();
+
+    var sql = " SELECT SC.ID_EMPRESA,SC.ID_SUCURSAL, SC.TIPO_DOC,SC.NUMERO,  SC.CUOTA, SC.DIAS AS DIAS,"
+   " SC.ID_TERCERO AS ID_TERCERO ,  SC.ID_VENDEDOR AS ID_VENDEDOR, SC.ID_SUCURSAL_TERCERO AS SUC_TERCERO,"
+   "  STRFTIME('%d/%m/%Y ', SC.FECHA) as fecha , STRFTIME('%d/%m/%Y ', SC.VENCIMIENTO)  as vencimiento,"
+   " SC.DCTOMAX, SUM(SC.DEBITO - SC.CREDITO) AS DEBITO, SC.ID_DESTINO AS ID_DESTINO ,"
+   " SC.ID_PROYECTO AS ID_PROYECTO FROM SALDO_CARTERA SC"
+   " WHERE SC.ID_TERCERO =  '$idTercero'    AND SC.ID_SUCURSAL_TERCERO = '$id_sucursal_tercero'"
+   " GROUP BY"
+   " SC.ID_EMPRESA,SC.ID_SUCURSAL,  SC.TIPO_DOC,SC.NUMERO,SC.CUOTA,SC.DIAS,"
+   " SC.ID_TERCERO,SC.ID_VENDEDOR, SC.ID_SUCURSAL_TERCERO,SC.FECHA,"
+   " SC.VENCIMIENTO, SC.DCTOMAX, SC.ID_DESTINO, SC.ID_PROYECTO"
+   " HAVING (SUM(SC.DEBITO - SC.CREDITO) < -0.01 OR SUM(SC.DEBITO -SC.CREDITO) > 0.01)" ;
+
+
+    print("*-*-*-*-* recibos de caja **-*-*-*-* $sql");
+    final res = await database.rawQuery(sql);
+    if (res.isNotEmpty) {
+      return res;
+    } else {
+      return false;
+    }
+  }
+
   static Future getVisitados(idVendedor, fecha, orden) async {
     Database database = await _openDB();
-    var sql =
-        "SELECT T.nombre_sucursal as nombre_sucursal ,T.direccion ,T.telefono, max(P.numero) as numero "
-        "FROM PEDIDO P INNER JOIN TERCERO_DIRECCION TD ON (TD.ID_TERCERO =P.ID_TERCERO "
-        "AND TD.ID_SUCURSAL_TERCERO = P.ID_SUCURSAL_TERCERO AND TD.ID_DIRECCION = P.ID_DIRECCION) "
-        "INNER JOIN TERCERO T ON (T.ID_TERCERO = P.ID_TERCERO AND  T.ID_SUCURSAL_TERCERO = P.ID_SUCURSAL_TERCERO) "
-        "WHERE P.ID_VENDEDOR = '$idVendedor' AND date(FECHA)  = '$fecha'  "
-        "GROUP BY T.NOMBRE , T.nombre_sucursal ,T.direccion ,T.telefono,P.numero";
+    var sql = " SELECT T.nombre_sucursal as nombre_sucursal ,T.direccion , T.telefono, max(P.numero) as numero"
+       " FROM PEDIDO P INNER JOIN TERCERO  T ON (T.ID_TERCERO =P.ID_TERCERO ) "
+       " WHERE P.ID_VENDEDOR = '$idVendedor' AND date(FECHA)  = '$fecha'"
+       " GROUP BY T.NOMBRE , T.nombre_sucursal ,T.direccion ,T.telefono,P.numero";
     sql += " ORDER BY P.NUMERO $orden";
 
     final res = await database.rawQuery(sql);
@@ -1959,9 +2071,10 @@ print("*-*-*-*-* $sql");
   static Future getSaldoCartera(
       String id_tercero, String id_sucursal_tercero) async {
     Database database = await _openDB();
-    final res = await database.rawQuery(
-        " SELECT SUM(CT.DEBITO - CT.CREDITO)  AS DEBITO   FROM SALDO_CARTERA AS CT "
-        "  WHERE CT.ID_TERCERO = '$id_tercero'   AND CT.ID_SUCURSAL_TERCERO = '$id_sucursal_tercero' ");
+    var sql = " SELECT SUM(CT.DEBITO - CT.CREDITO)  AS DEBITO   FROM SALDO_CARTERA AS CT "
+        "  WHERE CT.ID_TERCERO = '$id_tercero'   AND CT.ID_SUCURSAL_TERCERO = '$id_sucursal_tercero' ";
+    final res = await database.rawQuery(sql);
+    print(sql);
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -1972,16 +2085,34 @@ print("*-*-*-*-* $sql");
   //seccion de tercero cliente
   static Future getFormPago(String id_tercero, String nit) async {
     Database database = await _openDB();
-    final res = await database.rawQuery(
-        " SELECT id_tipo_pago,descripcion FROM TERCERO "
+    var sql = " SELECT id_tipo_pago,descripcion FROM TERCERO "
         " INNER JOIN  tipo_pago ON tipo_pago.id_tipo_pago=tercero.id_forma_pago AND tercero.nit=tipo_pago.nit"
-        " AND id_tercero= '$id_tercero' and tercero.nit ='$nit' ");
+        " AND id_tercero= '$id_tercero' and tercero.nit ='$nit' ";
+    print("sql forma pago $sql");
+    final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
       return res;
     } else {
       return false;
     }
   }
+
+
+  static Future getidSuc(idTercero, nit) async {
+    Database database = await _openDB();
+
+    var sql =
+        " select  id_sucursal_tercero,id_suc_vendedor from tercero_cliente "
+        " where id_tercero= '$idTercero'  and nit='$nit' ";
+
+    final res = await database.rawQuery(sql);
+    if (res.isNotEmpty) {
+      return res;
+    } else {
+      return false;
+    }
+  }
+
 
   //seccion de tercero pedido
   static Future getClasificacionProductos(
@@ -2008,12 +2139,15 @@ print(sql);
   }
 
   //seccion de tercero pedido
-  static Future getItems(String nit, String id_clasificacion,search) async {
+  static Future getItems(String nit, String idClasificacion,search,listaPrecioTercero) async {
     Database database = await _openDB();
 
     var sql = " SELECT * from item i LEFT JOIN precio_item_det pd  ON pd.id_item = i.id_item "
-    "  WHERE i.nit= '$nit' and id_clasificacion='$id_clasificacion'   ";
+    "  WHERE i.nit= '$nit' and id_clasificacion='$idClasificacion'  ";
 
+    if (listaPrecioTercero != '') {
+      sql += " and id_precio_item='$listaPrecioTercero' ";
+    }
     if (search != '@') {
       sql += ' AND descripcion LIKE  "%$search%" ';
     }
@@ -2031,9 +2165,10 @@ print(sql);
   static Future getPrecioProducto(
       String nit, String idItem, String _itemsListPrecio) async {
     Database database = await _openDB();
-    final res = await database.rawQuery(
-        " SELECT precio, descuento_maximo,id_item FROM precio_item_det "
-        " WHERE id_item='$idItem' AND id_precio_item = '$_itemsListPrecio' AND nit='$nit' ");
+    var sql = " SELECT precio, descuento_maximo,id_item FROM precio_item_det "
+        " WHERE id_item='$idItem' AND id_precio_item = '$_itemsListPrecio' AND nit='$nit' ";
+    final res = await database.rawQuery(sql);
+    print("--------precio prod $sql");
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -2231,10 +2366,8 @@ print(sql);
     final res = await database.rawQuery(
         "SELECT * FROM carrito ");
     if (res.isEmpty) {
-      print("INSERTA CARRITO  CARRITO $carrito");
       await database.insert('carrito', carrito.toMap());
     } else {
-      print("ACTUALUIZA CARRITO  CARRITO  $carrito");
       await database.update('carrito', carrito.toMap(),
           where: " numero = ? and nit = ? ", whereArgs: [numero, nit]);
     }
@@ -2245,10 +2378,8 @@ print(sql);
     final resdet = await database.rawQuery(
         "SELECT * FROM carrito_detalle WHERE  numero = $numero AND nit = '$nit' AND id_item = '$idItem'");
     if (resdet.isEmpty) {
-      print("INSERTA  CARRITO detalle  CARRITO detalle $numero $idItem");
       await database.insert('carrito_detalle', carritodet.toMap());
     } else {
-      print("ACTUALUIZA CARRITO detalle  CARRITO detalle $numero $idItem");
       await database.update('carrito_detalle', carritodet.toMap(),
           where: " numero = ? and nit = ? and id_item = ?",
           whereArgs: [numero, nit, idItem]);
@@ -2270,7 +2401,7 @@ print(sql);
   }
 
   /// Simple query with sqflite helper
-  static Future getCarrito(nit, idtercero, numero, origen) async {
+  static Future getCarrito(nit, idtercero, numero) async {
     Database database = await _openDB();
 
     var sql =
@@ -2278,10 +2409,11 @@ print(sql);
         "  fecha,id_forma_pago,carrito.id_precio_item,id_direccion,orden_compra,id_direccion_factura,"
         "  carrito.id_tercero,carrito.numero,descripcion, id_item,precio, cast(cantidad as int) as cantidad,"
         "  carrito_detalle.total_dcto, dcto, carrito_detalle.id_precio_item, (precio * cantidad ) as total"
-        "  FROM carrito_detalle ,carrito  where carrito.nit =  '$nit'  AND carrito.numero = $numero  ";
-    if (!origen) {
+        "  FROM carrito_detalle ,carrito  where carrito.nit =  '$nit'  ";
+    if (idtercero !='' &&  numero!= '') {
       sql += " AND carrito.id_tercero ='$idtercero'  AND carrito.numero = $numero ";
     }
+
     final resdet = await database.rawQuery(sql);
     if (resdet.isNotEmpty) {
       return resdet;
@@ -2291,7 +2423,6 @@ print(sql);
   }
 
   static Future<void> updateCantidad(String idItem, numero, bool incre) async {
-    print("updateCantidad updateCantidad $incre");
     Database database = await _openDB();
     var sql = '';
     if (incre) {

@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 class TerceroDireccion { 
  
     final String id_tercero ;
-    final int id_sucursal_tercero ;
+    final String id_sucursal_tercero ;
     final String id_direccion ;
     final String direccion ; 
     final String id_pais ;

@@ -36,7 +36,7 @@ class Cliente {
   final String id_medio_contacto;
   final String id_zona;
   final String flag_persona_nat;
-
+  final String usuario;
   const Cliente(
       {  
           required this.id_tercero,
@@ -67,7 +67,8 @@ class Cliente {
           required this.id_suc_vendedor,
           required this.id_medio_contacto,
           required this.id_zona,
-          required this.flag_persona_nat
+          required this.flag_persona_nat,
+          required this.usuario
       });
 
   // Convert a Dog into a Map. The keys must correspond to the names of the
@@ -103,7 +104,8 @@ class Cliente {
       'id_suc_vendedor':id_suc_vendedor,
       'id_medio_contacto':id_medio_contacto,
       'id_zona':id_zona,
-      'flag_persona_nat':flag_persona_nat
+      'flag_persona_nat':flag_persona_nat,
+      'usuario':usuario
     };          
   }
 
@@ -117,6 +119,6 @@ class Cliente {
            '  nombre_sucursal: $nombre_sucursal, primer_apellido: $primer_apellido,'
            '  segundo_apellido: $segundo_apellido, primer_nombre: $primer_nombre,  segundo_nombre: $segundo_nombre, e_mail: $e_mail, nit: $nit,'
            ' id_tipo_empresa: $id_tipo_empresa,id_forma_pago: $id_forma_pago,id_lista_precio:$id_lista_precio, id_precio_item:$id_precio_item,id_vendedor:$id_vendedor,'
-           ' id_suc_vendedor:$id_suc_vendedor,id_medio_contacto:$id_medio_contacto,id_zona:$id_zona,flag_persona_nat:$flag_persona_nat}';
+           ' id_suc_vendedor:$id_suc_vendedor,id_medio_contacto:$id_medio_contacto,id_zona:$id_zona,flag_persona_nat:$flag_persona_nat,usuario:$usuario}';
   }
 }

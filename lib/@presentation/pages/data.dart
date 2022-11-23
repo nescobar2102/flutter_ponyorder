@@ -4,14 +4,14 @@ import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
 import 'package:pony_order/models/tercero_cliente.dart';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/safe_area_values.dart';
-import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
-import 'package:sqflite/sqflite.dart';
+
 import '../../db/operationDB.dart';
+import '../../httpConexion/validateConexion.dart';
+import '../../Common/Constant.dart';
 
 import '../../models/tercero_direccion.dart';
 import '../../models/usuario.dart';
@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPages> {
  String _url = 'http://178.62.80.103:5000';
 
   bool focus = false;
-  bool isOnline = false;
+  bool _isConnected = false;
 
   Future<Null> _submitDialog(BuildContext context) async {
     return await showDialog<Null>(
@@ -92,55 +92,20 @@ class _LoginPageState extends State<LoginPages> {
    );
  }
 
-  Future<bool> hasNetwork() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
-      return false;
-    }
-  }
 
   @override
   void initState() {
     super.initState();
+
   }
 
-  /////api obtiene todos los usuarios de la bd postgres
-  Future getUsuariosSincronizacion() async {
-    print("ingresa a la sincronizacion desde data");
-    final response = await http.get(Uri.parse("$_url/users_all"));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      //  await  OperationDB.deleteDataUsuario();
-      for (int i = 0; i < data.length; i++) {
-        final user = Usuario(
-            id: i + 1,
-            usuario: data[i]['usuario'],
-            password: data[i]['clave'],
-            nit: data[i]['nit'],
-            id_tipo_doc_pe: data[i]['id_tipo_doc_pe'],
-            id_tipo_doc_rc: data[i]['id_tipo_doc_rc']);
-        print("manda a inserta usuariosssss $user");
-   
-      }
-      await getCuotaVentaSincronizacion();
-    } else {
-      _showError('Error en la sincronizacion de usuarios');
-    }
-  }
 
   /////api obtiene todos los tipo de pago de la bd postgres
   Future getTipoPagoSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/tipopago_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/tipopago_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
@@ -156,13 +121,11 @@ class _LoginPageState extends State<LoginPages> {
       _showError('Error en la sincronizacion de tipo de pago');
     }
     await getEmpresaSincronizacion();
-    final allTipoPago = await OperationDB.getTipoPago();
-    print("muestra todos los getTipoPago  $allTipoPago");
   }
 
   /////api obtiene todo las empresas de la bd postgres
   Future getEmpresaSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/empresa_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/empresa_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -200,13 +163,11 @@ class _LoginPageState extends State<LoginPages> {
       _showError('Error en la sincronizacion de Empresa');
     }
     await getPaisSincronizacion();
-    final allEmpresa = await OperationDB.getEmpresa();
-    print("muestra todos los getEmpresa    $allEmpresa");
   }
 
  
   Future getPaisSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/pais_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/pais_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -227,12 +188,11 @@ class _LoginPageState extends State<LoginPages> {
       _showError('Error en la sincronizacion de Pais');
     }
     await getCiudadSincronizacion();
- 
   }
 
   /////api obtiene todo las empresas de la bd postgres
   Future getCiudadSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/ciudades_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/ciudades_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -253,12 +213,11 @@ class _LoginPageState extends State<LoginPages> {
       _showError('Error en la sincronizacion de Ciudad');
     }
     await getTipoDocSincronizacion();
-    final allCiudad = await OperationDB.getCiudad();
-    print("muestra todos los getCiudad    $allCiudad");
+
   }
 
   Future getZonaSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/zona_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/zona_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -279,13 +238,12 @@ class _LoginPageState extends State<LoginPages> {
     } else {
       _showError('Error en la sincronizacion de Zona');
     }
-    final allZona = await OperationDB.getZona();
-    print("muestra todos los getZona  $allZona");
+
     await getMedioContactoSincronizacion();
   }
 
   Future getMedioContactoSincronizacion() async { 
-    final response = await http.get(Uri.parse("$_url/medioContacto_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/medioContacto_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -303,13 +261,12 @@ class _LoginPageState extends State<LoginPages> {
     } else {
       _showError('Error en la sincronizacion de MedioContacto');
     }
-    final allMedio = await OperationDB.getMedioContacto();
-    print("muestra todos los getMedioContacto  $allMedio");
+
     await getTipoIdentificacion();
   }
   
   Future getTipoIdentificacion() async { 
-    final response = await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/tipoidentificacion_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -318,22 +275,22 @@ class _LoginPageState extends State<LoginPages> {
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final tipoIdentity = TipoIdentificacion(
-              id_tipo_identificacion: data[i]['value'],
-              descripcion: data[i]['label'] );
+              id_tipo_identificacion: data[i]['id_tipo_identificacion'],
+              descripcion: data[i]['descripcion'] ,
+              nit: data[i]['nit']);
           await OperationDB.insertTipoIdentificacion(tipoIdentity);
         }
       }
     } else {
       _showError('Error en la sincronizacion de TipoIdentificacion');
     }
-    final alltipo_identity= await OperationDB.getTipoIdentificacion();
-    print("muestra todos los getTipoIdentificacion  $alltipo_identity");
+
     await getTipoEmpresa();
   }
 
 
   Future getTipoEmpresa() async {   
-    final response = await http.get(Uri.parse("$_url/tipoempresa_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/tipoempresa_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -344,20 +301,19 @@ class _LoginPageState extends State<LoginPages> {
           final tipoEmpresa = TipoEmpresa(
               id_tipo_empresa: data[i]['id_tipo_empresa'],
               descripcion: data[i]['descripcion'] ,
-                 nit: data[i]['nit']);
+              nit: data[i]['nit']);
           await OperationDB.insertTipoEmpresa(tipoEmpresa);
         }
       }
     } else {
       _showError('Error en la sincronizacion de  tipo_empresa');
     }
-    final alltipo_empresa= await OperationDB.getTipoEmpresa();
-    print("muestra todos los getTipoEmpresa  $alltipo_empresa");
+
     await getBarrio();
   }
 
   Future getBarrio() async { 
-    final response = await http.get(Uri.parse("$_url/barrio_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/barrio_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -378,13 +334,12 @@ class _LoginPageState extends State<LoginPages> {
     } else {
       _showError('Error en la sincronizacion de barrio');
     }
-    final allbarrio= await OperationDB.getBarrio();
-    print("muestra todos los getBarrio  $allbarrio");
+
     await getDepto();
   }
 
   Future getDepto() async {
-    final response = await http.get(Uri.parse("$_url/depto_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/depto_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -403,13 +358,12 @@ class _LoginPageState extends State<LoginPages> {
     } else {
       _showError('Error en la sincronizacion de insertDepto');
     }
-    final alldepto= await OperationDB.getDepto();
-    print("muestra todos los getDepto  $alldepto");
+
     await getPedido();
   }
 
   Future getPedido() async {  
-    final response = await http.get(Uri.parse("$_url/pedido_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/pedido_all"));
     var jsonResponse =
     convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -447,8 +401,7 @@ class _LoginPageState extends State<LoginPages> {
   }
 
   Future getPedidoDet() async {
-
-    final response = await http.get(Uri.parse("$_url/pedido_det_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/pedido_det_all"));
     var jsonResponse =
     convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -472,7 +425,7 @@ class _LoginPageState extends State<LoginPages> {
                     tasa_dcto_adicional:data[i]['tasa_dcto_adicional'],id_kit:data[i]['id_kit'],precio_kit:data[i]['precio_kit'],
                     tasa_dcto_cliente:data[i]['tasa_dcto_cliente'].toString(),total_dcto_cliente:data[i]['total_dcto_cliente'].toString()
           );
-          await OperationDB.insertPedidoDet(pedidodet);
+          await OperationDB.insertPedidoDet(pedidodet,false);
         }
       }
     } else {
@@ -484,7 +437,7 @@ class _LoginPageState extends State<LoginPages> {
   }
 
  Future getCuentaTercero() async  {
-      final response = await http.get(Uri.parse("$_url/cuentaportercero_all"));
+      final response = await http.get(Uri.parse("${Constant.URL}/cuentaportercero_all"));
       var jsonResponse =
       convert.jsonDecode(response.body) as Map<String, dynamic>;
       var success = jsonResponse['success'];
@@ -500,21 +453,21 @@ class _LoginPageState extends State<LoginPages> {
                 cuota: data[i]['cuota'],
                 dias: data[i]['dias'],
                 id_tercero: data[i]['id_tercero'].toString(),
-                id_vendedor:  data[i]['id_vendedor'].toString(),
-                id_sucursal_tercero:  data[i]['id_sucursal_tercero'],
-                fecha:  data[i]['fecha'],
-                vencimiento:  data[i]['vencimiento'],
-                credito:  data[i]['credito'].toString(),
-                dctomax:  data[i]['dctomax'].toString(),
-                debito:  data[i]['debito'].toString(),
-                id_destino:  data[i]['id_destino'],
-                id_proyecto:  data[i]['id_proyecto'],
-                nit:  data[i]['nit'],
-                id_empresa_cruce:  data[i]['id_empresa_cruce'],
-                id_sucursal_cruce :  data[i]['id_sucursal_cruce'],
-                tipo_doc_cruce:  data[i]['tipo_doc_cruce'],
-                numero_cruce:  data[i]['numero_cruce'],
-                cuota_cruce:  data[i]['cuota_cruce']
+                id_vendedor: data[i]['id_vendedor'].toString(),
+                id_sucursal_tercero: data[i]['id_sucursal_tercero'],
+                fecha: data[i]['fecha'],
+                vencimiento: data[i]['vencimiento'],
+                credito: data[i]['credito'].toString(),
+                dctomax: data[i]['dctomax'].toString(),
+                debito: data[i]['debito'].toString(),
+                id_destino: data[i]['id_destino'].toString(),
+                id_proyecto: data[i]['id_proyecto'].toString(),
+                nit: data[i]['nit'],
+                id_empresa_cruce: data[i]['id_empresa_cruce'],
+                id_sucursal_cruce: data[i]['id_sucursal_cruce'],
+                tipo_doc_cruce: data[i]['tipo_doc_cruce'],
+                numero_cruce: data[i]['numero_cruce'].toString(),
+                cuota_cruce: data[i]['cuota_cruce'].toString()
             );
             await OperationDB.insertCuentaTercero(cuenta_tercero);
           }
@@ -527,7 +480,7 @@ class _LoginPageState extends State<LoginPages> {
 
 
  Future getCarteraProveedores() async  {    
-   final response = await http.get(Uri.parse("$_url/carteraproveedores_all"));
+   final response = await http.get(Uri.parse("${Constant.URL}/carteraproveedores_all"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
    var success = jsonResponse['success'];
@@ -569,7 +522,7 @@ class _LoginPageState extends State<LoginPages> {
 
   
  Future getCarteraProveedoresDet(id_empresa,numero,nit) async  {
-   final response = await http.get(Uri.parse("$_url/carteraproveedoresdet_all/$id_empresa/$numero/$nit"));
+   final response = await http.get(Uri.parse("${Constant.URL}/carteraproveedoresdet_all/$id_empresa/$numero/$nit"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
    var success = jsonResponse['success'];
@@ -621,7 +574,7 @@ class _LoginPageState extends State<LoginPages> {
  }
 
  Future getAuxiliar() async  {
-   final response = await http.get(Uri.parse("$_url/auxiliar_all"));
+   final response = await http.get(Uri.parse("${Constant.URL}/auxiliar_all"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
    var success = jsonResponse['success'];
@@ -647,7 +600,7 @@ class _LoginPageState extends State<LoginPages> {
 
  Future getConcepto() async  {
 
-   final response = await http.get(Uri.parse("$_url/concepto_all"));
+   final response = await http.get(Uri.parse("${Constant.URL}/concepto_all"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
    var success = jsonResponse['success'];
@@ -675,7 +628,7 @@ class _LoginPageState extends State<LoginPages> {
 
  Future getBanco() async  {
    print("banco");
-   final response = await http.get(Uri.parse("$_url/banco_all"));
+   final response = await http.get(Uri.parse("${Constant.URL}/banco_all"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
    var success = jsonResponse['success'];
@@ -700,7 +653,7 @@ class _LoginPageState extends State<LoginPages> {
  Future getFormaPago() async  {
    print("getFormaPago");
    //ULTIMO
-   final response = await http.get(Uri.parse("$_url/formapago_all"));
+   final response = await http.get(Uri.parse("${Constant.URL}/formapago_all"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
    var success = jsonResponse['success'];
@@ -723,7 +676,7 @@ class _LoginPageState extends State<LoginPages> {
  }
 
  Future searchTercero() async {
-    final response = await http.get(Uri.parse("$_url/tercero_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/tercero_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -787,7 +740,7 @@ class _LoginPageState extends State<LoginPages> {
   }
 
   Future searchTerceroCliente() async {
-    final response = await http.get(Uri.parse("$_url/cliente_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/cliente_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -796,11 +749,11 @@ class _LoginPageState extends State<LoginPages> {
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final tercero_cliente = TerceroCliente(
-              id_tercero: data[i]['id_tercero'],
-              id_sucursal_tercero: data[i]['id_sucursal_tercero'],
+              id_tercero: data[i]['id_tercero'].toString(),
+              id_sucursal_tercero: data[i]['id_sucursal_tercero'].toString(),
               id_forma_pago: data[i]['id_forma_pago'],
               id_precio_item: data[i]['id_precio_item'].toString(),
-              id_vendedor: data[i]['id_vendedor'],
+              id_vendedor: data[i]['id_vendedor'].toString(),
               id_suc_vendedor: data[i]['id_suc_vendedor'],
               id_medio_contacto: data[i]['id_medio_contacto'],
               id_zona: data[i]['id_zona'],
@@ -852,7 +805,7 @@ class _LoginPageState extends State<LoginPages> {
   }
 
   Future searchTerceroDireccion() async {
-    final response = await http.get(Uri.parse("$_url/direccion_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/direccion_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -861,8 +814,8 @@ class _LoginPageState extends State<LoginPages> {
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final tercero_direccion = TerceroDireccion(
-              id_tercero: data[i]['id_tercero'],
-              id_sucursal_tercero: data[i]['id_sucursal_tercero'],
+              id_tercero: data[i]['id_tercero'].toString(),
+              id_sucursal_tercero: data[i]['id_sucursal_tercero'].toString(),
               id_direccion: data[i]['id_direccion'],
               direccion: data[i]['direccion'],
               id_pais: data[i]['id_pais'],
@@ -884,9 +837,17 @@ class _LoginPageState extends State<LoginPages> {
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getCuotaVentaSincronizacion() async {
+    final val = await validateConexion.checkInternetConnection();
+    setState(() {
+     _isConnected = val!;
+    });
+    if(!_isConnected) {
+      _showError('No está conectado a internet');
+      return;
+    }
     _submitDialog(context);
     print("ingresa a la cuota venta");
-    final response = await http.get(Uri.parse("$_url/cuotaventas_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/cuotaventas_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -907,19 +868,18 @@ class _LoginPageState extends State<LoginPages> {
           print("manda a inserta cuota_Venta $sale");
           await OperationDB.insertCuotaVenta(sale);
         }
-        final allSale = await OperationDB.cuotaventaAll();
-        print(
-            "muestra todos los registro de cuota venta  desde dataaaaa $allSale");
+       // final allSale = await OperationDB.cuotaventaAll();
+
       }
-      await searchTercero();
     } else {
       _showError('Error en la sincronizacion de cuota venta');
     }
+    await searchTercero();
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getTipoDocSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/tipodoc_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/tipodoc_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -938,9 +898,6 @@ class _LoginPageState extends State<LoginPages> {
           print("manda a inserta tipodoc $tipodoc");
           await OperationDB.insertTipoDoc(tipodoc);
         }
-        final allTipoDoc = await OperationDB.getTipoDoc();
-        print(
-            "muestra todos los registro de tipodoc desde dataaaaa $allTipoDoc");
       }
     } else {
       _showError('Error en la sincronizacion de tipodoc');
@@ -950,7 +907,7 @@ class _LoginPageState extends State<LoginPages> {
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getFacturaSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/factura_app_movil"));
+    final response = await http.get(Uri.parse("${Constant.URL}/factura_app_movil"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -971,9 +928,6 @@ class _LoginPageState extends State<LoginPages> {
           print("manda a inserta factura $factura");
           await OperationDB.insertFactura(factura);
         }
-        final allFactura = await OperationDB.getFactura();
-        print(
-            "muestra todos los registro de factura desde dataaaaa $allFactura");
       }
     } else {
       _showError('Error en la sincronizacion de factura');
@@ -983,7 +937,7 @@ class _LoginPageState extends State<LoginPages> {
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getCalsificacionItemSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/clasificacionItems_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/clasificacionItems_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -1007,9 +961,6 @@ class _LoginPageState extends State<LoginPages> {
           );
           await OperationDB.insertClasificacionItem(claitem);
         }
-        final allClasiItem = await OperationDB.getClasificacionItem();
-        print(
-            "muestra todos los registro de clasificac desde dataaaaa $allClasiItem");
       }
     } else {
       _showError('Error en la sincronizacion de getClasificacionItem');
@@ -1019,7 +970,7 @@ class _LoginPageState extends State<LoginPages> {
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getPrecioItemSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/precioitem_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/precioitem_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -1047,9 +998,6 @@ class _LoginPageState extends State<LoginPages> {
           print("manda a inserta insertPrecioItem $precioItem");
           await OperationDB.insertPrecioItem(precioItem);
         }
-        final allPrecioItem = await OperationDB.getPrecioItem();
-        print(
-            "muestra todos los registro de insertPrecioItem desde dataaaaa $allPrecioItem");
       }
     } else {
       _showError('Error en la sincronizacion de getPrecioItem');
@@ -1059,7 +1007,7 @@ class _LoginPageState extends State<LoginPages> {
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getPrecioItemDetSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/precioitemdet_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/precioitemdet_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -1084,9 +1032,6 @@ class _LoginPageState extends State<LoginPages> {
           print("manda a inserta insertPrecioItemDet $precioItemDet");
           await OperationDB.insertPrecioItemDet(precioItemDet);
         }
-        final allPrecioItemDet = await OperationDB.getPrecioItemDet();
-        print(
-            "muestra todos los registro de insertPrecioItem DERdesde dataaaaa $allPrecioItemDet");
       }
     } else {
       _showError('Error en la sincronizacion de getPrecioItemDer');
@@ -1096,7 +1041,7 @@ class _LoginPageState extends State<LoginPages> {
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getItemSincronizacion() async {
-    final response = await http.get(Uri.parse("$_url/item_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/item_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -1129,38 +1074,77 @@ class _LoginPageState extends State<LoginPages> {
           print("manda a inserta item $item");
           await OperationDB.inserItem(item);
         }
-        final allItem = await OperationDB.getItem();
-        print("muestra todos los registro de item dataaaaa $allItem");
       }
     } else {
       _showError('Error en la sincronizacion de getItem');
     }
-    await getZonaSincronizacion();
+
+    await getKitSincronizacion();
   }
 
-  /////api
-  Future getItemTypeIdentication() async {
-    final response =
-        await http.get(Uri.parse("$_url/app_tipoidentificacion_all"));
 
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
+ Future getKitSincronizacion() async {
+   final response = await http.get(Uri.parse("${Constant.URL}/kit_all"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final kit = Kit(
+           id_kit: data[i]['id_kit'].toString(),
+           descripcion: data[i]['descripcion'].toString(),
+           precio_kit: data[i]['precio_kit'].toString(),
+           precio_kit_iva: data[i]['precio_kit_iva'].toString(),
+           flag_vigencia: data[i]['flag_vigencia'].toString(),
+           fecha_inicial: data[i]['fecha_inicial'].toString(),
+           fecha_final: data[i]['fecha_final'].toString(),
+           ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
+           nit: data[i]['nit']
+         );
+         print("manda a inserta kit $kit");
+         await OperationDB.insertKit(kit);
+       }
+     }
+   } else {
+     _showError('Error en la sincronizacion de getKit');
+   }
+   await getKitDetSincronizacion();
+ }
 
-      print("object object $data");
-    } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error en la sincronizaciond e ",
-        ),
-      );
-    }
-  }
-
+ Future getKitDetSincronizacion() async {
+   final response = await http.get(Uri.parse("${Constant.URL}/kit_det_all"));
+   var jsonResponse =
+   convert.jsonDecode(response.body) as Map<String, dynamic>;
+   var success = jsonResponse['success'];
+   if (response.statusCode == 200 && success) {
+     var data = jsonResponse['data'];
+     if (data.length > 0) {
+       for (int i = 0; i < data.length; i++) {
+         final kitdet = KitDet(
+             id_kit: data[i]['id_kit'].toString(),
+             id_item: data[i]['id_item'].toString(),
+             id_bodega: data[i]['id_bodega'].toString(),
+             cantidad: data[i]['cantidad'].toString(),
+             tasa_dcto: data[i]['tasa_dcto'].toString(),
+             precio: data[i]['precio'].toString(),
+             valor_total: data[i]['valor_total'].toString(),
+             tasa_iva: data[i]['tasa_iva'].toString(),
+             valor_iva: data[i]['valor_iva'].toString(),
+             total: data[i]['total'].toString(),
+             ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
+             nit: data[i]['nit']
+         );
+         print("manda a inserta lit $kitdet");
+         await OperationDB.insertKitDet(kitdet);
+       }
+     }
+   } else {
+     _showError('Error en la sincronizacion de kitdet');
+   }
+   await getZonaSincronizacion();
+ }
   //visual
   @override
   Widget build(BuildContext context) {

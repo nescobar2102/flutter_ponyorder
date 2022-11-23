@@ -108,7 +108,7 @@ class  Items {
       'dcto_producto': dcto_producto,
       'dcto_maximo': dcto_maximo,
       'flag_facturable': flag_facturable ,
-         'flag_serial': flag_serial,
+      'flag_serial': flag_serial,
       'flag_kit': flag_kit,
       'id_clasificacion': id_clasificacion,
       'id_padre_clasificacion': id_padre_clasificacion,
@@ -116,7 +116,7 @@ class  Items {
       'exento_impuesto': exento_impuesto,
       'flag_existencia': flag_existencia,
       'flag_dcto_volumen': flag_dcto_volumen ,
-        'nit': nit,
+      'nit': nit,
       'saldo_inventario': saldo_inventario
     };
   }
@@ -130,5 +130,118 @@ class  Items {
       ' flag_serial:$flag_serial, flag_kit:$flag_kit, id_clasificacion:$id_clasificacion,  id_padre_clasificacion:$id_padre_clasificacion,'
     '  id_unidad_compra:$id_unidad_compra,   exento_impuesto:$exento_impuesto,  flag_existencia:$flag_existencia,  flag_dcto_volumen:$flag_dcto_volumen ,'
      '   nit:$nit,   saldo_inventario:$saldo_inventario  }';
+  }
+}
+
+
+class  Kit {
+
+  final String  id_kit;
+  final String  descripcion;
+  final String  precio_kit;
+  final String  precio_kit_iva;
+  final String  flag_vigencia;
+  final String  fecha_inicial;
+  final String  fecha_final;
+  final String  ultima_actualizacion;
+  final String  nit;
+
+  const Kit(
+      {
+        required this.id_kit,
+        required this.descripcion,
+        required this.precio_kit,
+        required this.precio_kit_iva,
+        required this.flag_vigencia,
+        required this.fecha_inicial,
+        required this.fecha_final,
+        required this.ultima_actualizacion,
+        required this. nit
+      });
+
+  // Convert a Dog into a Map. The keys must correspond to the names of the
+  // columns in the database.
+  Map<String, dynamic> toMap() {
+    return {
+      'id_kit': id_kit,
+      'descripcion': descripcion,
+      'precio_kit': precio_kit,
+      'precio_kit_iva': precio_kit_iva,
+      'flag_vigencia': flag_vigencia,
+      'fecha_inicial': fecha_inicial,
+      'fecha_final': fecha_final,
+      'ultima_actualizacion': ultima_actualizacion,
+      'nit': nit
+    };
+  }
+
+  // Implement toString to make it easier to see information about
+  // each dog when using the print statement.
+  @override
+  String toString() {
+    return ' Kit { id_kit: $id_kit, descripcion:$descripcion,  precio_kit:$precio_kit,  precio_kit_iva:$precio_kit_iva,'
+        ' flag_vigencia:$flag_vigencia, fecha_inicial:$fecha_inicial, fecha_final:$fecha_final, ultima_actualizacion:$ultima_actualizacion,'
+        ' nit:$nit }';
+  }
+}
+
+
+class  KitDet {
+
+  final String  id_kit;
+  final String  id_item;
+  final String  id_bodega;
+  final String  cantidad;
+  final String  tasa_dcto;
+  final String  precio;
+  final String  valor_total;
+  final String  tasa_iva;
+  final String valor_iva;
+  final String total;
+  final String ultima_actualizacion;
+  final String  nit;
+
+  const KitDet(
+      {
+        required this.id_kit,
+        required this.id_item,
+        required this.id_bodega,
+        required this.cantidad,
+        required this.tasa_dcto,
+        required this.precio,
+        required this.valor_total,
+        required this.tasa_iva,
+        required this.valor_iva,
+        required this.total,
+        required this.ultima_actualizacion,
+        required this. nit
+      });
+
+  // Convert a Dog into a Map. The keys must correspond to the names of the
+  // columns in the database.
+  Map<String, dynamic> toMap() {
+    return {
+      'id_kit': id_kit,
+      'id_item': id_item,
+      'id_bodega': id_bodega,
+      'cantidad': cantidad,
+      'tasa_dcto': tasa_dcto,
+      'precio': precio,
+      'valor_total': valor_total,
+      'tasa_iva': tasa_iva,
+      'valor_iva': valor_iva,
+      'total': total,
+      'ultima_actualizacion': ultima_actualizacion,
+      'nit': nit
+    };
+  }
+
+  // Implement toString to make it easier to see information about
+  // each dog when using the print statement.
+  @override
+  String toString() {
+    return ' KitDet { id_kit: $id_kit, id_item:$id_item,  id_bodega:$id_bodega,  cantidad:$cantidad,'
+        ' tasa_dcto:$tasa_dcto, precio:$precio, valor_total:$valor_total, tasa_iva:$tasa_iva,'
+        ' valor_iva:$valor_iva, total:$total, ultima_actualizacion:$ultima_actualizacion, nit:$nit }';
   }
 }

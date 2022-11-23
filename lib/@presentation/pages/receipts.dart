@@ -241,6 +241,18 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                             SizedBox(height: 10.0),
                             TextField(
                               controller: myControllerSearch,
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (String str){
+                                setState((){
+                                  searchRecibo();
+                                });
+                              },
+                              onChanged: (text) {
+                                if (text.isEmpty) {
+                                  searchRecibo();
+                                }
+                              },
+
                               decoration: InputDecoration(
                                 hintText:
                                     'Identificacion, nombre, o N° de recibo',

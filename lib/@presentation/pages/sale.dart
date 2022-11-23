@@ -63,7 +63,7 @@ class _SalePageState extends State<SalePage> {
   
   Future searchBalanceApi() async {
      _datBalance = await  OperationDB.getCBalance(_nit,id_vendedor,_fecha);      
-      if(_datBalance.isNotEmpty) {
+      if(_datBalance != null) {
         for (int i = 0; i < _datBalance.length; i++) {
            if(_datBalance[i]['tipo'] == 'MES'){
              total_cuota =  _datBalance[i]['total_cuota']!=null ?_datBalance[i]['total_cuota'] : 0;
@@ -92,7 +92,7 @@ class _SalePageState extends State<SalePage> {
 
   Future searchSaleApi() async {
       final allSale = await  OperationDB.getCuotaValue(_nit,id_vendedor);   
-        if(allSale.isNotEmpty) {
+        if(allSale!=null) {
         setState(() {
            _datSale = allSale;
           _count = _datSale.length; 

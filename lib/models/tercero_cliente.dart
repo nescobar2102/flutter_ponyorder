@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
   
 class TerceroCliente { 
     final String id_tercero ;
-    final int id_sucursal_tercero ;
+    final String id_sucursal_tercero ;
     final String id_forma_pago ;
     final String  id_precio_item ;
     final String id_vendedor ;

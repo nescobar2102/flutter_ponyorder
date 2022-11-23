@@ -1,8 +1,7 @@
 import 'package:pony_order/@presentation/components/btnForm.dart';
 import 'package:pony_order/@presentation/components/btnSmall.dart';
-import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
-import 'package:pony_order/@presentation/components/itemClient.dart';
-import 'package:pony_order/@presentation/components/itemProductOrder.dart';
+import 'package:badges/badges.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:select_form_field/select_form_field.dart';
 import 'dart:async';
@@ -15,6 +14,9 @@ import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../../db/operationDB.dart';
+import '../../httpConexion/validateConexion.dart';
+import '../../Common/Letras.dart';
+import '../../Common/Constant.dart';
 import '../../models/cliente.dart';
 import '../../models/pedido.dart';
 
@@ -24,6 +26,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  bool _isConnected = false;
   bool _clientShow = false;
   bool _productosShow = false;
   bool _productosShowCat = false;
@@ -39,8 +43,8 @@ class _HomePageState extends State<HomePage> {
   late int _checked = 0;
   bool isCheckedDV = false;
   bool isReadOnly = true;
-  bool isOnline = true;
-  String _url = 'http://178.62.80.103:5000';
+ 
+  bool isValidEmail = true;
 
   //data
   bool focus = false;
@@ -63,13 +67,14 @@ class _HomePageState extends State<HomePage> {
   String idPedidoUser = '';
   String idReciboUser = '';
   int _cantidadProducto = 1;
-
+  String fecha_pedido = '';
+  late String orden_compra = '';
+  late String id_direccion = '';
+  late String id_direccion_factura = '';
   //nuevo cliente
-  String _valueChanged = '';
-  String _valueToValidate = '';
+
   bool isBanco = false;
   bool isCheque = false;
-  String _valueSaved = '';
   String _value_itemsTypeDoc = '';
   String _value_itemsDepartamento = '';
   String _value_itemsClasification = '';
@@ -79,8 +84,6 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsBarrio = '';
   late Object _body;
   List<dynamic> _datClient = [];
-  List<dynamic> _datDetalleFactura = [];
-  late int _countFactura;
   List<dynamic> _datFactura = [];
 
   final myControllerNroDoc = TextEditingController();
@@ -104,7 +107,6 @@ class _HomePageState extends State<HomePage> {
   ];
   String _value_itemsFormaPago = '';
   late String _value_automatico = '';
-  late String _value_automaticoRecibo = '';
   String _value_DireccionFactura = '0';
   String _value_DireccionMercancia = '0';
 
@@ -115,7 +117,7 @@ class _HomePageState extends State<HomePage> {
   late int _countClasificacionNivel = 0;
   List<dynamic> _datClasificacionProductosNivel = [];
   late String idClasificacion = '01';
-  late String _id_padre = '-';
+  late String _id_padre = '';
   late String totalPedido = '0.00';
   late String totalSubTotal = '0.00';
   late String totalDescuento = '0.00';
@@ -127,10 +129,6 @@ class _HomePageState extends State<HomePage> {
   List<dynamic> _datProductos = [];
   List<Map<String, dynamic>> _cartProductos = [];
 
-  List<Map<String, dynamic>> _itemsListPrecio = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "01", "label": "precios distribuidor"},
-  ];
 
   //variables de pedidos
   bool selectItem = false;
@@ -140,19 +138,18 @@ class _HomePageState extends State<HomePage> {
   final myControllerCantidad = TextEditingController(text: "1");
   final myControllerOrdenCompra = TextEditingController();
   final myControllerBuscarProd = TextEditingController();
-  final myControllerBuscarCatego= TextEditingController();
-  late String _precioList = '';
-  late String _value_itemsListPrecio = '';
+  final myControllerBuscarCatego = TextEditingController();
+
+  late String _value_itemsListPrecio = '0';
   late String _itemSelect = '';
   late double _precio = 0;
   late double _descuento = 0;
   late double limiteCreditoTercero = 0;
-  late String listaPrecioTecero = '';
+  late String listaPrecioTercero = '';
 
   //nuevo recibo de caja
   final myControllerNroRecibo = TextEditingController();
   final myControllerNroCheque = TextEditingController();
-  String _value_itemsFormaPagoRecibo = '';
   String _value_itemsBanco = '';
   String _value_itemsTipoPago = '';
 
@@ -170,12 +167,15 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadDataUserLogin();
+     _loadDataUserLogin();
+
   }
 
   /// This implementation is just to simulate a load data behavior
   /// from a data base sqlite or from a API
-
+  Future sleep1() {
+    return new Future.delayed(const Duration(seconds: 5), () => "4");
+  }
   Future<Null> _submitDialog(BuildContext context) async {
     return await showDialog<Null>(
         context: context,
@@ -202,31 +202,39 @@ class _HomePageState extends State<HomePage> {
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
+
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
       idReciboUser = (prefs.getString('idReciboUser') ?? '');
       print("el usuario es $_user $_nit $idPedidoUser");
+    });
       if (_nit != '') {
         searchClient();
-        searchVendedor(_nit.trim(), _user.trim());
+        if (id_vendedor == '') {
+          searchVendedor(_nit.trim(), _user.trim());
+        }
       }
-    });
+
+     Navigator.pop(context);
   }
-  
+
   String id_sucursal_tercero_cliente = '';
   String id_forma_pago_cliente = '';
   String id_precio_item_cliente = '';
   String id_lista_precio_cliente = '';
   String id_suc_vendedor_cliente = '';
 
-
   Future<void> searchVendedor(_nit, user) async {
+    print("-----searchVendedor---");
     final vendedor = await OperationDB.getVendedor(_nit, _user);
+    print("resultado del vendedor $vendedor");
     if (vendedor != false) {
+
       setState(() {
         id_vendedor = vendedor[0]['id_tercero'];
-        id_sucursal_tercero_cliente = vendedor[0]['id_sucursal_tercero'].toString();
+        id_sucursal_tercero_cliente =
+            vendedor[0]['id_sucursal_tercero'].toString();
         id_forma_pago_cliente = vendedor[0]['id_forma_pago'];
         id_precio_item_cliente = vendedor[0]['id_precio_item'];
         id_lista_precio_cliente = vendedor[0]['id_lista_precio'];
@@ -246,26 +254,46 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> searchDigitoVerif() async {
-    if(myControllerNroDoc.text.isNotEmpty){
-    //_submitDialog(context);
-  final numero_id =  myControllerNroDoc.text;
-    print("busca el digito $numero_id");
-    final response = await http.get(Uri.parse("$_url/cliente_dv/$numero_id"));
-    var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      setState(() {
-       myControllerDv.text = data.toString();
-      });
-     } else {
-        _showBarMsg('$msg',false);
+    final val = await validateConexion.checkInternetConnection();
+    setState(() {
+      _isConnected = val!;
+        print("valida la conexion $_isConnected");
+    });
+    if (myControllerNroDoc.text.isNotEmpty && _isConnected) {  
+      final numeroId = myControllerNroDoc.text.trim();
+     
+      final response = await http.get(Uri.parse("${Constant.URL}/cliente_dv/$numeroId"));
+      var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var success = jsonResponse['success'];
+      var msg = jsonResponse['msg'];
+      if (response.statusCode == 200 && success) {
+        var data = jsonResponse['data'];
+        setState(() {
+          myControllerDv.text = data.toString();
+        });
+      } else {
+        _showBarMsg('$msg', false);
       }
     }
   }
 
+  late List<Map<String, dynamic>> itemsListPrecio = [];
+  Future  getListPrecio() async {
+    final data = await OperationDB.getListPrecio(_nit);
+    if (data != false) {
+      setState(() {
+        itemsListPrecio = (data as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+      });
+    } else {
+      setState(() {
+        itemsListPrecio = [];
+      });
+      _showBarMsg('Error', false);
+    }
+  }
 
   late List<Map<String, dynamic>> _itemsDepartamento = [];
   Future getItemDepartamento() async {
@@ -277,7 +305,7 @@ class _HomePageState extends State<HomePage> {
             .toList();
       });
     } else {
-      _showBarMsg('Error',false);
+      _showBarMsg('Error', false);
     }
   }
 
@@ -294,7 +322,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _itemsBarrio = [];
       });
-      _showBarMsg('Error',false);
+      _showBarMsg('Error', false);
     }
   }
 
@@ -308,13 +336,13 @@ class _HomePageState extends State<HomePage> {
             .toList();
       });
     } else {
-      _showBarMsg('Error',false);
+      _showBarMsg('Error', false);
     }
   }
 
   late List<Map<String, dynamic>> _itemsTypeDoc = [];
   Future getItemTypeIdentication() async {
-    final data = await OperationDB.getTipoIdentificacionList();
+    final data = await OperationDB.getTipoIdentificacionList(_nit);
     if (data != false) {
       setState(() {
         _itemsTypeDoc = (data as List)
@@ -322,7 +350,7 @@ class _HomePageState extends State<HomePage> {
             .toList();
       });
     } else {
-      _showBarMsg('Error',false);
+      _showBarMsg('Error', false);
     }
   }
 
@@ -336,7 +364,7 @@ class _HomePageState extends State<HomePage> {
             .toList();
       });
     } else {
-      _showBarMsg('No se obtuvo medio de contacto',false);
+      _showBarMsg('No se obtuvo medio de contacto', false);
     }
   }
 
@@ -350,7 +378,7 @@ class _HomePageState extends State<HomePage> {
             .toList();
       });
     } else {
-      _showBarMsg('No se obtuvo la zona',false);
+      _showBarMsg('No se obtuvo la zona', false);
     }
   }
 
@@ -367,7 +395,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _itemsCiudad = [];
       });
-      _showBarMsg('No se obtuvo la ciudad',false);
+      _showBarMsg('No se obtuvo la ciudad', false);
     }
   }
 
@@ -384,7 +412,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _itemsBanco = [];
       });
-      _showBarMsg('No se obtuvo el banco',false);
+      _showBarMsg('No se obtuvo el banco', false);
     }
   }
 
@@ -394,6 +422,7 @@ class _HomePageState extends State<HomePage> {
       new GlobalKey<ScaffoldState>();
 
   Future<void> searchClient() async {
+    _submitDialog(context);
     isCheckedDV = false;
     isReadOnly = false;
     myControllerNroDoc.clear();
@@ -418,8 +447,9 @@ class _HomePageState extends State<HomePage> {
         _formNewClientShowDescuento = false;
         _formNewClientShow = false;
       });
+      await ObtieneCarrito(false);
     } else {
-      _showBarMsg('No existen clientes',false);
+      _showBarMsg('No existen clientes', false);
     }
 
     setState(() {
@@ -429,6 +459,7 @@ class _HomePageState extends State<HomePage> {
       _formNewClientShowDescuento = false;
       _formNewClientShow = false;
     });
+
   }
 
   Future<void> saldoCartera(bool pedido) async {
@@ -438,8 +469,9 @@ class _HomePageState extends State<HomePage> {
     if (data != false) {
       setState(() {
         _saldoCartera =
-            data[0]['debito'] != null ? data[0]['debito'].toString() : '0';
+            data[0]['DEBITO'] != null ? data[0]['DEBITO'].toString() : '0';
       });
+      print("saldo cartera $_saldoCartera");
       var data1 = await OperationDB.getFormPago(id_tercero, _nit);
       if (data1 != false) {
         setState(() {
@@ -456,7 +488,7 @@ class _HomePageState extends State<HomePage> {
       }
     } else {
       Navigator.pop(context);
-      _showBarMsg('No se obtuvo  el saldo',false);
+      _showBarMsg('No se obtuvo  el saldo', false);
     }
   }
 
@@ -487,7 +519,7 @@ class _HomePageState extends State<HomePage> {
         id_pais: "57",
         id_depto: _value_itemsDepartamento,
         id_ciudad: _value_itemsCiudad,
-        id_barrio: _value_itemsBarrio,
+        id_barrio: _value_itemsBarrio !='' ? _value_itemsBarrio : '0',
         telefono: myControllerTelefono.text.trim(),
         id_actividad: _value_itemsClasification,
         fecha_creacion:
@@ -497,10 +529,13 @@ class _HomePageState extends State<HomePage> {
             : myControllerPrimerNombre.text.trim() +
                 ' ' +
                 myControllerPrimerApellido.text.trim(),
-        primer_apellido: isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
-        segundo_apellido: isCheckedDV ? myControllerSegundoApellido.text.trim() : '',
+        primer_apellido:
+            isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
+        segundo_apellido:
+            isCheckedDV ? myControllerSegundoApellido.text.trim() : '',
         primer_nombre: isCheckedDV ? myControllerPrimerNombre.text.trim() : '',
-        segundo_nombre: isCheckedDV ? myControllerSegundoNombre.text.trim() : '',
+        segundo_nombre:
+            isCheckedDV ? myControllerSegundoNombre.text.trim() : '',
         e_mail: myControllerEmail.text.trim(),
         id_forma_pago: id_forma_pago_cliente,
         id_precio_item: id_precio_item_cliente,
@@ -511,15 +546,20 @@ class _HomePageState extends State<HomePage> {
         id_suc_vendedor: id_suc_vendedor_cliente,
         nit: _nit,
         id_tipo_empresa: '',
-        flag_persona_nat: isCheckedDV ? 'SI' : 'NO');
+        flag_persona_nat: isCheckedDV ? 'SI' : 'NO',
+        usuario: _user);
     final insert = await OperationDB.insertCliente(nuevo_cliente);
     if (insert) {
-      _showBarMsg('Creación exitosa del cliente',true);
-      await _saveClient_api();
-     /* _search = '@';
-      searchClient();*/
+      _showBarMsg('Creación exitosa del cliente', true);
+         final val = await validateConexion.checkInternetConnection();
+          setState(() {
+          _isConnected = val!;
+        });
+
+      _isConnected ?  await _saveClient_api() : null;
+
     } else {
-      _showBarMsg('Error en la creción del cliente',false);
+      _showBarMsg('Error, identificación ya existe', false);
       Navigator.pushNamed(context, 'home');
     }
   }
@@ -527,10 +567,10 @@ class _HomePageState extends State<HomePage> {
   Future<void> _saveClient_api() async {
     final tercero_update = myControllerNroDoc.text;
     print("Save clientapi ");
-    final response = await http.post(Uri.parse("$_url/nuevo_cliente_app"),
+    final response = await http.post(Uri.parse("${Constant.URL}/nuevo_cliente_app"),
         body: ({
           "id_tercero": tercero_update.trim(),
-          "id_sucursal_tercero":id_sucursal_tercero_cliente,
+          "id_sucursal_tercero": id_sucursal_tercero_cliente,
           "id_tipo_identificacion": _value_itemsTypeDoc,
           "dv": myControllerDv.text.trim(),
           "nombre": isCheckedDV
@@ -540,7 +580,7 @@ class _HomePageState extends State<HomePage> {
           "id_pais": "57",
           "id_depto": _value_itemsDepartamento,
           "id_ciudad": _value_itemsCiudad,
-          "id_barrio": _value_itemsBarrio,
+          "id_barrio": _value_itemsBarrio !='' ? _value_itemsBarrio : '0',
           "telefono": myControllerTelefono.text.trim(),
           "id_actividad": _value_itemsClasification,
           "nombre_sucursal": !isCheckedDV
@@ -548,11 +588,14 @@ class _HomePageState extends State<HomePage> {
               : myControllerPrimerNombre.text.trim() +
                   ' ' +
                   myControllerPrimerApellido.text.trim(),
-          "primer_apellido": isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
+          "primer_apellido":
+              isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
           "segundo_apellido":
               isCheckedDV ? myControllerSegundoApellido.text.trim() : '',
-          "primer_nombre": isCheckedDV ? myControllerPrimerNombre.text.trim() : '',
-          "segundo_nombre": isCheckedDV ? myControllerSegundoNombre.text.trim() : '',
+          "primer_nombre":
+              isCheckedDV ? myControllerPrimerNombre.text.trim() : '',
+          "segundo_nombre":
+              isCheckedDV ? myControllerSegundoNombre.text.trim() : '',
           "e_mail": myControllerEmail.text.trim(),
           "telefono_celular": myControllerTelefono.text.trim(),
           "id_forma_pago": id_forma_pago_cliente,
@@ -564,25 +607,26 @@ class _HomePageState extends State<HomePage> {
           "id_direccion": "1",
           "tipo_direccion": "Factura",
           "id_suc_vendedor": id_suc_vendedor_cliente,
-          'nit': _nit
+          'nit': _nit,
+          'flag_persona_nat': isCheckedDV ? 'SI' : 'NO',
+          'usuario': _user
         }));
 
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
-    print("ssuccesssuccesssuccess $success $response");
     if (response.statusCode != 201 && !success) {
-      _showBarMsg('No se sincronizó el cliente',false); ;
+      _showBarMsg('No se sincronizó el cliente', false);
     } else {
       print("se actualiza el status del cliente");
       await OperationDB.updateCliente(tercero_update, _nit);
     }
-     Navigator.pushNamed(context, 'home');
+    Navigator.pushNamed(context, 'home');
   }
 
   Future<void> getConsecutivo(bool pedido) async {
     print(
-        "--------------getConsecutivo getConsecutivo $idReciboUser $id_tercero $nombre_tercero $id_empresa");
+        "--------------getConsecutivo getConsecutivo $idPedidoUser $idReciboUser $id_tercero $nombre_tercero $id_empresa");
     var idTipoDoc = pedido ? idPedidoUser : idReciboUser;
     final allConse =
         await OperationDB.getConsecutivoTipoDoc(_nit, idTipoDoc, id_empresa);
@@ -590,7 +634,7 @@ class _HomePageState extends State<HomePage> {
       _value_automatico = allConse[0]['consecutivo'].toString();
       if (_value_automatico != '') {
         print("se busca el carrito en el home");
-        await ObtieneCarrito(false);
+       await ObtieneCarrito(false);
         saldoCartera(pedido);
       } else {
         setState(() {
@@ -598,26 +642,39 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } else {
-      _showBarMsg('No se obtuvo consecutivo',false);
+      _showBarMsg('No se obtuvo consecutivo', false);
     }
   }
 
   Future<void> ObtieneCarrito(bool update) async {
+    print("---------------ObtieneCarrito----------");
     final data = await OperationDB.getCarrito(
-        _nit, id_tercero, _value_automatico, false);
+        _nit, id_tercero, _value_automatico);
     if (data != false) {
       _cartProductos =
           (data as List).map((dynamic e) => e as Map<String, dynamic>).toList();
-      print("tiene articulos en el carrito $_cartProductos");
-    } else {
-    //  _cartProductos = [];
+
+  if(_value_automatico== '' && id_tercero == '' && id_empresa == '') {
+        nombre_tercero = _cartProductos[0]['nombre_sucursal'];
+        _value_automatico = _cartProductos[0]['numero'].toString();
+        id_empresa = _cartProductos[0]['id_empresa'];
+        id_tercero = _cartProductos[0]['id_tercero'];
+        orden_compra = _cartProductos[0]['orden_compra'];
+        idPedidoUser = _cartProductos[0]['id_tipo_doc'];
+        fecha_pedido = _cartProductos[0]['fecha'];
+        _value_itemsFormaPago = _cartProductos[0]['id_forma_pago'];
+        listaPrecioTercero = _cartProductos[0]['id_precio_item'];
+        id_direccion = _cartProductos[0]['id_direccion'];
+        id_direccion_factura = _cartProductos[0]['id_direccion_factura'];
+      }
     }
     totalPedido = await valorTotal();
-    numeroAletra(totalPedido.toString());
+     // await numeroAletra(totalPedido.toString());
     if (update) {
       await OperationDB.updateCarritoG(
           _value_automatico, totalDescuento, totalPedido, _letras);
-    }
+
+    }//
   }
 
   late List<Map<String, dynamic>> _direccionClient = [];
@@ -637,16 +694,17 @@ class _HomePageState extends State<HomePage> {
       });
     } else {
       Navigator.pop(context);
-      _showBarMsg('El cliente no registra dirección',false);
+      _showBarMsg('El cliente no registra dirección', false);
     }
   }
 
   Future<void> searchClasificacionProductos() async {
+    _search = myControllerBuscarCatego.text.isNotEmpty
+        ? myControllerBuscarCatego.text
+        : '@';
 
-    _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text :'@';
-
-    var data =
-        await OperationDB.getClasificacionProductos(_nit, '1', '-', true,_search);
+    var data = await OperationDB.getClasificacionProductos(
+        _nit, '1', '', true, _search);
     if (data != false) {
       _datClasificacionProductos = data;
       _countClasificacion = data.length;
@@ -659,19 +717,19 @@ class _HomePageState extends State<HomePage> {
           _productosShow
               ? _productos(context, _datClasificacionProductos)
               : Container();
+            getListPrecio();
         }
       });
     } else {
-      _showBarMsg('ERROR SCP',false);
+      _showBarMsg('ERROR SCP', false);
     }
   }
 
   Future<void> selectProducto() async {
     String _search = '@';
-  //  _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text : _search;
-     print("-************selectProducto*********** $_search");
-    var data =
-        await OperationDB.getClasificacionProductos(_nit, '1', '-', true,_search);
+    print("-************selectProducto*********** $_search");
+    var data = await OperationDB.getClasificacionProductos(
+        _nit, '1', '', true, _search);
     if (data != false) {
       _datClasificacionProductos = data;
       _countClasificacion = data.length;
@@ -679,7 +737,7 @@ class _HomePageState extends State<HomePage> {
         if (_countClasificacion > 0) {
           idClasificacion =
               '${_datClasificacionProductos[0]['id_clasificacion']}';
-          if(_search =='@') {
+          if (_search == '@') {
             _formOrderShow = false;
             _productosShow = true;
           }
@@ -689,33 +747,35 @@ class _HomePageState extends State<HomePage> {
         }
       });
     } else {
-      _showBarMsg('ERROR SP1',false);
+      _showBarMsg('ERROR SP1', false);
     }
   }
 
   Future<void> selectProductoNivel() async {
-
-    var data =
-        await OperationDB.getClasificacionProductos(_nit, '2', _id_padre, true,'@');
+    var data = await OperationDB.getClasificacionProductos(
+        _nit, '2', _id_padre, true, '@');
     if (data != false) {
       _datClasificacionProductosNivel = data;
       _countClasificacionNivel = data.length;
       setState(() {
+       /* idClasificacion =
+            '${_datClasificacionProductosNivel[0]['id_clasificacion']}';*/
         idClasificacion =
-            '${_datClasificacionProductosNivel[0]['id_clasificacion']}';
+        '${_datClasificacionProductosNivel[0]['id_padre']}';
         searchProductosPedido();
       });
     } else {
-      _showBarMsg('ERROR SPN2',false);
+      _showBarMsg('ERROR SPN2', false);
     }
   }
 
   Future<void> searchProductosPedido() async {
-
-    final  _search =  myControllerBuscarProd.text.isNotEmpty ? myControllerBuscarProd.text : '@';
+    final _search = myControllerBuscarProd.text.isNotEmpty
+        ? myControllerBuscarProd.text
+        : '@';
 
     print("-------*-*--------searchProductosPedido *---------**-*-- $_search");
-    var data = await OperationDB.getItems(_nit, idClasificacion,_search);
+    var data = await OperationDB.getItems(_nit, idClasificacion, _search,listaPrecioTercero);
     if (data != false) {
       setState(() {
         _datProductos = data;
@@ -728,7 +788,7 @@ class _HomePageState extends State<HomePage> {
         _datProductos = [];
         _countProductos = 0;
       });
-      _showBarMsg('No tiene productos',false);
+      _showBarMsg('No tiene productos', false);
     }
   }
 
@@ -738,17 +798,20 @@ class _HomePageState extends State<HomePage> {
     if (data != false) {
       setState(() {
         _precio = double.parse(data[0]['precio']);
-        _itemSelect = data[0]['id_item'];
-        _descuento = double.parse(data[0]['descuento_maximo']);
+       _descuento = data[0]['descuento_maximo'] != null ? double.parse(data[0]['descuento_maximo']):0;
       });
     } else {
-      _showBarMsg('No se obtuvo el precio de este producto',false);
+      setState(() {
+        _precio = 0;
+        _descuento = 0;
+      });
+      _showBarMsg('No se obtuvo el precio de este producto', false);
     }
   }
 
   // Perform login
   void validateAndSubmit() {
-    _search = myControllerSearch.text;
+    _search = myControllerSearch.text.trim();
     setState(() {
       searchClient();
     });
@@ -773,7 +836,7 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } else {
-      _showBarMsg('No tiene pedidos este cliente',false);
+      _showBarMsg('No tiene pedidos este cliente', false);
     }
   }
 
@@ -796,7 +859,7 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } else {
-      _showBarMsg('No tiene recibos este cliente',false);
+      _showBarMsg('No tiene recibos este cliente', false);
     }
   }
 
@@ -828,12 +891,77 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void validateEmail() {
+    String email = myControllerEmail.text;
+    isValidEmail = EmailValidator.validate(email);
+  }
+
+    bool  validateFormulario() {
+    bool result = false;
+    result =  _value_itemsTypeDoc!='' ? true : false;
+    print("result _value_itemsTypeDoc $result");
+    if(result){
+      result =  myControllerNroDoc.text.trim() !='' ? true : false;
+    }
+    print("resultmyControllerNroDoc $result");
+    if(result && isCheckedDV){
+      result =  myControllerPrimerNombre.text.trim() !='' ? true : false;
+    }
+    print(" result myControllerPrimerNombre $result");
+    if(result && isCheckedDV){
+      result =  myControllerPrimerApellido.text.trim() !='' ? true : false;
+    }
+    print("result myControllerPrimerApellido $result");
+    if(result && !isCheckedDV){
+    result =  myControllerRazonSocial.text.trim() !=''  ? true : false;
+    }
+    print("resul myControllerRazonSocial $result");
+
+    if(result){
+      result =  myControllerDireccion.text.trim() !='' ? true : false;
+    }
+    print("result myControllerDireccion $result");
+    if(result){
+      result =  myControllerTelefono.text.trim() !='' ? true : false;
+    }
+    print("resutl myControllerTelefono $result");
+    if(result && !isValidEmail){
+      result = false;
+    }
+    print("resutl isValidEmail $result");
+    if(result){
+      result =  _value_itemsClasification.trim() !='' ? true : false;
+    }
+    print("resutl _value_itemsClasification $result");
+    if(result){
+      result =  _value_itemsMedioContacto.trim() !='' ? true : false;
+    }
+    print("resutl _value_itemsMedioContacto $result");
+    if(result){
+      result =  _value_itemsZona.trim() !='' ? true : false;
+    }
+    print("resutl _value_itemsZona $result");
+    if(result){
+      result =  _value_itemsDepartamento.trim() !='' ? true : false;
+    }
+    print("resutl _value_itemsDepartamento $result");
+    if(result){
+      result =  _value_itemsCiudad.trim() !='' ? true : false;
+    }
+    print("resutl _value_itemsCiudad $result");
+
+    print("resultado de validacion de formaulario $result");
+    return result;
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: 
+       AppBar(
           toolbarHeight: 60,
           automaticallyImplyLeading: false,
           leadingWidth: 40.0,
@@ -854,21 +982,28 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          actions: [
-            GestureDetector(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 15.0),
-                  child: Icon(
-                    Icons.shopping_cart_outlined,
-                    color: Color(0xff0090ce),
-                    size: 30,
+           actions: [
+              Badge(
+                badgeContent: Text( (_cartProductos.length).toString() ,
+                  style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                ),
-                onTap: () => {
-                      _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                          ? Navigator.pop(context)
-                          : _drawerscaffoldkey.currentState!.openEndDrawer()
-                    })
+                  child: GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 15.0),
+                        child: Icon(
+                          Icons.shopping_cart_outlined,
+                          color: Color(0xff0090ce),
+                          size: 30,
+                        ),
+                      ),
+                      onTap: () => {
+                        _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                            ? Navigator.pop(context)
+                            : _drawerscaffoldkey.currentState!.openEndDrawer()
+                      }),
+                position: const BadgePosition(start: -18, bottom: 30),
+              ),
           ],
           title: Text(
             'Clientes',
@@ -890,7 +1025,6 @@ class _HomePageState extends State<HomePage> {
           key: _drawerscaffoldkey,
           drawer: _menu(context),
           endDrawer: _shoppingCart(context),
-
           body: CustomScrollView(
             slivers: [
               SliverList(
@@ -912,11 +1046,17 @@ class _HomePageState extends State<HomePage> {
                               : !_productosShow && !_productosShowCat
                                   ? TextField(
                                       controller: myControllerSearch,
-                                        onChanged: (text) {
-                                          if(text.isEmpty){
-                                            validateAndSubmit();
-                                          }
-                                        },
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (String str){
+                                        setState((){
+                                          validateAndSubmit();
+                                        });
+                                      },
+                                      onChanged: (text) {
+                                        if (text.isEmpty) {
+                                          validateAndSubmit();
+                                        }
+                                      },
                                       decoration: InputDecoration(
                                         hintText: !_productosShow
                                             ? 'Buscar cliente'
@@ -1023,8 +1163,6 @@ class _HomePageState extends State<HomePage> {
       id_tercero = '${data['id_tercero']}';
       nombre_tercero =
           '${data['nombre_completo'].toString()}  ${data['nombre_sucursal'].toString()} ';
-      //forma_pago_tercero = '${data['forma_pago'].toString()}';
-      //   _value_itemsFormaPago = data['id_forma_pago'];
       id_empresa = '${data['id_empresa']}';
       id_suc_vendedor = '${data['id_suc_vendedor']}';
       id_sucursal_tercero = '${data['id_sucursal_tercero']}';
@@ -1047,13 +1185,8 @@ class _HomePageState extends State<HomePage> {
         SizedBox(
           height: 535.0,
           child: ListView.builder(
-            itemCount: _count ,
-              itemBuilder: (context, i) =>_ItemClient('$_count', _datClient[i]),
-            /*children: [
-              for (var i = 0; i < _count; i++) ...[
-                _ItemClient('$_count', _datClient[i]),
-              ],
-            ],*/
+            itemCount: _count,
+            itemBuilder: (context, i) => _ItemClient('$_count', _datClient[i]),
           ),
         ),
         SizedBox(height: 10.0),
@@ -1066,9 +1199,7 @@ class _HomePageState extends State<HomePage> {
                     getItemDepartamento();
                     getItemClasificacion();
                     getItemMedioContacto();
-                    getItemZona();
-                    //getItemCiudad('76');
-                    // getItemBarrio();
+                    getItemZona();                 
                     _clientShow = false;
                     _formShow = true;
                   })
@@ -1078,7 +1209,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget InputCallback(BuildContext context,hintText,iconCallback,callback,controller) {
+  Widget InputCallback(
+      BuildContext context, hintText, iconCallback, callback, controller) {
     final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
@@ -1089,12 +1221,12 @@ class _HomePageState extends State<HomePage> {
           });
         },
         child: TextField(
-           controller: controller,
-           onChanged: (text) {
-             if(text.isEmpty){
-               callback();
-             }
-           },
+          controller: controller,
+          onChanged: (text) {
+            if (text.isEmpty) {
+              callback();
+            }
+          },
           decoration: InputDecoration(
             hintText: hintText,
             fillColor: Colors.white,
@@ -1112,14 +1244,15 @@ class _HomePageState extends State<HomePage> {
               borderSide: BorderSide(color: Color(0xffc7c7c7), width: 1.2),
             ),
             suffixIcon: GestureDetector(
-                onTap: () {
-                  if( controller.text.isNotEmpty){
-                    callback();
-                  }
-                },
+              onTap: () {
+                if (controller.text.isNotEmpty) {
+                  callback();
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.only(left: 17.0, right: 12.0),
-                child: Icon( iconCallback,
+                child: Icon(
+                  iconCallback,
                   color: focus ? Color(0xff0f538d) : Color(0xffc7c7c7),
                 ),
               ),
@@ -1136,6 +1269,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _productos(BuildContext context, data) {
     //listado de clientes en el home
+    final nombre = nombre_tercero.toUpperCase();
     final _size = MediaQuery.of(context).size;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1143,15 +1277,15 @@ class _HomePageState extends State<HomePage> {
         Text(
           'Nuevo Pedido',
           style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff06538D)),
+              color: Color(0xff0f538d),
+              fontSize: 24.0,
+              fontWeight: FontWeight.w700),
         ),
         SizedBox(
           height: 15.0,
         ),
         Text(
-          '$nombre_tercero',
+          '$nombre',
           style: TextStyle(
               fontSize: 20.0,
               fontWeight: FontWeight.bold,
@@ -1160,11 +1294,8 @@ class _HomePageState extends State<HomePage> {
         SizedBox(
           height: 10.0,
         ),
-        InputCallback(context,
-             'Buscar Categoria',
-             Icons.search,
-             searchClasificacionProductos,
-            myControllerBuscarCatego),
+        InputCallback(context, 'Buscar Categoria', Icons.search,
+            searchClasificacionProductos, myControllerBuscarCatego),
         SizedBox(
           height: 20.0,
         ),
@@ -1245,7 +1376,7 @@ class _HomePageState extends State<HomePage> {
                   height: 41.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5.0),
-                      color: _cartProductos.length > 0
+                      color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
                           ? Color(0xff0894FD)
                           : Color.fromARGB(255, 146, 144, 144)),
                   child: Material(
@@ -1262,7 +1393,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       onTap: () {
-                        _cartProductos.length > 0
+                        (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
                             ? createPedido()
                             : modalSinPedido();
                       },
@@ -1286,320 +1417,317 @@ class _HomePageState extends State<HomePage> {
           color: Colors.white,
         ),
         padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
-        child: ListView(
-          children: [
-            _cartProductos.length > 0 ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-               children:  [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: ListView(children: [
+          _cartProductos.length > 0
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Carrito de compras',
+                          style: TextStyle(
+                              color: Color(0xff0f538d),
+                              fontSize: 24.0,
+                              fontWeight: FontWeight.w700),
+                        ),
+                        GestureDetector(
+                        child:Icon(
+                          Icons.disabled_by_default_outlined,
+                          color: Color(0xff0f538d),
+                          size: 30.0,
+                        ),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.0),
+                    Text('$nombre',
+                        style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w600)),
+                    SizedBox(
+                      height: 12.0,
+                    ),
                     Text(
-                      'Carrito de compras',
+                      'Búsqueda de productos en el carrito',
                       style: TextStyle(
                           color: Color(0xff0f538d),
-                          fontSize: 24.0,
-                          fontWeight: FontWeight.w700),
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w500),
                     ),
-                    Icon(
-                      Icons.disabled_by_default_outlined,
-                      color: Color(0xff0f538d),
-                      size: 30.0,
-                    )
-                  ],
-                ),
-                SizedBox(height: 12.0),
-                Text('$nombre',
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w600)),
-                SizedBox(
-                  height: 12.0,
-                ),
-               Text(
-                  'Búsqueda de productos en el carrito',
-                  style: TextStyle(
-                      color: Color(0xff0f538d),
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w500),
-                ) ,
-                SizedBox(
-                  height: 10.0,
-                ),
-                InputCallback(context,
-                   'Buscar producto',
-                   Icons.search,
-                  _searchProducto,
-                  myControllerBuscarProd),
-                SizedBox(height: 15.0),
-                Container(
-                  width: 160.0,
-                  height: 45.0,
-                  decoration: BoxDecoration(
-                      color: Color(0xff06538D),
-                      borderRadius: BorderRadius.circular(5.0)),
-                  child: Material(
-                    borderRadius: BorderRadius.circular(5.0),
-                    color: Color(0xff06538D),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      onTap: () => {
-                        setState(() {
-                          Navigator.pop(context);
-                          _productosShowCat = false;
-                          _clientShow = false;
-                          searchClasificacionProductos();
-                        }),
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: <Widget>[
-                            Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 5.0),
-                            Text(
-                              'Categorias',
-                              style: TextStyle(
+                    SizedBox(
+                      height: 10.0,
+                    ),
+                    InputCallback(context, 'Buscar producto', Icons.search,
+                        _searchProducto, myControllerBuscarProd),
+                    SizedBox(height: 15.0),
+                    Container(
+                      width: 160.0,
+                      height: 45.0,
+                      decoration: BoxDecoration(
+                          color: Color(0xff06538D),
+                          borderRadius: BorderRadius.circular(5.0)),
+                      child: Material(
+                        borderRadius: BorderRadius.circular(5.0),
+                        color: Color(0xff06538D),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(5.0),
+                          onTap: () => {
+                            setState(() {
+                              Navigator.pop(context);
+                              _productosShowCat = false;
+                              _clientShow = false;
+                              _formShow = false;
+                              searchClasificacionProductos();
+                            }),
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: <Widget>[
+                                Icon(
+                                  Icons.arrow_back,
                                   color: Colors.white,
-                                  fontSize: 18.0,
-                                  fontWeight: FontWeight.w700),
-                            )
-                          ],
+                                ),
+                                SizedBox(width: 5.0),
+                                Text(
+                                  'Categorias',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18.0,
+                                      fontWeight: FontWeight.w700),
+                                )
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                SizedBox(
-                  height: 15.0,
-                ),
-              SizedBox(
-                  height: 310.0,
-                  child: ListView.builder(
-                      itemCount: _cartProductos.length,
-                      itemBuilder: (context, i) =>   _ItemCategoryOrderCart(_cartProductos[i], i),
+                    SizedBox(
+                      height: 15.0,
                     ),
-
-                  /*  children: [
-                      for (var i = 0; i < data.length; i++) ...[
-                        _ItemCategoryOrderCart(data[i], i),
-                        SizedBox(height: 10.0),
-                     ],
-                    ],*/
-                ) ,
-                SizedBox(height: 15.0),
-                TextField(
-                    controller: myControllerObservacion,
-                    decoration: InputDecoration(
-                      disabledBorder: UnderlineInputBorder(
-                          borderSide:
-                              BorderSide(width: 0.8, color: Color(0xff707070))),
-                      labelText: 'Observaciones',
-                      hintText: 'Ingrese observacion',
-                    )),
-                SizedBox(height: 30.0),
-                Container(
-                  width: _size.width,
-                  height: 40.0,
-                  padding: EdgeInsets.symmetric(horizontal: 15.0),
-                  decoration: BoxDecoration(
-                      color: Color(0xffE8E8E8),
-                      borderRadius: BorderRadius.circular(5.0)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Total',
-                          style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff06538D))),
-                      Text(
-                        '\$ ' +
-                            expresionRegular(
-                                double.parse(totalPedido.toString())),
-                        style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),
-                      )
-                    ],
-                  ),
-                ),
-                SizedBox(height: 15.0),
-                Row(
-                  children: [
+                    SizedBox(
+                      height: 310.0,
+                      child: ListView.builder(
+                        itemCount: _cartProductos.length,
+                        itemBuilder: (context, i) =>
+                            _ItemCategoryOrderCart(_cartProductos[i], i),
+                      ),
+                    ),
+                    SizedBox(height: 15.0),
+                    TextField(
+                        controller: myControllerObservacion,
+                        decoration: InputDecoration(
+                          disabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(
+                                  width: 0.8, color: Color(0xff707070))),
+                          labelText: 'Observaciones',
+                          hintText: 'Ingrese observacion',
+                        )),
+                    SizedBox(height: 30.0),
                     Container(
-                        width: _size.width * 0.5 - 30,
-                        child: Container(
-                          width: _size.width,
-                          height: 41.0,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5.0),
-                              color: Color(0xffCB1B1B)),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(5.0),
-                              child: Center(
-                                child: Text(
-                                  'Vaciar carrito',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700),
+                      width: _size.width,
+                      height: 40.0,
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      decoration: BoxDecoration(
+                          color: Color(0xffE8E8E8),
+                          borderRadius: BorderRadius.circular(5.0)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Text('Total',
+                              style: TextStyle(
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xff06538D))),
+                          Text(
+                            '\$ ' +
+                                expresionRegular(
+                                    double.parse(totalPedido.toString())),
+                            style: TextStyle(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xff06538D)),
+                          )
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 15.0),
+                    Row(
+                      children: [
+                        Container(
+                            width: _size.width * 0.5 - 30,
+                            child: Container(
+                              width: _size.width,
+                              height: 41.0,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  color: Color(0xffCB1B1B)),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Vaciar carrito',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                  onTap: () => {
+                                    setState(() {
+                                      print("vaciar carrito");
+                                      removeCarrito();
+
+                                    }),
+                                  },
                                 ),
                               ),
-                              onTap: () => {
-                                setState(() {
-                                  print("vaciar carrito");
-                                  removeCarrito();
-
-                                  Navigator.of(context)
-                                      .pop(); // close the drawer
-                                  Navigator.pushNamed(context, 'home');
-                                }),
-                              },
-                            ),
-                          ),
-                        )),
-                    SizedBox(width: 10.0),
-                    Container(
-                        width: _size.width * 0.5 - 30,
-                        child: Container(
-                          width: _size.width,
-                          height: 41.0,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5.0),
-                              color: _cartProductos.length > 0
-                                  ? Color(0xff0894FD)
-                                  : Color.fromARGB(255, 146, 144, 144)),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(5.0),
-                              child: Center(
-                                child: Text(
-                                  'Guardar',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700),
+                            )),
+                        SizedBox(width: 10.0),
+                        Container(
+                            width: _size.width * 0.5 - 30,
+                            child: Container(
+                              width: _size.width,
+                              height: 41.0,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                      ? Color(0xff0894FD)
+                                      : Color.fromARGB(255, 146, 144, 144)),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Guardar',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    print("guardar pedido desde carrito");
+                                    (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                        ? createPedido()
+                                        : modalSinPedido();
+                                  },
                                 ),
                               ),
-                              onTap: () {
-                                print("guardar pedido desde carrito");
-                                _cartProductos.length > 0
-                                    ? createPedido()
-                                    : modalSinPedido();
-                              },
-                            ),
-                          ),
-                        )),
+                            )),
+                      ],
+                    )
                   ],
                 )
-              ],
-            ):
-
-        Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Carrito de compras',
-                style: TextStyle(
-                    color: Color(0xff0f538d),
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.w700),
-              ),
-              Icon(
-                Icons.disabled_by_default_outlined,
-                color: Color(0xff0f538d),
-                size: 30.0,
-              )
-            ],
-          ),
-          SizedBox(height: 60.0),
-         SizedBox(width: 20.0),
-          SizedBox(
-            height: 400.0,
-            child:
-            new Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                new Card(
-                  elevation: 10,
-                  child: new Column(
-                    children: <Widget>[
-                      new Row(
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Carrito de compras',
+                          style: TextStyle(
+                              color: Color(0xff0f538d),
+                              fontSize: 24.0,
+                              fontWeight: FontWeight.w700),
+                        ),
+                        GestureDetector(
+                          child:Icon(
+                            Icons.disabled_by_default_outlined,
+                            color: Color(0xff0f538d),
+                            size: 30.0,
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 60.0),
+                    SizedBox(width: 20.0),
+                    SizedBox(
+                      height: 400.0,
+                      child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          SizedBox(width: 50.0),
-                          new Container(
-                            child:  Image(
-                              height: 250.0,
-                              width: 250.0,
-                              image: AssetImage('assets/images/carrito_vacio.png'),
+                          new Card(
+                            elevation: 10,
+                            child: new Column(
+                              children: <Widget>[
+                                new Row(
+                                  children: <Widget>[
+                                    SizedBox(width: 50.0),
+                                    new Container(
+                                      child: Image(
+                                        height: 250.0,
+                                        width: 250.0,
+                                        image: AssetImage(
+                                            'assets/images/carrito_vacio.png'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 20.0),
+                                new Row(
+                                  children: [
+                                    SizedBox(width: 88.0),
+                                    Container(
+                                        width: _size.width * 0.5 - 30,
+                                        child: Container(
+                                          width: _size.width,
+                                          height: 41.0,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(5.0),
+                                              color: Color(0xff0894FD)),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              borderRadius:
+                                                  BorderRadius.circular(5.0),
+                                              child: Center(
+                                                child: Text(
+                                                  'Cerrar',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.w700),
+                                                ),
+                                              ),
+                                              onTap: () {
+                                                Navigator.pop(context);
+                                               // Navigator.pushNamed(context, 'home');
+                                              },
+                                            ),
+                                          ),
+                                        )),
+                                  ],
+                                ),
+                                SizedBox(height: 20.0),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20.0),
-                      new Row(
-                    children: [
-                          SizedBox(width: 88.0),
-                          Container(
-                              width: _size.width * 0.5 - 30,
-                              child: Container(
-                                width: _size.width,
-                                height: 41.0,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                    color:
-                                         Color(0xff0894FD)
-                                         ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                    child: Center(
-                                      child: Text(
-                                        'Salir',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushNamed(context, 'home');
-                                    },
-                                  ),
-                                ),
-                              )),
-                        ],
-                      ),  SizedBox(height: 20.0),
-
-                    ],
-                  ),
+                    ),
+                    SizedBox(width: 20.0),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          SizedBox(width: 20.0),
-        ],
-        ),
-        ]
-        ),
-        ),
+        ]),
+      ),
     );
   }
 
@@ -1643,12 +1771,8 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                   height: 10.0,
                 ),
-                InputCallback(context,
-                  'Buscar producto',
-                   Icons.search,
-                   searchProductosPedido,
-                  myControllerBuscarProd
-                    ),
+                InputCallback(context, 'Buscar producto', Icons.search,
+                    searchProductosPedido, myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -1780,7 +1904,7 @@ class _HomePageState extends State<HomePage> {
                           height: 41.0,
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(5.0),
-                              color: _cartProductos.length > 0
+                              color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
                                   ? Color(0xff0894FD)
                                   : Color.fromARGB(255, 146, 144, 144)),
                           child: Material(
@@ -1798,7 +1922,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               onTap: () {
                                 print("guardar pedido");
-                                _cartProductos.length > 0
+                                (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
                                     ? createPedido()
                                     : modalSinPedido();
                               },
@@ -2401,11 +2525,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   onTap: () {
                     setState(() {
-                      /* _checkedCartera = true;
-                      _checkedPedido = false;
-                      _checkedRecibo = false;
-                      _formHistoryShow = false;
-                      _clientShow = false;*/
                       Navigator.pushNamed(context, 'home');
                     });
                   }),
@@ -2613,6 +2732,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget ItemProductOrderHistoryNew(data, i) {
+    print("detale del pedido ItemProductOrderHistoryNew $data");
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -2761,7 +2881,7 @@ class _HomePageState extends State<HomePage> {
                       child: Text(
                           '\$ ' +
                               expresionRegular(
-                                  double.parse(data['total'].toString())),
+                                  double.parse(data['total_prod'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -3001,13 +3121,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   onTap: () {
                     setState(() {
-                      /*   _checkedCartera = true;
-                      _checkedPedido = false;
-                      _checkedRecibo = false;
-                      _formHistoryShow = false;
-                      _clientShow = false;
-                      _productosShow = false;*/
-
                       Navigator.pushNamed(context, 'home');
                     });
                   }),
@@ -3638,7 +3751,7 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(height: 20.0),
               _itemForm(context, 'Recibo N°', '$_value_automatico',
-                  myControllerNroRecibo, false, 'number', true,callback),
+                  myControllerNroRecibo, false, 'number', true, callback),
               InkWell(
                 onTap: () {
                   _pickDateDialog();
@@ -3661,7 +3774,7 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(height: 10),
               _itemForm(context, 'Nombre', '$nombre_tercero', null, false,
-                  'text', false,callback),
+                  'text', false, callback),
               _itemForm(
                   context,
                   'Total cartera',
@@ -3670,7 +3783,8 @@ class _HomePageState extends State<HomePage> {
                   null,
                   false,
                   'number',
-                  false,callback),
+                  false,
+                  callback),
               SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
@@ -3691,11 +3805,6 @@ class _HomePageState extends State<HomePage> {
                     isBanco = false;
                   }
                 }),
-                onSaved: (val) => setState(() => _valueSaved = val ?? ''),
-                validator: (val) {
-                  setState(() => _valueToValidate = val ?? '');
-                  return null;
-                },
               ),
               SelectFormField(
                 style: TextStyle(
@@ -3707,14 +3816,13 @@ class _HomePageState extends State<HomePage> {
                 items: _itemsBanco,
                 initialValue: _value_itemsBanco,
                 onChanged: (val) => setState(() => _value_itemsBanco = val),
-                onSaved: (val) => setState(() => _valueSaved = val ?? ''),
                 validator: (val) {
-                  setState(() => _valueToValidate = val ?? '');
+                  setState(() => _value_itemsBanco = val ?? '');
                   return null;
                 },
               ),
               _itemForm(context, 'N° cheque', '00000', myControllerNroCheque,
-                  false, 'number', isCheque,callback),
+                  false, 'number', isCheque, callback),
               SizedBox(height: 30.0),
               Container(
                   width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
@@ -3780,13 +3888,13 @@ class _HomePageState extends State<HomePage> {
                         onTap: () {
                           setState(() {
                             if (_value_itemsTipoPago == '') {
-                              _showBarMsg('Indique una forma de pago',false);
+                              _showBarMsg('Indique una forma de pago', false);
                             } else if (_value_itemsTipoPago == '02' &&
                                 _value_itemsBanco == '') {
-                              _showBarMsg('Indique un banco',false);
+                              _showBarMsg('Indique un banco', false);
                             } else if (_value_itemsTipoPago == '03' &&
                                 myControllerNroCheque.text == '') {
-                              _showBarMsg('Indique el N° Cheque',false);
+                              _showBarMsg('Indique el N° Cheque', false);
                             } else {
                               _formRecipeShow = false;
                               _formNewClientShow = true;
@@ -3818,7 +3926,7 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(height: 20.0),
         _itemForm(context, 'Pedido', '$_value_automatico',
-            myControllerNroPedido, true, 'number', false,callback),
+            myControllerNroPedido, true, 'number', false, callback),
         InkWell(
           onTap: () {
             _pickDateDialog();
@@ -3839,8 +3947,8 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        _itemForm(
-            context, 'Nombre', '$nombre_tercero', null, true, 'text', false,callback),
+        _itemForm(context, 'Nombre', '$nombre_tercero', null, true, 'text',
+            false, callback),
         SelectFormField(
           style: TextStyle(
               color: Color(0xff06538D),
@@ -3851,11 +3959,6 @@ class _HomePageState extends State<HomePage> {
           labelText: 'Dir. envío factura',
           items: _direccionClient,
           onChanged: (val) => setState(() => _value_DireccionFactura = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
-          validator: (val) {
-            setState(() => _valueToValidate = val ?? 'Es requerido');
-            return null;
-          },
         ),
         SelectFormField(
           style: TextStyle(
@@ -3868,16 +3971,15 @@ class _HomePageState extends State<HomePage> {
           labelText: 'Dir. envío mercancia',
           items: _direccionClient,
           onChanged: (val) => setState(() => _value_DireccionMercancia = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
           validator: (val) {
-            setState(() => _valueToValidate = val ?? 'Es requerido');
+            setState(() => _value_DireccionMercancia = val ?? 'Es requerido');
             return null;
           },
         ),
         _itemForm(context, 'Orden de compra', '', myControllerOrdenCompra,
-            false, 'text', false,callback),
+            false, 'text', false, callback),
         _itemForm(context, 'Forma de pago', '$forma_pago_tercero', null, true,
-            'text', false,callback),
+            'text', false, callback),
         SizedBox(height: 30.0),
         Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
         SizedBox(height: 30.0),
@@ -3897,12 +3999,13 @@ class _HomePageState extends State<HomePage> {
             null,
             true,
             'number',
-            false,callback),
+            false,
+            callback),
         _itemSelectForm(
             context,
             'Total cartera',
             '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
-            ''),
+            '',null),
         SizedBox(height: 20.0),
         Column(
           children: [
@@ -4113,7 +4216,8 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     )),
                               )
-                            : _showBarMsg('Este cliente no tiene facturas',false);
+                            : _showBarMsg(
+                                'Este cliente no tiene facturas', false);
                       },
                     )
                   ],
@@ -4186,7 +4290,7 @@ class _HomePageState extends State<HomePage> {
                         (_value_DireccionMercancia.toString() != '0' &&
                                 _value_DireccionFactura.toString() != '0')
                             ? searchClasificacionProductos()
-                            : _showBarMsg('Seleccione las direcciones',false);
+                            : _showBarMsg('Seleccione las direcciones', false);
                       },
                     ),
                   ),
@@ -4216,14 +4320,13 @@ class _HomePageState extends State<HomePage> {
           labelText: 'Tipo de documento',
           items: _itemsTypeDoc.toList(),
           onChanged: (val) => setState(() => _value_itemsTypeDoc = val),
-          onSaved: (val) => print(val),
           validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
+            setState(() => _value_itemsTypeDoc = val ?? '');
             return null;
           },
         ),
         _itemForm(context, 'N° de documento', '', myControllerNroDoc, false,
-            'number', true,searchDigitoVerif),
+            'number', true, searchDigitoVerif),
         CheckboxListTile(
             checkColor: Color(0xff06538D),
             title: Text(
@@ -4241,24 +4344,24 @@ class _HomePageState extends State<HomePage> {
                 isReadOnly = value!;
               });
             }),
-        _itemForm(context, 'DV.', '', myControllerDv, true,
-            'text', !isCheckedDV,callback),
+        _itemForm(context, 'DV.', '', myControllerDv, true, 'text',
+            !isCheckedDV, callback),
         _itemForm(context, 'Primer nombre', '', myControllerPrimerNombre,
-            !isReadOnly, 'name', isCheckedDV,callback),
+            !isReadOnly, 'name', isCheckedDV, callback),
         _itemForm(context, 'Segundo nombre', '', myControllerSegundoNombre,
-            !isReadOnly, 'name', false,callback),
+            !isReadOnly, 'name', false, callback),
         _itemForm(context, 'Primer apellido', '', myControllerPrimerApellido,
-            !isReadOnly, 'name', isCheckedDV,callback),
+            !isReadOnly, 'name', isCheckedDV, callback),
         _itemForm(context, 'Segundo apellido', '', myControllerSegundoApellido,
-            !isReadOnly, 'name', false,callback),
+            !isReadOnly, 'name', false, callback),
         _itemForm(context, 'Razón social', '', myControllerRazonSocial,
-            isCheckedDV, 'name', !isCheckedDV,callback),
+            isCheckedDV, 'name', !isCheckedDV, callback),
         _itemForm(context, 'Dirección', '', myControllerDireccion, false,
-            'text', true,false),
-        _itemForm(
-            context, 'Email', '', myControllerEmail, false, 'email', true,callback),
+            'text', true, false),
+        _itemForm(context, 'Email', '', myControllerEmail, false, 'email', true,
+            validateEmail),
         _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,
-            'phone', true,callback ),
+            'phone', true, callback),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Clasificación',
@@ -4270,9 +4373,8 @@ class _HomePageState extends State<HomePage> {
           labelText: 'Medio contacto',
           items: _itemsMedioContacto,
           onChanged: (val) => setState(() => _value_itemsMedioContacto = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
           validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
+            setState(() => _value_itemsMedioContacto = val ?? '');
             return null;
           },
         ),
@@ -4281,9 +4383,8 @@ class _HomePageState extends State<HomePage> {
           labelText: 'Zona',
           items: _itemsZona,
           onChanged: (val) => setState(() => _value_itemsZona = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
           validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
+            setState(() => _value_itemsZona = val ?? '');
             return null;
           },
         ),
@@ -4309,9 +4410,8 @@ class _HomePageState extends State<HomePage> {
           labelText: 'Barrio',
           items: _itemsBarrio,
           onChanged: (val) => setState(() => _value_itemsBarrio = val),
-          onSaved: (val) => setState(() => _valueSaved = val ?? ''),
           validator: (val) {
-            setState(() => _valueToValidate = val ?? '');
+            setState(() => _value_itemsBarrio = val ?? '');
             return null;
           },
         ),
@@ -4359,7 +4459,9 @@ class _HomePageState extends State<HomePage> {
                   height: 41.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xff0894FD)),
+                      color: validateFormulario()
+                          ? Color(0xff0894FD)
+                          : Color.fromARGB(255, 146, 144, 144)),
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -4375,9 +4477,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
-                          _value_itemsCiudad != '' && _value_itemsBarrio != ''
-                              ? _saveClient()
-                              :  _showBarMsg('La ciudad ó barrio no pueden estar vacios',false);
+                          if(!validateFormulario()){
+                            _showBarMsg('Debe completar los campos correctamente', false);
+                          }else{
+                            _saveClient();
+                          }
                         });
                       },
                     ),
@@ -4554,7 +4658,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _itemForm(BuildContext context, String label, String hintText,
-      controller, enable, String type, bool isRequired , callback) {
+      controller, enable, String type, bool isRequired, callback) {
     final _size = MediaQuery.of(context).size;
     var typeInput;
     var cant;
@@ -4594,42 +4698,42 @@ class _HomePageState extends State<HomePage> {
         ),
         Container(
           width: _size.width * 0.5 - 20,
-                child: Focus(
-                onFocusChange: (e) {
-                setState(() {
-                  if(callback != null && !e && controller.text.isNotEmpty ){
-                    print("EL CAMPO ES callback $e $callback");
-                    searchDigitoVerif();
-                    //focus = e;
-                  }
-                });
-                },
-          child: TextField(
-            readOnly: enable,
-            keyboardType: typeInput,
-            inputFormatters: <TextInputFormatter>[
-              type == "number" || type == "phone"
-                  ? FilteringTextInputFormatter.digitsOnly
-                  : FilteringTextInputFormatter.singleLineFormatter,
-              LengthLimitingTextInputFormatter(cant)
-            ],
-            controller: controller,
-            style: TextStyle(
-              color: Color(0xff707070),
-              fontSize: 14.0,
-            ),
-            decoration: InputDecoration(
-             errorText:
-                  isRequired && controller.text.isEmpty  ? 'Es requerido' : null,
-              hintText: hintText,
-              hintStyle: TextStyle(
+          child: Focus(
+            onFocusChange: (e) {
+              setState(() {
+                if (callback != null && !e && controller.text.isNotEmpty) {
+                  callback();
+                }
+              });
+            },
+            child: TextField(
+              readOnly: enable,
+              keyboardType: typeInput,
+              inputFormatters: <TextInputFormatter>[
+                type == "number" || type == "phone"
+                    ? FilteringTextInputFormatter.digitsOnly
+                    : FilteringTextInputFormatter.singleLineFormatter,
+                LengthLimitingTextInputFormatter(cant)
+              ],
+              textCapitalization: TextCapitalization.characters,
+              controller: controller,
+              style: TextStyle(
                 color: Color(0xff707070),
                 fontSize: 14.0,
               ),
-              contentPadding: EdgeInsets.only(bottom: 0, top: 0),
+              decoration: InputDecoration(
+                errorText: isRequired && controller.text.isEmpty
+                    ? 'Es requerido'
+                    : !isValidEmail && controller.text.isNotEmpty && type=='email'? 'Email inválido' : null,
+                hintText: hintText,
+                hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 14.0,
+                ),
+                contentPadding: EdgeInsets.only(bottom: 0, top: 0),
+              ),
             ),
           ),
-        ),
         ),
       ],
     );
@@ -4802,7 +4906,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _itemSelectForm(
-      BuildContext context, String label, String hintText, String title) {
+      BuildContext context, String label, String hintText, String title,callback) {
     final _size = MediaQuery.of(context).size;
     return Row(
       children: [
@@ -4834,7 +4938,13 @@ class _HomePageState extends State<HomePage> {
                 ),
                 contentPadding: EdgeInsets.only(bottom: 0, top: 15),
                 suffixIcon: GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    setState(() {
+                      if (callback == null) {
+                        print("EL CAMPO ES  del select   $callback");
+                      }
+                    });
+                  },
                   child: Icon(
                     Icons.keyboard_arrow_down,
                     size: 24.0,
@@ -4849,6 +4959,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _ItemClient(hintText, data) {
     final nombre = data['nombre_sucursal'].toUpperCase();
+    final tlf_cliente = data['telefono_celular']!=null   ? data['telefono_celular'] : data['telefono'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -4938,7 +5049,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('${data['telefono']}',
+                      child: Text(tlf_cliente,
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5043,29 +5154,33 @@ class _HomePageState extends State<HomePage> {
                           ),
                           onTap: () {
                             setState(() {
-                              print("-----qweqweqweqweqwe------ $data");
-                              _submitDialog(context);
+                              print("el tercero es $id_tercero");
+                              print(data['id_tercero']);
+                              if (_cartProductos.isNotEmpty && data['id_tercero']!=id_tercero) {
+                                modalNuevoPedido(context, data);
+                              }else{
+                                _submitDialog(context);
 
-                              id_tercero = '${data['id_tercero']}';
-                              nombre_tercero =
-                                  '${data['nombre_sucursal'].toString()}  ';
+                                id_tercero = '${data['id_tercero']}';
+                                nombre_tercero =
+                                    '${data['nombre_sucursal'].toString()}  ';
 
-                              limiteCreditoTercero =
-                                  double.parse(data['limite_credito']);
-                              listaPrecioTecero =
-                                  '${data['lista_precio'].toString()}';
-                              _value_itemsFormaPago =
-                                  data['id_forma_pago'] != ''
-                                      ? data['id_forma_pago']
-                                      : '01';
-                              id_empresa = '${data['id_empresa']}';
-                              id_suc_vendedor = '${data['id_suc_vendedor']}';
-                              id_sucursal_tercero =
-                                  '${data['id_sucursal_tercero']}';
-                              limite_credito = '${data['limite_credito']}';
-                              getConsecutivo(true);
+                                limiteCreditoTercero =
+                                    double.parse(data['limite_credito']);
+                                listaPrecioTercero =
+                                    '${data['lista_precio'].toString()}';
+                                _value_itemsFormaPago =
+                                    data['id_forma_pago'] != ''
+                                        ? data['id_forma_pago']
+                                        : '01';
+                                id_empresa = '${data['id_empresa']}';
+                                id_suc_vendedor = '${data['id_suc_vendedor']}';
+                                id_sucursal_tercero =
+                                    '${data['id_sucursal_tercero']}';
+                                limite_credito = '${data['limite_credito']}';
+                                getConsecutivo(true);
+                              }
 
-                              //   modalNuevoPedido(data);
                             });
                           },
                         ),
@@ -5093,6 +5208,8 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           onTap: () {
+
+                            print("------------data recibo $data");
                             setState(() {
                               id_tercero = '${data['id_tercero']}';
                               nombre_tercero =
@@ -5161,14 +5278,15 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image:
-                      AssetImage('assets/images/${data[i]['descripcion']}.png'),
+                     // AssetImage('assets/images/${data[i]['descripcion']}.png'),
+                  AssetImage('assets/images/producto-sin-imagen.png'),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.all(
                   Radius.circular(20.0),
                 ),
               ),
-            ),
+              ),
             onTap: () {
               setState(() {
                 idClasificacion = '${data[i]['id_clasificacion']}';
@@ -5176,6 +5294,14 @@ class _HomePageState extends State<HomePage> {
                 selectProductoNivel();
               });
             },
+          ),
+          Text(
+            '${data[i]['descripcion']}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Color(0xff0f538d),
+                fontSize: 14,
+                fontWeight: FontWeight.w500),
           ),
         ],
       ],
@@ -5196,13 +5322,14 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: Text(
               '${data['descripcion']}',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
                 color: Colors.blue,
+
               ),
             ),
           ),
@@ -5214,12 +5341,15 @@ class _HomePageState extends State<HomePage> {
                 SelectFormField(
                   type: SelectFormFieldType.dropdown, // or can be dialog
                   labelText: 'Lista de precios',
-                  items: _itemsListPrecio,
+                  items: itemsListPrecio,
+                  initialValue: listaPrecioTercero,
                   onChanged: (val) => setState(() => {
                         _value_itemsListPrecio = val,
-                      if(_value_itemsListPrecio!=''){
-                           searchPrecioProductos('${data['id_item']}'),
-                      }
+                        if (_value_itemsListPrecio !='0')
+                          {
+                            _itemSelect = data['id_item'],
+                            searchPrecioProductos('${data['id_item']}'),
+                          }
                       }),
                   onSaved: (val) => print(val),
                 ),
@@ -5252,10 +5382,9 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 40,
                       child: Text(
-                          _itemSelect == data['id_item'] &&
-                                  data['precio'] != null
+                     (_itemSelect == data['id_item'])
                               ? '\$ ' + expresionRegular(_precio)
-                              : '\$  0.00',
+                              : '\$ ' + expresionRegular(double.parse(data['precio'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5309,11 +5438,12 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Container(),
                     Container(
-                      width: 160.0,
-                      height: 50.0,
+                      width: 120.0,
+                      height: 40.0,
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8.0),
-                          color: _itemSelect == data['id_item'] && _precio > 0
+                          color: (_itemSelect == data['id_item'] && _precio > 0  )
+                              || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
                               ? Colors.blue
                               : Colors.grey[300]),
                       child: Material(
@@ -5325,17 +5455,29 @@ class _HomePageState extends State<HomePage> {
                               'Agregar',
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w400),
                             ),
                           ),
-                          onTap: _itemSelect == data['id_item'] && _precio > 0
+
+                            onTap: (_itemSelect == data['id_item'] && _precio > 0  ) || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
                               ? () {
-                                  _showAlert(
-                                      i,
-                                      data['id_item'],
-                                      data['descripcion'],
-                                      int.parse(data['saldo_inventario']));
+                            var findById = (_cartProductos) => _cartProductos['id_item'] == data['id_item'];
+                            var result = _cartProductos.where(findById);
+                              if (result.isNotEmpty) {
+                                  _showBarMsg('Este producto ya existe en el carrito', false);
+                                  }else {
+
+                                  if(_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 ) {
+                                    _precio = double.parse(data['precio'].toString());
+                                  }
+                                  _itemSelect = data['id_item'];
+                                    _showAlert(
+                                        i,
+                                        data['id_item'],
+                                        data['descripcion'],
+                                        int.parse(data['saldo_inventario']));
+                                  }
                                 }
                               : null,
                         ),
@@ -5359,7 +5501,7 @@ class _HomePageState extends State<HomePage> {
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
     return Container(
       width: maxWidth,
-      height: 350.0,
+      height: 360.0,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
@@ -5368,18 +5510,14 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 7.0, horizontal: 7.0),
-            child: Row(
-              children: [
-                Text(
-                  '$nombre',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            child: Text(
+              '$descripcion',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w700,
+                color: Colors.blue,
+              ),
             ),
           ),
           Padding(
@@ -5470,8 +5608,9 @@ class _HomePageState extends State<HomePage> {
                               InkWell(
                                   onTap: () {
                                     setState(() {
-                                      if (_cantidadProducto > 0) {
-                                        _cantidadProducto = int.parse(myControllerCantidad.text);
+                                      if (_cantidadProducto > 1) {
+                                        _cantidadProducto = int.parse(
+                                            myControllerCantidad.text);
                                         _cantidadProducto--;
                                         myControllerCantidad.text =
                                             _cantidadProducto.toString();
@@ -5505,17 +5644,18 @@ class _HomePageState extends State<HomePage> {
                                       controller: myControllerCantidad,
                                       keyboardType: TextInputType.number,
                                       decoration: InputDecoration(
-                                          disabledBorder: UnderlineInputBorder(
-                                              borderSide: BorderSide(
-                                                  width: 0.8,
-                                                  color: Color(0xff707070))),
-                                         )),
+                                        disabledBorder: UnderlineInputBorder(
+                                            borderSide: BorderSide(
+                                                width: 0.8,
+                                                color: Color(0xff707070))),
+                                      )),
                                 ),
                               ),
                               InkWell(
                                   onTap: () {
                                     setState(() {
-                                      _cantidadProducto = int.parse(myControllerCantidad.text);
+                                      _cantidadProducto =
+                                          int.parse(myControllerCantidad.text);
                                       _cantidadProducto++;
                                       myControllerCantidad.text =
                                           _cantidadProducto.toString();
@@ -5596,7 +5736,6 @@ class _HomePageState extends State<HomePage> {
                               //backgroundColor: Colors.blue,
                               ),
                           onPressed: () {
-
                             _addProductoPedido(descripcion, idItem);
                           }),
                     )
@@ -5613,11 +5752,9 @@ class _HomePageState extends State<HomePage> {
   //listado de carrito
   Widget _ItemCategoryOrderCart(data, index) {
     var cantidad = int.parse(data['cantidad'].toString());
-
-    print("_ItemCategoryOrderCart $data $cantidad");
     double total = 0.0;
     total = data['total'];
-
+    final descripcion = data['descripcion'] ;
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -5629,30 +5766,42 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            child: Row(
+            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal:0.0),
+            child:Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 300.0, bottom:0.0),
+                        child: Icon(
+                          Icons.do_disturb_on,
+                          color: Color(0xffCB1B1B),
+                          size: 20,
+                        ),
+                      ),
+                      onTap: () => {
+                          _showDialog(context, index),
+                      }),
+                ],
+              ),
+          ),
+          Padding(
+              padding: const EdgeInsets.all(10.0),
+              child:Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${data['descripcion']}',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.blue,
-                  ),
-                ),
-                IconButton(
-                    onPressed: () {
-                      _showDialog(context, index);
-                    },
-                    icon: Icon(
-                      Icons.do_disturb_on,
-                      color: Color(0xffCB1B1B),
-                      size: 20.0,
-                    )),
+              Text(
+              '$descripcion',
+              style: TextStyle(
+              fontSize: 16.0,
+              fontWeight: FontWeight.w700,
+              color: Colors.blue,
+              ),
+              ),
               ],
-            ),
-          ),
+              ),
+              ),
+
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
@@ -5751,7 +5900,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Container(
-                        width: _size.width * 0.5 - 75,
+                        width: _size.width * 0.5 - 40,
                         child: Container(
                           width: _size.width,
                           height: 30.0,
@@ -5762,11 +5911,13 @@ class _HomePageState extends State<HomePage> {
                                     print("resta en carrito");
                                     setState(() {
                                       if (cantidad > 1) {
+
                                         cantidad = cantidad--;
                                         OperationDB.updateCantidad(
                                             _cartProductos[index]['id_item'],
                                             _value_automatico,
                                             false);
+
                                         ObtieneCarrito(true);
 
                                         print("nueva cantidad resta $cantidad");
@@ -5774,7 +5925,7 @@ class _HomePageState extends State<HomePage> {
                                     });
                                   },
                                   child: Container(
-                                    width: 25.0,
+                                    width: 30.0,
                                     height: 30.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
@@ -5790,7 +5941,7 @@ class _HomePageState extends State<HomePage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: _size.width * 0.5 - 160,
+                                width: _size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
                                   child: Text(
@@ -5804,9 +5955,9 @@ class _HomePageState extends State<HomePage> {
                               ),
                               InkWell(
                                   onTap: () {
+
                                     setState(() {
-                                      if (cantidad >= 1) {
-                                        _submitDialog(context);
+                                      if (cantidad >= 0) {
                                         cantidad = cantidad++;
                                         OperationDB.updateCantidad(
                                             _cartProductos[index]['id_item'],
@@ -5815,12 +5966,14 @@ class _HomePageState extends State<HomePage> {
                                         ObtieneCarrito(true);
 
                                         print("nueva cantidad suma $cantidad");
-                                        Navigator.pop(context);
+
                                       }
+
                                     });
+
                                   },
                                   child: Container(
-                                    width: 25.0,
+                                    width: 30.0,
                                     height: 30.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
@@ -5885,8 +6038,10 @@ class _HomePageState extends State<HomePage> {
                       onTap: () {
                         setState(() {
                           _checked = i;
+                         /* idClasificacion =
+                              '${_datClasificacionProductosNivel[i]['id_clasificacion']}';*/
                           idClasificacion =
-                              '${_datClasificacionProductosNivel[i]['id_clasificacion']}';
+                          '${_datClasificacionProductosNivel[i]['id_padre_clasificacion']}';
                           print(
                               "----------filtrar por categoria $idClasificacion");
                           searchProductosPedido();
@@ -6003,7 +6158,7 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               _cartProductos.removeAt(index);
                               totalPedido = valorTotal();
-                              numeroAletra(totalPedido.toString());
+                             // numeroAletra(totalPedido.toString());
                             });
                             sendCarritoBD();
                             Navigator.pop(context);
@@ -6020,46 +6175,45 @@ class _HomePageState extends State<HomePage> {
   }
 
   _addProductoPedido(String descripcion, String idItem) {
-
     var findById = (_cartProductos) => _cartProductos['id_item'] == idItem;
     var result = _cartProductos.where(findById);
-    var cantidad =  int.parse(myControllerCantidad.text);
+    var cantidad = int.parse(myControllerCantidad.text);
     print("se filtra el listado de carrito $result la cantidad $cantidad");
 
-    if ( result.isEmpty) {
-      final cantidad =  int.parse(myControllerCantidad.text);
+    if (result.isEmpty) {
+      final cantidad = int.parse(myControllerCantidad.text);
 
-    final total = double.parse(cantidad.toString()) * _precio;
+      final total = double.parse(cantidad.toString()) * _precio;
       print("No existe se agrega al carrito el producto $result");
 
-          _cartProductos.add({
-            "descripcion": descripcion,
-            "id_item": idItem,
-            "precio": _precio,
-            "cantidad": cantidad,
-            "total_dcto": double.parse(myControllerDescuentos.text),
-            "dcto": double.parse(myControllerDescuentos.text),
-            "id_precio_item": _value_itemsListPrecio != ''
-                ? _value_itemsListPrecio
-                : listaPrecioTecero,
-            "total": total
-          });
+      _cartProductos.add({
+        "descripcion": descripcion,
+        "id_item": idItem,
+        "precio": _precio,
+        "cantidad": cantidad,
+        "total_dcto": double.parse(myControllerDescuentos.text),
+        "dcto": double.parse(myControllerDescuentos.text),
+        "id_precio_item":  _value_itemsListPrecio !='0'
+            ? _value_itemsListPrecio
+            : listaPrecioTercero,
+        "total": total
+      });
 
-        setState(() {
-          totalPedido = valorTotal();
-          numeroAletra(totalPedido.toString());
-            myControllerCantidad.clear();
-            myControllerDescuentos.clear();
-            myControllerDescuentos.text = '0';
-            myControllerCantidad.text = '1';
-            _cantidadProducto = 1;
-            sendCarritoBD();
-        });
+      setState(() {
+        totalPedido = valorTotal();
+      //  numeroAletra(totalPedido.toString());
+        myControllerCantidad.clear();
+        myControllerDescuentos.clear();
+        myControllerDescuentos.text = '0';
+        myControllerCantidad.text = '1';
+        _cantidadProducto = 1;
+        sendCarritoBD();
+      });
       Navigator.of(context).pop();
-      _showBarMsg('Producto Agregado',true);
-      } else{
-      _showBarMsg('Este producto existe en el carrito',false);
-     }
+      _showBarMsg('Has agregado estos productos a tu carrito', true);
+    } else {
+      _showBarMsg('Este producto existe en el carrito', false);
+    }
   }
 
   Future sendCarritoBD() async {
@@ -6077,7 +6231,7 @@ class _HomePageState extends State<HomePage> {
         fecha:
             '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
         id_forma_pago: '$_value_itemsFormaPago',
-        id_precio_item: '$listaPrecioTecero',
+        id_precio_item: '$listaPrecioTercero',
         id_direccion: _value_DireccionMercancia,
         subtotal: '$totalSubTotal',
         total_costo: totalCosto.toString(),
@@ -6113,8 +6267,6 @@ class _HomePageState extends State<HomePage> {
       double descuento = 0.0;
       double totalProducto = 0.0;
       totalProducto = double.parse(_cartProductos[i]['total'].toString());
-      // totalProducto =
-      //  _cartProductos[i]['precio'] * _cartProductos[i]['cantidad'];
       descuento = double.parse(_cartProductos[i]['total_dcto'].toString());
 
       totalProducto = totalProducto - descuento;
@@ -6133,95 +6285,54 @@ class _HomePageState extends State<HomePage> {
     totalPedido = '0.00';
     totalSubTotal = '0.00';
     totalDescuento = '0.00';
-    numeroAletra('');
+    _letras = '';
+   // numeroAletra('');
   }
 
-  modalNuevoPedido(data) {
-    showDialog<String>(
+
+  modalNuevoPedido(BuildContext context, data,) {
+    Widget cancelButton = ElevatedButton(
+      child: Text("Cancelar"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+      style: ButtonStyle(
+        backgroundColor: MaterialStatePropertyAll<Color>(
+          Color(0xffCB1B1B),
+        ),
+      ),
+    );
+
+    Widget continueButton = ElevatedButton(
+      child: Text("Continuar"),
+      onPressed: () {
+        OperationDB.deleteCarrito();
+        _cartProductos = [];
+        totalPedido = '0.00';
+        totalSubTotal = '0.00';
+        totalDescuento = '0.00';
+        totalPedido = valorTotal();
+        _letras = '';
+      //  numeroAletra('');
+
+        Navigator.pop(context);
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("¡Espera!"),
+      content: Text(
+        'Tiene productos en el carrito que pertenecen a otro cliente, si continua estos se descartarán.'),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+    showDialog(
       context: context,
-      builder: (BuildContext context) => Dialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10.0))),
-          child: Container(
-            height: 210.0,
-            width: 300.0,
-            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-            child: Column(
-              children: [
-                SizedBox(height: 20.0),
-                Text(
-                  'Espera!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 20.0),
-                Text(
-                  'Tiene productos en el carrito, si continua estos se descartarán.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Color(0xff0894FD),
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 30.0),
-                Container(
-                  width: 110,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xffCB1B1B)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Cancelar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                ),
-                Container(
-                  width: 110,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xff0894FD)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Continuar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        //   removeCarrito();
-                        Navigator.of(context).pop();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )),
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
 
@@ -6239,7 +6350,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 SizedBox(height: 20.0),
                 Text(
-                  'Espera!',
+                  '¡Espera!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Color(0xff06538D),
@@ -6288,6 +6399,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future createPedido() async {
+    await numeroAletra(totalPedido.toString());
+    _submitDialog(context);
+
     final total_costo =
         double.parse(totalPedido) + double.parse(totalDescuento);
     var flag_pedido = true;
@@ -6300,6 +6414,8 @@ class _HomePageState extends State<HomePage> {
     mes = mes.length == 1 ? '0$mes' : mes;
 
     final fecha_final = '$ano-$mes-$dia';
+    orden_compra =
+    orden_compra != '' ? orden_compra : myControllerOrdenCompra.text;
 
     final nuevo_pedido = Pedido(
         nit: _nit,
@@ -6308,7 +6424,7 @@ class _HomePageState extends State<HomePage> {
         id_sucursal: "01",
         id_tipo_doc: idPedidoUser,
         numero: '$_value_automatico',
-        id_sucursal_tercero: "1",
+        id_sucursal_tercero: id_sucursal_tercero,
         id_vendedor: id_vendedor,
         id_suc_vendedor: '$id_suc_vendedor',
         fecha: fecha_final,
@@ -6316,27 +6432,27 @@ class _HomePageState extends State<HomePage> {
         fecha_entrega: fecha_final,
         fecha_trm: fecha_final,
         id_forma_pago: '$_value_itemsFormaPago',
-        id_precio_item: '$listaPrecioTecero',
-        id_direccion: _value_DireccionMercancia,
+        id_precio_item: '$listaPrecioTercero',
+        id_direccion:  _value_DireccionMercancia != '0' ?_value_DireccionMercancia: id_direccion ,
         id_moneda: "COLP",
         trm: "1",
         subtotal: '$totalSubTotal',
         total_costo: total_costo.toString(),
-        total_iva: "1900",
+        total_iva: "0",
         total_dcto: '$totalDescuento',
         total: '$totalPedido',
         total_item: "0",
-        orden_compra: myControllerOrdenCompra.text,
+        orden_compra: orden_compra,
         estado: "PENDIENTE",
         flag_autorizado: "SI",
         comentario: "PRUEBA",
         observacion: myControllerObservacion.text,
         letras: _letras,
-        id_direccion_factura: _value_DireccionFactura,
+        id_direccion_factura: _value_DireccionFactura != '0' ?_value_DireccionFactura: id_direccion_factura  ,
         usuario: _user,
-        id_tiempo_entrega: "22",
+        id_tiempo_entrega: "0",
         flag_enviado: "NO");
-    flag_pedido = await OperationDB.insertPedido(nuevo_pedido,true);
+    flag_pedido = await OperationDB.insertPedido(nuevo_pedido, true);
     await OperationDB.editarPedido(_value_automatico);
 
     for (var i = 0; i < _cartProductos.length; i++) {
@@ -6380,15 +6496,23 @@ class _HomePageState extends State<HomePage> {
           precio_kit: "0",
           tasa_dcto_cliente: "0",
           total_dcto_cliente: "0");
-      flag_pedido_det = await OperationDB.insertPedidoDet(nuevo_pedido_det);
+      flag_pedido_det = await OperationDB.insertPedidoDet(nuevo_pedido_det,true);
     }
-    ;
+
     if (flag_pedido && flag_pedido_det) {
       await OperationDB.updateConsecutivo(
           int.parse(_value_automatico), _nit, idPedidoUser, id_empresa);
-      isOnline ? await createPedidoAPI() : modalExitosa();
+
+      final val = await validateConexion.checkInternetConnection();
+      setState(() {
+        _isConnected = val!;
+        print("valida la conexion antes de enviar el pedido a la api $_isConnected");
+      });
+
+      Navigator.pop(context);
+      _isConnected ? await createPedidoAPI() : modalExitosa();
     } else {
-      _showBarMsg('Error en la creacion del pedido local',false);
+      _showBarMsg('Error en la creacion del pedido', false);
     }
   }
 
@@ -6453,8 +6577,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future createPedidoAPI() async {
+    _submitDialog(context);
     final response = await http.post(
-      Uri.parse('$_url/synchronization_pedido'),
+      Uri.parse('${Constant.URL}/synchronization_pedido'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -6467,7 +6592,7 @@ class _HomePageState extends State<HomePage> {
             "id_sucursal": "01",
             "id_tipo_doc": idPedidoUser,
             "numero": '$_value_automatico',
-            "id_sucursal_tercero": "1",
+            "id_sucursal_tercero": id_sucursal_tercero,
             "id_vendedor": id_vendedor,
             "id_suc_vendedor": '$id_suc_vendedor',
             "fecha": '$_selectedDate',
@@ -6475,8 +6600,8 @@ class _HomePageState extends State<HomePage> {
             "fecha_entrega": '$_selectedDate',
             "fecha_trm": '$_selectedDate',
             "id_forma_pago": '$_value_itemsFormaPago',
-            "id_precio_item": '$listaPrecioTecero',
-            "id_direccion": _value_DireccionMercancia,
+            "id_precio_item": '$listaPrecioTercero',
+            "id_direccion": _value_DireccionMercancia != '0' ?_value_DireccionMercancia: id_direccion ,
             "id_moneda": "COLP",
             "trm": "1",
             "subtotal": '$totalSubTotal',
@@ -6491,10 +6616,10 @@ class _HomePageState extends State<HomePage> {
             "flag_autorizado": "SI",
             "comentario": "PRUEBA",
             "observacion": myControllerObservacion.text,
-            "letras": _letras,
-            "id_direccion_factura": _value_DireccionFactura,
+            //"letras": _letras,
+            "id_direccion_factura": _value_DireccionFactura != '0' ?_value_DireccionFactura: id_direccion_factura ,
             "usuario": _user,
-            "id_tiempo_entrega": "22",
+            "id_tiempo_entrega": "0",
             "flag_enviado": "SI",
             "app_movil": true,
             "pedido_det": [
@@ -6512,7 +6637,7 @@ class _HomePageState extends State<HomePage> {
                   "id_bodega": "01",
                   "cantidad": _cartProductos[i]['cantidad'],
                   "precio": _cartProductos[i]['precio'],
-                  "precio_lista": "10000",
+                  "precio_lista": "0",
                   "tasa_iva": "19",
                   "total_iva": "0",
                   "tasa_dcto_fijo": "0",
@@ -6553,16 +6678,18 @@ class _HomePageState extends State<HomePage> {
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
+    Navigator.pop(context);
     if (response.statusCode == 201 && success) {
       await OperationDB.updatePedidoFlag(_value_automatico, _nit);
       //actualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI
       print("actualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI");
-      modalExitosa();
     } else {
-      removeCarrito();
+
       print("error en la creacion del pedido online $msg");
-      _showBarMsg('Error en la creacion del pedido $msg',false);
+      //_showBarMsg('Error en la creacion del pedido $msg', false);
     }
+    removeCarrito();
+    modalExitosa();
   }
 
   ///////////////////////////////////RECIBOS DE CAJA////////////////////
@@ -6633,15 +6760,13 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> searchDocumentPend(data) async {
     final response = await http.get(
-        Uri.parse("$_url/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
+        Uri.parse("${Constant.URL}/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     if (response.statusCode == 200 && success) {
       _dataDocumentPend = jsonResponse['data'];
-      print(
-          "----------_dataDocumentPend_dataDocumentPend $_dataDocumentPend--- ");
 
       getConsecutivo(false);
       setState(() {
@@ -6650,14 +6775,14 @@ class _HomePageState extends State<HomePage> {
         _formRecipeShow = true;
       });
     } else {
-       _showBarMsg('$msg',false);
+      _showBarMsg('$msg', false);
     }
   }
 
   //descuentos poara el recibo  //cambiar a bd
   Future<void> searchConcepto() async {
     print("buscar lso descuentos");
-    final response = await http.get(Uri.parse("$_url/concepto_all"));
+    final response = await http.get(Uri.parse("${Constant.URL}/concepto_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -6669,7 +6794,7 @@ class _HomePageState extends State<HomePage> {
         _formNewClientShowDescuento = true;
       });
     } else {
-      _showBarMsg('Error no se obtuvo el concepto  $msg',false);
+      _showBarMsg('Error no se obtuvo el concepto  $msg', false);
     }
   }
 
@@ -7604,7 +7729,7 @@ class _HomePageState extends State<HomePage> {
   Future createRecibo() async {
     print("createRecibo createRecibo   $_selectedDate");
     final response = await http.post(
-      Uri.parse('$_url/synchronization_cuentaportercero'),
+      Uri.parse('${Constant.URL}/synchronization_cuentaportercero'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -7650,20 +7775,27 @@ class _HomePageState extends State<HomePage> {
     var msg = jsonResponse['msg'];
     if (response.statusCode == 201 && success) {
       print("createRecibo");
-      createReciboCartera();
+         final val = await validateConexion.checkInternetConnection();
+    setState(() {
+     _isConnected = val!;
+    });
+    _isConnected ? createReciboCarteraApi(): null;
     } else {
-      _showBarMsg('Error en la creacion del recibo cuentas_por_tercero  $msg',false);
+      _showBarMsg(
+          'Error en la creacion del recibo cuentas_por_tercero  $msg', false);
     }
   }
 
-  Future createReciboCartera() async {
+  Future createReciboCarteraApi() async {
+  
     print("createReciboCarteracreateReciboCarteracreateReciboCartera");
     late int cuota_cruce_cpd = 0;
     late int cuota = 1;
     late int conse = 0;
     numeroAletra(totalReciboPagado);
+
     final response = await http.post(
-      Uri.parse('$_url/synchronization_carteraproveedores'),
+      Uri.parse('${Constant.URL}/synchronization_carteraproveedores'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -7819,7 +7951,7 @@ class _HomePageState extends State<HomePage> {
         'consecutivo': _value_automatico,
       };
       final response = await http
-          .post(Uri.parse("$_url/consecutivo_recibo_app"), body: (_body));
+          .post(Uri.parse("${Constant.URL}/consecutivo_recibo_app"), body: (_body));
       var jsonResponse =
           convert.jsonDecode(response.body) as Map<String, dynamic>;
       var success = jsonResponse['success'];
@@ -7870,8 +8002,7 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w700),
                             ),
                           ),
-                          onTap: () {
-                            //  removeCarrito();
+                          onTap: () {                           
                             setState(() {
                               _clientShow = true;
                               _productosShowCat = false;
@@ -7890,12 +8021,45 @@ class _HomePageState extends State<HomePage> {
         );
       }
     } else {
-      _showBarMsg('Error en la creacion del recibo',false);
+      _showBarMsg('Error en la creacion del recibo', false);
     }
   }
 
   /////api
   Future<void> numeroAletra(String numero) async {
+
+    _submitDialog(context);
+    final val = await validateConexion.checkInternetConnection();
+      setState(() {
+      _isConnected = val!;
+        print("LA CONEXION $_isConnected");
+      });
+
+      if (_isConnected){
+          final response = await http.get(Uri.parse("${Constant.URL}/letras/$numero"));
+          var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+          var success = jsonResponse['success'];
+          if (response.statusCode == 200 && success) {
+            var data = jsonResponse['data'];
+              setState(() {
+                _letras = data ;
+              });
+           } else{
+             // _letras = await LetraN.convertirLetras(numero);
+            }
+        }else{
+       // _letras = await LetraN.convertirLetras(numero);
+       }
+
+    print("la letra convertida en locasl es  $_letras");
+ 
+    Navigator.pop(context);
+  }
+
+  Future<void> numeroAletraOld(String numero) async {
+
+    _submitDialog(context);
     final response = await http.get(
       Uri.parse(
           'https://numeros-a-letras1.p.rapidapi.com//api/NAL/?num=$numero'),
@@ -7907,23 +8071,25 @@ class _HomePageState extends State<HomePage> {
     );
     if (response.statusCode == 200) {
       var jsonResponse =
-          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      convert.jsonDecode(response.body) as Map<String, dynamic>;
       setState(() {
         _letras = jsonResponse['letras'];
-      });  
+      });
     }
+    Navigator.pop(context);
   }
 
-  void _showBarMsg(msg,bool type) {
+  void _showBarMsg(msg, bool type) {
     showTopSnackBar(
       context,
       animationDuration: const Duration(seconds: 1),
-      type ? CustomSnackBar.info(
-        message: msg,
-      ):CustomSnackBar.error(
-        message: msg,
-      ) ,
+      type
+          ? CustomSnackBar.info(
+              message: msg,
+            )
+          : CustomSnackBar.error(
+              message: msg,
+            ),
     );
   }
-
 }

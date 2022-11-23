@@ -6,8 +6,8 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
-
- 
+import '../../httpConexion/validateConexion.dart';
+import '../../Common/Constant.dart';
 import '../../db/operationDB.dart';
 import '../../models/usuario.dart';
 
@@ -44,7 +44,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   Duration get loginTime => Duration(milliseconds: 2250);
   LoginStatus _loginStatus = LoginStatus.notSignIn;
-  String _url = 'http://178.62.80.103:5000';
   final myControllerUsers = TextEditingController();
   final myControllerPassword = TextEditingController();
 
@@ -52,8 +51,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool focus = false;
   bool focusPass = false;
-  bool isOnline = false;
-  bool _isLoading = false;
+  bool _isConnected = false;
   final String hintText = '';
   bool _validate = true;
   bool _validatePass = true;
@@ -115,19 +113,9 @@ class _LoginPageState extends State<LoginPage> {
       }
   }
 
-  Future<bool> hasNetwork() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
-      return false;
-    }
-  }
-
   var value;
   getPref() async {
-    //  bool isOnline = await hasNetwork();
-    print('isOnline : $isOnline');
+
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
       value = preferences.getInt("value");
@@ -145,39 +133,54 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    super.initState();   
-    getUsuariosSincronizacion();    
+    getUsuariosSincronizacion();
     getPref();
+    super.initState();
   }
 
   /////api obtiene todos los usuarios de la bd postgres
   Future getUsuariosSincronizacion() async {
-    print("ingresa a la sincronizacion");
-    final response =
-    await http.get(Uri.parse("$_url/users_all"));
-    var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      var data = jsonResponse['data'];
-      if(data.length > 0) {
-      print("la data que se obtiene de la api $data");
-     await  OperationDB.deleteDataUsuario();
-      for (int i = 0; i < data.length; i++) {
-          final user = Usuario(id:i+1,usuario: data[i]['usuario'],
-                password:  data[i]['clave'],
-                nit:  data[i]['nit'],
-                id_tipo_doc_pe:  data[i]['id_tipo_doc_pe'],
-                id_tipo_doc_rc:  data[i]['id_tipo_doc_rc']);
-              print("manda a inserta usuariosssss $user");
-              await OperationDB.insertUser(user) ;
+    final val =  await validateConexion.checkInternetConnection(); 
+    setState(() {
+      _isConnected = val!;
+    });
+
+   if(_isConnected!=null && _isConnected) { 
+      final response = await http.get(Uri.parse("${Constant.URL}/users_all"));
+      var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var success = jsonResponse['success'];
+      var msg = jsonResponse['msg'];
+      if (response.statusCode == 200 && success) {
+        var data = jsonResponse['data'];
+        if (data.length > 0) {    
+           await OperationDB.deleteDataUsuario();
+          for (int i = 0; i < data.length; i++) {
+            final user = Usuario(
+                usuario: data[i]['usuario'],
+                clave: data[i]['clave'],
+                nit: data[i]['nit'],
+                id_tipo_doc_pe: data[i]['id_tipo_doc_pe'],
+                id_tipo_doc_rc: data[i]['id_tipo_doc_rc'],
+                id_bodega: data[i]['id_bodega'],
+                flag_activo:  data[i]['flag_activo']!= null ? data[i]['flag_activo'] : '',
+                edita_fecha_rc: data[i]['edita_fecha_rc']!= null ? data[i]['edita_fecha_rc'] : '',
+                flag_cambia_fp: data[i]['flag_cambia_fp']!= null ? data[i]['flag_cambia_fp'] : '',
+                flag_cambia_lp: data[i]['flag_cambia_lp']!= null ? data[i]['flag_cambia_lp'] : '',
+                flag_edita_cliente: data[i]['flag_edita_cliente']!= null ? data[i]['flag_edita_cliente'] : '',
+                flag_edita_dcto: data[i]['flag_edita_dcto']!=null ? data[i]['flag_edita_dcto'] : '',
+                flag_mobile: data[i]['flag_mobile']!=null ? data[i]['flag_mobile'] : '',
+                id_tipo_doc_fac:data[i]['id_tipo_doc_fac']!=null ? data[i]['id_tipo_doc_fac'] : '',
+                edita_consecutivo_rc: data[i]['id_tipo_doc_fac']!=null ? data[i]['id_tipo_doc_fac'] : '',
+            );
+            await OperationDB.insertUser(user);
+          }
         }
-      final allUsuarios=   await OperationDB.usuariosAll();
-      print("Allusuaruis $allUsuarios");
-      } 
+      } else {
+        _showBarMsg(msg, false);
+      }
     } else {
-      _showBarMsg(msg,false);
+       _showBarMsg("Sin conexión a internet", true);
     }
   }
 

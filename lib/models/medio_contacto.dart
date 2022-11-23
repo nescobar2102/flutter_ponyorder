@@ -40,11 +40,13 @@ class MedioContacto {
 class TipoIdentificacion { 
  
   final String id_tipo_identificacion;
-  final String descripcion;  
+  final String descripcion;
+  final String nit;
 
   const TipoIdentificacion(
       {required this.id_tipo_identificacion,
-      required this.descripcion
+      required this.descripcion,
+        required this.nit
        });
 
   // Convert a Dog into a Map. The keys must correspond to the names of the
@@ -52,7 +54,8 @@ class TipoIdentificacion {
   Map<String, dynamic> toMap() {
     return {
       'id_tipo_identificacion': id_tipo_identificacion,
-      'descripcion': descripcion 
+      'descripcion': descripcion ,
+      'nit': nit
     };
   }
 
@@ -60,7 +63,7 @@ class TipoIdentificacion {
   // each dog when using the print statement.
   @override
   String toString() {
-    return 'TipoIdentificacion {id_tipo_identificacion: $id_tipo_identificacion, descripcion: $descripcion  }';
+    return 'TipoIdentificacion {id_tipo_identificacion: $id_tipo_identificacion, descripcion: $descripcion , nit: $nit  }';
   }
 }
 

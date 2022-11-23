@@ -11,7 +11,7 @@ class CuentaTercero {
   final String  id_empresa;
   final String  id_sucursal;
   final String  tipo_doc;
-  final int    numero;
+  final int numero;
   final int cuota;
   final int dias;
   final String id_tercero;
@@ -28,8 +28,8 @@ class CuentaTercero {
   final String  id_empresa_cruce;
   final String id_sucursal_cruce;
   final String tipo_doc_cruce;
-  final int numero_cruce;
-  final int cuota_cruce;
+  final String numero_cruce;
+  final String cuota_cruce;
 
   const CuentaTercero(
       {
