@@ -3,12 +3,9 @@ import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
 import 'package:pony_order/models/tercero_cliente.dart';
-import 'dart:io';
 
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
-
-
 import '../../db/operationDB.dart';
 import '../../httpConexion/validateConexion.dart';
 import '../../Common/Constant.dart';
@@ -29,6 +26,8 @@ import '../../models/zona.dart';
 import '../../models/medio_contacto.dart';
 import '../../models/pedido.dart';
 import '../../models/recibo_caja.dart';
+
+import './sendData.dart';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -61,10 +60,10 @@ class LoginPages extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPages> {
- String _url = 'http://178.62.80.103:5000';
 
   bool focus = false;
   bool _isConnected = false;
+  String date = '';
 
   Future<Null> _submitDialog(BuildContext context) async {
     return await showDialog<Null>(
@@ -83,10 +82,10 @@ class _LoginPageState extends State<LoginPages> {
         });
   }
 
- void _showError(msg) {
+ void _showMSG(msg) {
    showTopSnackBar(
      context,
-     CustomSnackBar.error(
+     CustomSnackBar.info(
        message: msg,
      ),
    );
@@ -96,11 +95,17 @@ class _LoginPageState extends State<LoginPages> {
   @override
   void initState() {
     super.initState();
-
+    getSincronizacion();
   }
 
-
-  /////api obtiene todos los tipo de pago de la bd postgres
+  Future getSincronizacion() async {
+   var data =  await OperationDB.getSincronizacion();
+   if (data  != false) {
+     setState(() {
+      date = data[0]['create_at'];
+     });
+   }
+  }
   Future getTipoPagoSincronizacion() async {
     final response = await http.get(Uri.parse("${Constant.URL}/tipopago_all"));
     var jsonResponse =
@@ -117,8 +122,6 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertTipoPago(tipo_pago);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de tipo de pago');
     }
     await getEmpresaSincronizacion();
   }
@@ -159,8 +162,6 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertEmpresa(empresa);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de Empresa');
     }
     await getPaisSincronizacion();
   }
@@ -184,8 +185,6 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertPais(pais);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de Pais');
     }
     await getCiudadSincronizacion();
   }
@@ -209,8 +208,6 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertCiudad(ciudad);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de Ciudad');
     }
     await getTipoDocSincronizacion();
 
@@ -235,10 +232,7 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertZona(zona);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de Zona');
     }
-
     await getMedioContactoSincronizacion();
   }
 
@@ -258,10 +252,7 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertMedioContacto(contacto);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de MedioContacto');
     }
-
     await getTipoIdentificacion();
   }
   
@@ -281,10 +272,7 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertTipoIdentificacion(tipoIdentity);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de TipoIdentificacion');
     }
-
     await getTipoEmpresa();
   }
 
@@ -305,10 +293,7 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertTipoEmpresa(tipoEmpresa);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de  tipo_empresa');
     }
-
     await getBarrio();
   }
 
@@ -322,19 +307,16 @@ class _LoginPageState extends State<LoginPages> {
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final barrio = Barrio(
-              id_pais: data[i]['id_pais'],
-              id_depto: data[i]['id_depto'] ,
-                 id_ciudad: data[i]['id_ciudad'],
-                  id_barrio: data[i]['id_barrio'],
-              nombre: data[i]['nombre'] ,
-                 nit: data[i]['nit']);
+                          id_pais: data[i]['id_pais'],
+                          id_depto: data[i]['id_depto'] ,
+                          id_ciudad: data[i]['id_ciudad'],
+                          id_barrio: data[i]['id_barrio'],
+                          nombre: data[i]['nombre'] ,
+                          nit: data[i]['nit']);
           await OperationDB.insertBarrio(barrio);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de barrio');
     }
-
     await getDepto();
   }
 
@@ -355,10 +337,7 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertDepto(depto);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de insertDepto');
     }
-
     await getPedido();
   }
 
@@ -392,11 +371,7 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertPedido(pedido,false);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de insertPedido');
     }
-    final allPedido= await OperationDB.getPedido();
-    print("muestra todos los getPedido  $allPedido");
     await getPedidoDet();
   }
 
@@ -413,7 +388,8 @@ class _LoginPageState extends State<LoginPages> {
                     id_empresa:data[i]['id_empresa'],id_sucursal:data[i]['id_sucursal'],
                     id_tipo_doc:data[i]['id_tipo_doc'],numero:data[i]['numero'].toString(),
                     id_precio_item:data[i]['id_precio_item'], 
-                    subtotal:data[i]['subtotal'],  descripcion_item:data[i]['descripcion_item'],
+                    subtotal:data[i]['subtotal'],
+                    descripcion_item:data[i]['descripcion_item'],
                     total_iva:data[i]['total_iva'], 
                     total_dcto:data[i]['total_dcto'],total:data[i]['total'],
                     total_item:data[i]['total_item'],  
@@ -428,12 +404,8 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertPedidoDet(pedidodet,false);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de getPedidoDet');
     }
-    final ALLPEDIDODET= await OperationDB.getPedidoDet();
-    print("muestra todos los getPedidoDet  $ALLPEDIDODET");
-   await  getCuentaTercero();
+   await getCuentaTercero();
   }
 
  Future getCuentaTercero() async  {
@@ -467,13 +439,12 @@ class _LoginPageState extends State<LoginPages> {
                 id_sucursal_cruce: data[i]['id_sucursal_cruce'],
                 tipo_doc_cruce: data[i]['tipo_doc_cruce'],
                 numero_cruce: data[i]['numero_cruce'].toString(),
-                cuota_cruce: data[i]['cuota_cruce'].toString()
+                cuota_cruce: data[i]['cuota_cruce'].toString(),
+                flag_enviado:'SI'
             );
             await OperationDB.insertCuentaTercero(cuenta_tercero);
           }
         }
-      } else {
-        _showError('Error en la sincronizacion de cuenta tercero');
       }
       await getCarteraProveedores();
  }
@@ -514,8 +485,6 @@ class _LoginPageState extends State<LoginPages> {
        }
      }
 
-   } else {
-     _showError('Error en la sincronizacion de cartera proveedores');
    }
    await getAuxiliar();
  }
@@ -545,7 +514,7 @@ class _LoginPageState extends State<LoginPages> {
              id_vendedor:data[i]['id_vendedor'].toString(),
              id_forma_pago: data[i]['id_forma_pago'],
              documento_forma_pago:data[i]['documento_forma_pago'],
-             cuota: data[i]['cuota'].toString(),
+             cuota: data[i]['cuota'],
              distribucion:data[i]['distribucion'],
              descripcion: data[i]['descripcion'],
              id_suc_recaudador:data[i]['id_suc_recaudador'],
@@ -568,8 +537,6 @@ class _LoginPageState extends State<LoginPages> {
          await OperationDB.insertCarteraProveedoresDet(carteraDet);
        }
      }
-   } else {
-     _showError('Error en la sincronizacion dec cartera proveedores det');
    }
  }
 
@@ -592,14 +559,11 @@ class _LoginPageState extends State<LoginPages> {
          await OperationDB.insertAuxiliar(auxiliar);
        }
      }
-   } else {
-     _showError('Error en la sincronizacion de auxiliar');
    }
    await getConcepto();
  }
 
  Future getConcepto() async  {
-
    final response = await http.get(Uri.parse("${Constant.URL}/concepto_all"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -618,16 +582,12 @@ class _LoginPageState extends State<LoginPages> {
          await OperationDB.insertConcepto(concepto);
        }
      }
-
-   } else {
-     _showError('Error en la sincronizacion de conceptos');
    }
    await getBanco();
  }
 
 
  Future getBanco() async  {
-   print("banco");
    final response = await http.get(Uri.parse("${Constant.URL}/banco_all"));
    var jsonResponse =
    convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -644,14 +604,11 @@ class _LoginPageState extends State<LoginPages> {
          await OperationDB.insertBanco(banco);
        }
      }
-   } else {
-     _showError('Error en la sincronizacion de banco');
    }
    await getFormaPago();
  }
 
  Future getFormaPago() async  {
-   print("getFormaPago");
    //ULTIMO
    final response = await http.get(Uri.parse("${Constant.URL}/formapago_all"));
    var jsonResponse =
@@ -670,9 +627,8 @@ class _LoginPageState extends State<LoginPages> {
          await OperationDB.insertFormaPago(formapago);
        }
      }
-   } else {
-     _showError('Error en la sincronizacion de formapago');
    }
+
  }
 
  Future searchTercero() async {
@@ -719,7 +675,7 @@ class _LoginPageState extends State<LoginPages> {
                   ? data[i]['id_forma_pago']
                   : '',
               usuario: data[i]['usuario'] != null ? data[i]['usuario'] : '',
-              flag_enviado: 'NO',
+              flag_enviado: 'SI',
               e_mail: data[i]['e_mail'],
               telefono_celular: data[i]['telefono_celular'] != null
                   ? data[i]['telefono_celular']
@@ -730,13 +686,11 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertTercero(tercero);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de tercero');
     }
     await searchTerceroCliente();
-    final allTercero = await OperationDB.getTercero();
-    print("muestra todos los TERCEROS   $allTercero");
+    await OperationDB.insertSincronizacion();
     Navigator.pop(context);
+    _showMSG('Sincronización exitosa');
   }
 
   Future searchTerceroCliente() async {
@@ -796,12 +750,8 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertTerceroCliente(tercero_cliente);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de tercero cliente');
     }
     await searchTerceroDireccion();
-    final allTerceroCliente = await OperationDB.getTerceroCliente();
-    print("muestra todos los TERCERO CLIENTE  $allTerceroCliente");
   }
 
   Future searchTerceroDireccion() async {
@@ -827,33 +777,29 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertTerceroDireccion(tercero_direccion);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de tercero direccion');
     }
     await getTipoPagoSincronizacion();
-    final allTerceroDireccion = await OperationDB.getTerceroDireccion();
-    print("muestra todos los TERCERO DIRECCION  $allTerceroDireccion");
   }
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getCuotaVentaSincronizacion() async {
+    print("empiza a recibir");
     final val = await validateConexion.checkInternetConnection();
     setState(() {
      _isConnected = val!;
     });
     if(!_isConnected) {
-      _showError('No está conectado a internet');
+      _showMSG('Sin conexión a internet');
       return;
     }
     _submitDialog(context);
-    print("ingresa a la cuota venta");
+
     final response = await http.get(Uri.parse("${Constant.URL}/cuotaventas_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
-      print("la data que se obtiene de la api $data");
       if (data.length > 0) {
         await OperationDB.deleteCuota();
         for (int i = 0; i < data.length; i++) {
@@ -865,19 +811,13 @@ class _LoginPageState extends State<LoginPages> {
               nit: data[i]['nit'],
               id_vendedor: data[i]['id_vendedor'],
               id_suc_vendedor: data[i]['id_suc_vendedor']);
-          print("manda a inserta cuota_Venta $sale");
           await OperationDB.insertCuotaVenta(sale);
         }
-       // final allSale = await OperationDB.cuotaventaAll();
-
       }
-    } else {
-      _showError('Error en la sincronizacion de cuota venta');
     }
     await searchTercero();
   }
 
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getTipoDocSincronizacion() async {
     final response = await http.get(Uri.parse("${Constant.URL}/tipodoc_all"));
     var jsonResponse =
@@ -895,17 +835,13 @@ class _LoginPageState extends State<LoginPages> {
               consecutivo: data[i]['consecutivo'],
               descripcion: data[i]['descripcion'].toString(),
               nit: data[i]['nit']);
-          print("manda a inserta tipodoc $tipodoc");
           await OperationDB.insertTipoDoc(tipodoc);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de tipodoc');
     }
     await getFacturaSincronizacion();
   }
 
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getFacturaSincronizacion() async {
     final response = await http.get(Uri.parse("${Constant.URL}/factura_app_movil"));
     var jsonResponse =
@@ -925,18 +861,14 @@ class _LoginPageState extends State<LoginPages> {
               precio: data[i]['precio'].toString(),
               cantidad: data[i]['cantidad'],
               total: data[i]['total']);
-          print("manda a inserta factura $factura");
           await OperationDB.insertFactura(factura);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de factura');
     }
-    await getCalsificacionItemSincronizacion();
+    await getClasificacionItemSincronizacion();
   }
 
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
-  Future getCalsificacionItemSincronizacion() async {
+  Future getClasificacionItemSincronizacion() async {
     final response = await http.get(Uri.parse("${Constant.URL}/clasificacionItems_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -962,13 +894,10 @@ class _LoginPageState extends State<LoginPages> {
           await OperationDB.insertClasificacionItem(claitem);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de getClasificacionItem');
     }
     await getPrecioItemSincronizacion();
   }
 
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getPrecioItemSincronizacion() async {
     final response = await http.get(Uri.parse("${Constant.URL}/precioitem_all"));
     var jsonResponse =
@@ -995,17 +924,13 @@ class _LoginPageState extends State<LoginPages> {
                 : '',
             nit: data[i]['nit'],
           );
-          print("manda a inserta insertPrecioItem $precioItem");
           await OperationDB.insertPrecioItem(precioItem);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de getPrecioItem');
     }
     await getPrecioItemDetSincronizacion();
   }
 
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getPrecioItemDetSincronizacion() async {
     final response = await http.get(Uri.parse("${Constant.URL}/precioitemdet_all"));
     var jsonResponse =
@@ -1029,17 +954,13 @@ class _LoginPageState extends State<LoginPages> {
                 : '',
             nit: data[i]['nit'],
           );
-          print("manda a inserta insertPrecioItemDet $precioItemDet");
           await OperationDB.insertPrecioItemDet(precioItemDet);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de getPrecioItemDer');
     }
     await getItemSincronizacion();
   }
 
-  /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getItemSincronizacion() async {
     final response = await http.get(Uri.parse("${Constant.URL}/item_all"));
     var jsonResponse =
@@ -1071,14 +992,10 @@ class _LoginPageState extends State<LoginPages> {
                 ? data[i]['saldo_inventario'].toString()
                 : '0',
           );
-          print("manda a inserta item $item");
           await OperationDB.inserItem(item);
         }
       }
-    } else {
-      _showError('Error en la sincronizacion de getItem');
     }
-
     await getKitSincronizacion();
   }
 
@@ -1103,12 +1020,9 @@ class _LoginPageState extends State<LoginPages> {
            ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
            nit: data[i]['nit']
          );
-         print("manda a inserta kit $kit");
          await OperationDB.insertKit(kit);
        }
      }
-   } else {
-     _showError('Error en la sincronizacion de getKit');
    }
    await getKitDetSincronizacion();
  }
@@ -1136,19 +1050,15 @@ class _LoginPageState extends State<LoginPages> {
              ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
              nit: data[i]['nit']
          );
-         print("manda a inserta lit $kitdet");
          await OperationDB.insertKitDet(kitdet);
        }
      }
-   } else {
-     _showError('Error en la sincronizacion de kitdet');
    }
    await getZonaSincronizacion();
  }
   //visual
   @override
   Widget build(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
     return Scaffold(
       body: Stack(
         children: [
@@ -1187,11 +1097,16 @@ class _LoginPageState extends State<LoginPages> {
             ),
             onPressed: () {
               action
-                  ? getCuotaVentaSincronizacion()
+                  ? startSin()
                   : Navigator.pushNamed(context, 'home');
             },
           ),
         ));
+  }
+
+  void startSin() async {
+        await SendataSincronizacion.initSincronizacion();
+       await getCuotaVentaSincronizacion();
   }
 
   Widget _background(BuildContext context) {
@@ -1227,22 +1142,14 @@ class _LoginPageState extends State<LoginPages> {
                 child: Column(
                   children: [
                     Text(
-                      'Ultima sincronizacion 26-09-2022 15:33',
+                      'Última sincronización  $date',
                       style: TextStyle(
                           color: Color(0xff06538D),
                           fontSize: 14.0,
                           fontStyle: FontStyle.italic),
                     ),
-                    SizedBox(
-                      height: 10.0,
-                    ),
-                    Text(
-                      'Versión D-18-11-2022',
-                      style: TextStyle(
-                          color: Color(0xff06538D),
-                          fontSize: 14.0,
-                          fontStyle: FontStyle.italic),
-                    ),
+
+
                   ],
                 ),
               ),

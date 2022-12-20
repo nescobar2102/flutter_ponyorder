@@ -32,8 +32,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       new GlobalKey<ScaffoldState>();
 
 //api
-  String _url = 'http://178.62.80.103:5000';
-  late Object _body;
+
   late String _search = '@';
   late int _count;
   String _user = '';
@@ -47,6 +46,9 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
   late String _range;
   late String fecha1;
   late String fecha2;
+
+  final myControllerBuscarProd = TextEditingController();
+  final myControllerBuscarCatego= TextEditingController();
 
   /// called whenever a selection changed on the date picker widget.
   void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
@@ -88,8 +90,15 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       id_lista_precio_cliente = (prefs.getString('id_lista_precio') ?? '');
       id_suc_vendedor_cliente = (prefs.getString('id_suc_vendedor') ?? '');
       print("el usuario es $_user $_nit $id_vendedor");
-      if (_nit != '') {
+      if (_nit != '' && id_vendedor!='') {
         searchRecibo();
+      }else{
+        showTopSnackBar(
+          context,
+          CustomSnackBar.error(
+            message: "No se obtuvo información del vendedor,sincronice los datos",
+          ),
+        );
       }
     });
   }
@@ -255,7 +264,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
 
                               decoration: InputDecoration(
                                 hintText:
-                                    'Identificacion, nombre, o N° de recibo',
+                                    'Identificación, nombre ó N° de recibo',
                                 fillColor: Colors.white,
                                 filled: true,
                                 contentPadding: EdgeInsets.only(
@@ -318,7 +327,8 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                                               ],
                                             ),
                                           )));
-                                }),
+                                },
+                            controller:null),
                             SizedBox(height: 15.0),
                             _showItems ? _items(context) : Container(),
                             _showItemsOrder ? _itemsOrder(context) : Container()
@@ -414,6 +424,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
 
   Widget _ItemReceipts(data, i) {
        final nombre = data['nombre'].toUpperCase();
+       final tlf_cliente = data['telefono_celular']!=null   ? data['telefono_celular'] : data['telefono'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -523,7 +534,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('${data['telefono']}',
+                      child: Text(tlf_cliente,
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -653,7 +664,8 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                 InputCallback(
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
-                    callback: () => {}),
+                    callback: () => {},
+                    controller:myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -885,7 +897,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.attach_money_sharp,
+                    Icons.paid,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
@@ -941,7 +953,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                     size: 28.0,
                   ),
                   title: Text(
-                    'Sincronizacion',
+                    'backup',
                     style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
                   ),
                   onTap: () => Navigator.pushNamed(context, 'data'),

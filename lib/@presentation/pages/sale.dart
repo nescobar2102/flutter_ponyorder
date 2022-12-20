@@ -13,10 +13,7 @@ import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart'; 
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
-
-import 'package:sqflite/sqflite.dart';
 import '../../db/OperationDB.dart';
-import '../../models/sale.dart'; 
 
 class SalePage extends StatefulWidget {
   @override
@@ -24,21 +21,21 @@ class SalePage extends StatefulWidget {
 }
 
 class _SalePageState extends State<SalePage> {
-    String _url = 'http://178.62.80.103:5000';
- // String _url = 'http://10.0.2.2:3000';
+
   late String id_vendedor; 
   late int _count;
   String _user = '';
   String _nit = '';
-  late int total_cuota =0;
-  late int total_venta = 0;
-  late int total_pedido =0;
-  late int total_recibo = 0;
-  late int porcentaje = 0;
+  late double total_cuota =0;
+  late double total_venta = 0;
+  late double total_pedido =0;
+  late double total_recibo = 0;
+  late double porcentaje = 0;
 
   List<dynamic> _datBalance = [];
   List<dynamic> _datSale = [];
   late String _fecha;
+  final myControllerBuscarProd = TextEditingController();
 
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
@@ -66,16 +63,16 @@ class _SalePageState extends State<SalePage> {
       if(_datBalance != null) {
         for (int i = 0; i < _datBalance.length; i++) {
            if(_datBalance[i]['tipo'] == 'MES'){
-             total_cuota =  _datBalance[i]['total_cuota']!=null ?_datBalance[i]['total_cuota'] : 0;
-             total_venta =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
-             porcentaje =  _datBalance[i]['balance_general']!=null ?_datBalance[i]['balance_general'] : 0;            
+             total_cuota =  _datBalance[i]['total_cuota']!=null ? double.parse(_datBalance[i]['total_cuota'].toString()) : 0.00;
+             total_venta =  _datBalance[i]['total_venta']!=null ? double.parse(_datBalance[i]['total_venta'].toString()) : 0.00;
+             porcentaje =  _datBalance[i]['balance_general']!=null ? double.parse(_datBalance[i]['balance_general'].toString()) : 0.00;
                      
            }
            if(_datBalance[i]['tipo'] == 'DIA_RECIBO'){
-             total_recibo =  _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
+             total_recibo =  _datBalance[i]['total_venta']!=null ? double.parse(_datBalance[i]['total_venta'].toString()): 0.00;
            }
            if(_datBalance[i]['tipo'] == 'DIA_PEDIDO'){
-             total_pedido = _datBalance[i]['total_venta']!=null ?_datBalance[i]['total_venta'] : 0;
+             total_pedido = _datBalance[i]['total_venta']!=null ? double.parse(_datBalance[i]['total_venta'].toString()) : 0.00;
            }
         }
       }
@@ -83,7 +80,7 @@ class _SalePageState extends State<SalePage> {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
-          message: "Error getCBalance ",
+          message: "No se obtuvo datos",
         ),
       );
     }
@@ -97,14 +94,7 @@ class _SalePageState extends State<SalePage> {
            _datSale = allSale;
           _count = _datSale.length; 
      });
-      } else {
-      showTopSnackBar(
-        context,
-        CustomSnackBar.error(
-          message: "Error allSale getCuotaValue",
-        ),
-      );
-    }
+      }
   }
   
   String id_sucursal_tercero_cliente = '';
@@ -126,10 +116,17 @@ class _SalePageState extends State<SalePage> {
       id_suc_vendedor_cliente = (prefs.getString('id_suc_vendedor') ?? '');
       print("el usuario es $_user $_nit $id_vendedor");
 
-      if (_nit != '') {
+      if (_nit != '' && id_vendedor!='' ) {
         searchBalanceApi();
         searchSaleApi();             
-     }   
+     } else{
+        showTopSnackBar(
+          context,
+          CustomSnackBar.error(
+            message: "No se obtuvo información del vendedor,comuníquese con el administrador",
+          ),
+        );
+      }
     });
   }
   
@@ -471,11 +468,12 @@ class _SalePageState extends State<SalePage> {
                         color: Color(0xffC7C7C7),
                       ),
                       borderRadius: BorderRadius.circular(8.0)),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                   /* crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,*/
+                  //  children: [
+                    child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -548,16 +546,14 @@ class _SalePageState extends State<SalePage> {
                                     fontSize: 14.0),
                               )
                             ],
-                          )
-                        ],
-                      ),
+                          ),
                       SizedBox(
                         width: 100.0,
                         height: 100.0,
                         child :   DashedCircularProgressBar.aspectRatio(
                           aspectRatio: 2, // width ÷ height
-                          valueNotifier: ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
-                          progress:double.parse(_datSale[i]['porcentaje'].toString()),
+                          valueNotifier: ValueNotifier( _datSale[i]['porcentaje'] != null ? double.parse(_datSale[i]['porcentaje'].toString()) : 0),
+                          progress: _datSale[i]['porcentaje'] != null ? double.parse(_datSale[i]['porcentaje'].toString()) : 0,
                           startAngle: 225,
                           sweepAngle: 270,
                           foregroundColor: Colors.blue,
@@ -569,7 +565,7 @@ class _SalePageState extends State<SalePage> {
                           seekColor: const Color(0xffeeeeee),
                           child: Center(
                             child: ValueListenableBuilder(
-                                valueListenable:  ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
+                                valueListenable:  ValueNotifier( _datSale[i]['porcentaje'] != null ? double.parse(_datSale[i]['porcentaje'].toString()) : 0.00),
                                 builder: (_, double value, __) => Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -587,7 +583,9 @@ class _SalePageState extends State<SalePage> {
                           ),
                         ),
                       ),
-                    ],
+                      ],
+                    ),
+                   // ],
                   ),
                 ),
                 SizedBox(height: 10.0),
@@ -785,7 +783,8 @@ class _SalePageState extends State<SalePage> {
                 InputCallback(
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
-                    callback: () => {}),
+                    callback: () => {},
+                    controller:myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -1017,7 +1016,7 @@ class _SalePageState extends State<SalePage> {
                 child: const ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.attach_money_sharp,
+                    Icons.paid,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
@@ -1067,12 +1066,12 @@ class _SalePageState extends State<SalePage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.remove_red_eye,
+                    Icons.backup,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
                   title: Text(
-                    'Sincronizacion',
+                    'Sincronización',
                     style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
                   ),
                   onTap: () => Navigator.pushNamed(context, 'data'),

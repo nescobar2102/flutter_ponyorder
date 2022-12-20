@@ -4,11 +4,13 @@ class InputCallback extends StatefulWidget {
   final String hintText;
   final IconData iconCallback;
   final VoidCallback callback;
+  final TextEditingController?  controller;
 
   const InputCallback(
       {required this.hintText,
       required this.iconCallback,
-      required this.callback});
+      required this.callback,
+      required this.controller});
 
   @override
   _InputCallbackState createState() => _InputCallbackState();
@@ -19,7 +21,6 @@ class _InputCallbackState extends State<InputCallback> {
 
   @override
   Widget build(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
       child: Focus(
@@ -29,7 +30,7 @@ class _InputCallbackState extends State<InputCallback> {
           });
         },
         child: TextField(
-          // controller: user,
+          controller: widget.controller ,
           decoration: InputDecoration(
             hintText: widget.hintText,
             fillColor: Colors.white,

@@ -76,8 +76,8 @@ class _LoginPageState extends State<LoginPage> {
 
   // Perform login
   void validateAndSubmit() async {
-    _user = myControllerUsers.text;
-    _password = myControllerPassword.text;
+    _user = myControllerUsers.text.trim();
+    _password = myControllerPassword.text.trim();
 
     _user.isEmpty ? _validate = false : _validate = true;
     _password.isEmpty ? _validatePass = false : _validatePass = true;
@@ -188,7 +188,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
     return Scaffold(
       body: Stack(
         children: [
@@ -255,7 +254,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget textFormFieldPass(hintText, controller, icon,  maxLength) {
-    final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
       child: Focus(
@@ -283,7 +281,7 @@ class _LoginPageState extends State<LoginPage> {
             fillColor: Colors.white,
             filled: true,
             contentPadding: EdgeInsets.only(top: 30, bottom: 0),
-            focusedBorder: OutlineInputBorder(
+           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5.0),
               borderSide: BorderSide(
                 color: Color(0xff0090ce),
@@ -409,7 +407,7 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 30.0),
               Text(
                 'Usuario',
-                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700,color: Color(0xff707070)),
               ),
               SizedBox(height: 5.0),
               textFormField('Ingrese su usuario', myControllerUsers,
@@ -417,7 +415,7 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 25.0),
               Text(
                 'Contraseña',
-                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700,color: Color(0xff707070)),
               ),
               SizedBox(height: 5.0),
               textFormFieldPass('* * * * * * * *', myControllerPassword,
