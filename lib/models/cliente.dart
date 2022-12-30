@@ -16,9 +16,9 @@ class Cliente {
   final String id_depto;
   final String id_ciudad;
   final String id_barrio;
-  final String telefono; 
+  final String telefono;
+  final String telefono_celular;
   final String id_actividad;
-/*   final String cliente;*/
   final String fecha_creacion;
   final String nombre_sucursal;
   final String primer_apellido;
@@ -37,6 +37,7 @@ class Cliente {
   final String id_zona;
   final String flag_persona_nat;
   final String usuario;
+
   const Cliente(
       {  
           required this.id_tercero,
@@ -49,7 +50,8 @@ class Cliente {
           required this.id_depto,
           required this.id_ciudad,
           required this.id_barrio,
-          required this.telefono,  
+          required this.telefono,
+          required this.telefono_celular,
           required this.id_actividad,
           required this.fecha_creacion,
           required this.nombre_sucursal,
@@ -87,6 +89,7 @@ class Cliente {
       'id_ciudad': id_ciudad,
       'id_barrio': id_barrio,
       'telefono': telefono,
+      'telefono_celular' : telefono_celular,
       'id_actividad':id_actividad,
       'fecha_creacion': fecha_creacion,
       'nombre_sucursal': nombre_sucursal,
@@ -115,7 +118,7 @@ class Cliente {
   String toString() {
     return 'Cliente{  id_tercero: $id_tercero, id_sucursal_tercero: $id_sucursal_tercero,'
            '  id_tipo_identificacion: $id_tipo_identificacion,  dv: $dv, nombre: $nombre, direccion: $direccion,'
-           '  id_pais: $id_pais, id_depto: $id_depto, id_ciudad: $id_ciudad, id_barrio: $id_barrio,telefono: $telefono, id_actividad: $id_actividad,fecha_creacion: $fecha_creacion,'
+           '  id_pais: $id_pais, id_depto: $id_depto, id_ciudad: $id_ciudad, id_barrio: $id_barrio,telefono: $telefono, telefono_celular: $telefono_celular,id_actividad: $id_actividad,fecha_creacion: $fecha_creacion,'
            '  nombre_sucursal: $nombre_sucursal, primer_apellido: $primer_apellido,'
            '  segundo_apellido: $segundo_apellido, primer_nombre: $primer_nombre,  segundo_nombre: $segundo_nombre, e_mail: $e_mail, nit: $nit,'
            ' id_tipo_empresa: $id_tipo_empresa,id_forma_pago: $id_forma_pago,id_lista_precio:$id_lista_precio, id_precio_item:$id_precio_item,id_vendedor:$id_vendedor,'

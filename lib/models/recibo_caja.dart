@@ -30,6 +30,7 @@ class CuentaTercero {
   final String tipo_doc_cruce;
   final String numero_cruce;
   final String cuota_cruce;
+  final String flag_enviado;
 
   const CuentaTercero(
       {
@@ -54,7 +55,8 @@ class CuentaTercero {
       required this.id_sucursal_cruce,
       required this.tipo_doc_cruce,
       required this.numero_cruce,
-      required this.cuota_cruce
+      required this.cuota_cruce,
+      required this.flag_enviado
 
       });
 
@@ -83,7 +85,8 @@ class CuentaTercero {
       'id_sucursal_cruce': id_sucursal_cruce,
       'tipo_doc_cruce': tipo_doc_cruce,
       'numero_cruce': numero_cruce,
-      'cuota_cruce': cuota_cruce
+      'cuota_cruce': cuota_cruce,
+      'flag_enviado':flag_enviado
     };
   }
 
@@ -94,7 +97,7 @@ class CuentaTercero {
       return 'CuentaTercero { id_empresa:$id_empresa, id_sucursal: $id_sucursal, tipo_doc: $tipo_doc,numero: $numero, cuota: $cuota, dias: $dias,'
                 ' id_tercero:$id_tercero, id_vendedor: $id_vendedor,id_sucursal_tercero: $id_sucursal_tercero, fecha: $fecha, vencimiento: $vencimiento,'
                 ' credito: $credito, dctomax: $dctomax, debito: $debito, id_destino: $id_destino, id_proyecto: $id_proyecto,nit: $nit,id_empresa_cruce: $id_empresa_cruce,'
-                ' id_sucursal_cruce : $id_sucursal_cruce, tipo_doc_cruce: $tipo_doc_cruce, numero_cruce: $numero_cruce, cuota_cruce: $cuota_cruce }';
+                ' id_sucursal_cruce : $id_sucursal_cruce, tipo_doc_cruce: $tipo_doc_cruce, numero_cruce: $numero_cruce, cuota_cruce: $cuota_cruce,flag_enviado: $flag_enviado }';
       }
    }
 
@@ -197,7 +200,7 @@ class CarteraProveedoresDet {
   final String  documento_forma_pago;
   final int  id_sucursal_tercero;
   final String  id_tercero;
-  final String  cuota;
+  final int  cuota;
   final String  distribucion;
   final String  descripcion;
   final String  trm;
