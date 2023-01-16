@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
   final myControllerDireccion = TextEditingController();
   final myControllerEmail = TextEditingController();
   final myControllerTelefono = TextEditingController();
-  final myControllerTelefonoCelular = TextEditingController();
+  final myControllerTelefonoCelular = Tex+tEditingController();
   final myControllerCantidadCart = TextEditingController();
  
 //nuevo cliente
@@ -305,8 +305,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 )),
           );
-
-       // _showBarMsg('No se obtuvo información del vendedor,sincronice los datos o comuniquese con el ', false);
       }
   }
 

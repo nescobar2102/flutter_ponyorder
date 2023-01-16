@@ -32,7 +32,7 @@ class OperationDB {
 
   static Future<Database> _openDB() async {
     var databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, "demo_asset_example.db");
+    String path = join(databasesPath, "pony.db");
 
     // await deleteDatabase(path);
 
@@ -976,7 +976,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
       sql += '  OR  ( CAST(TERCERO.ID_TERCERO AS VARCHAR(20)) LIKE UPPER("%$search%"))) ';
     }
       sql += ' ORDER BY TERCERO.NOMBRE ASC LIMIT 20 ';
-
+  print("sql $sql");
 
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
@@ -994,7 +994,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     " id_precio_item, id_lista_precio,id_suc_vendedor from tercero INNER JOIN  tercero_cliente"
     " ON tercero.id_tercero=tercero_cliente.id_tercero"
     " where usuario='$user' and tercero.nit='$nit'   AND vendedor ='SI' limit 1 ";
-
+  print("sql vendedor $sql");
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
       return res;
