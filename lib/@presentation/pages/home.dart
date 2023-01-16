@@ -30,7 +30,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   bool _isConnected = false;
   bool _clientShow = false;
   bool _clientShowNoFound = false;
@@ -48,7 +47,7 @@ class _HomePageState extends State<HomePage> {
   bool _noDatos = true;
   late int _checked = 0;
   bool isCheckedDV = false;
- 
+
   bool isValidEmail = true;
 
   //data
@@ -101,9 +100,9 @@ class _HomePageState extends State<HomePage> {
   final myControllerDireccion = TextEditingController();
   final myControllerEmail = TextEditingController();
   final myControllerTelefono = TextEditingController();
-  final myControllerTelefonoCelular = Tex+tEditingController();
+  final myControllerTelefonoCelular = TextEditingController();
   final myControllerCantidadCart = TextEditingController();
- 
+
 //nuevo cliente
 
 //nuevo pedido
@@ -132,7 +131,6 @@ class _HomePageState extends State<HomePage> {
   List<dynamic> _datProductos = [];
   List<Map<String, dynamic>> _cartProductos = [];
 
-
   //variables de pedidos
   bool selectItem = false;
   final myControllerNroPedido = TextEditingController();
@@ -156,15 +154,14 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsBanco = '';
   String _value_itemsTipoPago = '';
 
-  //nuevo pedido 
+  //nuevo pedido
 
   get callback => false;
 
   @override
   void initState() {
     super.initState();
-     _loadDataUserLogin();
-
+    _loadDataUserLogin();
   }
 
   /// This implementation is just to simulate a load data behavior
@@ -172,6 +169,7 @@ class _HomePageState extends State<HomePage> {
   Future sleep1() {
     return new Future.delayed(const Duration(seconds: 5), () => "4");
   }
+
   Future<Null> _submitDialog(BuildContext context) async {
     return await showDialog<Null>(
         context: context,
@@ -198,20 +196,18 @@ class _HomePageState extends State<HomePage> {
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
       idReciboUser = (prefs.getString('idReciboUser') ?? '');
     });
-      if (_nit != '') {
-
-        if (id_vendedor == '') {
-          searchVendedor(_nit.trim(), _user.trim());
-        }
-     // await SendataSincronizacion.initSincronizacion();
-
+    if (_nit != '') {
+      if (id_vendedor == '') {
+        searchVendedor(_nit.trim(), _user.trim());
       }
+      // await SendataSincronizacion.initSincronizacion();
+
+    }
   }
 
   String id_sucursal_tercero_cliente = '';
@@ -242,70 +238,70 @@ class _HomePageState extends State<HomePage> {
         prefs.setString("id_suc_vendedor", id_suc_vendedor_cliente);
       });
     }
-      if(id_vendedor!='') {
-        await searchClient(); //validar esto con pony
-      }else{
-       showDialog<String>(
-            context: context,
-            builder: (BuildContext context) => Dialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                child: Container(
-                  height: 250.0,
-                  width: 300.0,
-                  padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 15.0),
-                      Text(
-                        '¡Atención!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Color(0xff06538D),
-                            fontSize: 22.0,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 20.0),
-                      Text(
-                        'No se obtuvo información del vendedor. \n Sincronice los datos.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Color(0xff0894FD),
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 30.0),
-                      Container(
-                        width: 110,
-                        height: 41.0,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5.0),
-                            color: Color(0xff0894FD)),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(5.0),
-                            child: Center(
-                              child: Text(
-                                'Entendido',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamed(context, 'data');
-                            },
+    if (id_vendedor != '') {
+      await searchClient(); //validar esto con pony
+    } else {
+      showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => Dialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0))),
+            child: Container(
+              height: 250.0,
+              width: 300.0,
+              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 15.0),
+                  Text(
+                    '¡Atención!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Color(0xff06538D),
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 20.0),
+                  Text(
+                    'No se obtuvo información del vendedor. \n Sincronice los datos.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Color(0xff0894FD),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 30.0),
+                  Container(
+                    width: 110,
+                    height: 41.0,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0),
+                        color: Color(0xff0894FD)),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(5.0),
+                        child: Center(
+                          child: Text(
+                            'Entendido',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700),
                           ),
                         ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, 'data');
+                        },
                       ),
-                    ],
+                    ),
                   ),
-                )),
-          );
-      }
+                ],
+              ),
+            )),
+      );
+    }
   }
 
   Future<void> searchDigitoVerif() async {
@@ -313,9 +309,12 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isConnected = val!;
     });
-    if (myControllerNroDoc.text.isNotEmpty && _isConnected && _value_itemsTypeDoc=='31') {
+    if (myControllerNroDoc.text.isNotEmpty &&
+        _isConnected &&
+        _value_itemsTypeDoc == '31') {
       final numeroId = myControllerNroDoc.text.trim();
-      final response = await http.get(Uri.parse("${Constant.URL}/cliente_dv/$numeroId"));
+      final response =
+          await http.get(Uri.parse("${Constant.URL}/cliente_dv/$numeroId"));
       var jsonResponse =
           convert.jsonDecode(response.body) as Map<String, dynamic>;
       var success = jsonResponse['success'];
@@ -332,7 +331,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   late List<Map<String, dynamic>> itemsListPrecio = [];
-  Future  getListPrecio() async {
+  Future getListPrecio() async {
     final data = await OperationDB.getListPrecio(_nit);
     if (data != false) {
       setState(() {
@@ -349,7 +348,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   late List<Map<String, dynamic>> _itemsTipoPago = [];
-  Future  getTipoPago() async {
+  Future getTipoPago() async {
     final data = await OperationDB.getTipoPago(_nit);
     if (data != false) {
       setState(() {
@@ -364,6 +363,7 @@ class _HomePageState extends State<HomePage> {
       _showBarMsg('Error', false);
     }
   }
+
   late List<Map<String, dynamic>> _itemsDepartamento = [];
   Future getItemDepartamento() async {
     final data = await OperationDB.getDeptoList(_nit);
@@ -391,7 +391,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _itemsBarrio = [];
       });
-    //  _showBarMsg('Error', false);
+      //  _showBarMsg('Error', false);
     }
   }
 
@@ -503,8 +503,9 @@ class _HomePageState extends State<HomePage> {
     myControllerEmail.clear();
     myControllerTelefono.clear();
     myControllerTelefonoCelular.clear();
-    final allClient = await OperationDB.getClient(_nit, _search.trim(),id_vendedor);
-    if (allClient != false && id_vendedor!='') {
+    final allClient =
+        await OperationDB.getClient(_nit, _search.trim(), id_vendedor);
+    if (allClient != false && id_vendedor != '') {
       setState(() {
         _count = allClient.length;
         _datClient = allClient;
@@ -515,10 +516,10 @@ class _HomePageState extends State<HomePage> {
         _formNewClientShowDescuento = false;
         _formNewClientShow = false;
       });
-      if(_search == '@') {
+      if (_search == '@') {
         await ObtieneCarrito();
       }
-    } else if (allClient == false && id_vendedor!='') {
+    } else if (allClient == false && id_vendedor != '') {
       _showBarMsg('No existen clientes', false);
       setState(() {
         _clientShow = false;
@@ -528,10 +529,11 @@ class _HomePageState extends State<HomePage> {
         _formNewClientShowDescuento = false;
         _formNewClientShow = false;
       });
-    }else{
+    } else {
       _clientShow = false;
       _clientShowNoFound = false;
-      _showBarMsg('No se obtuvo información del vendedor,sincronice los datos', false);
+      _showBarMsg(
+          'No se obtuvo información del vendedor,sincronice los datos', false);
     }
   }
 
@@ -558,7 +560,7 @@ class _HomePageState extends State<HomePage> {
         _direccionClienMercancia = [];
         searchClientDireccion();
       }
-    } else { 
+    } else {
       _showBarMsg('No se obtuvo  el saldo', false);
     }
   }
@@ -573,23 +575,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _saveClient() async {
-    final dv = myControllerDv.text  !='' ? myControllerDv.text.trim() : "'-'";
+    final dv = myControllerDv.text != '' ? myControllerDv.text.trim() : "'-'";
     final nuevo_cliente = Cliente(
         id_tercero: myControllerNroDoc.text.trim(),
         id_sucursal_tercero: id_sucursal_tercero_cliente,
         id_tipo_identificacion: _value_itemsTypeDoc,
-        dv:dv,
+        dv: dv,
         nombre: isCheckedDV
-            ? myControllerPrimerNombre.text.trim() + ' ' +
-              myControllerSegundoNombre.text.trim()+  ' '+
-              myControllerPrimerApellido.text.trim() + ' ' +
-              myControllerSegundoApellido.text.trim()
+            ? myControllerPrimerNombre.text.trim() +
+                ' ' +
+                myControllerSegundoNombre.text.trim() +
+                ' ' +
+                myControllerPrimerApellido.text.trim() +
+                ' ' +
+                myControllerSegundoApellido.text.trim()
             : myControllerRazonSocial.text.trim(),
         direccion: myControllerDireccion.text.trim(),
         id_pais: "",
         id_depto: _value_itemsDepartamento,
         id_ciudad: _value_itemsCiudad,
-        id_barrio: _value_itemsBarrio !='' ? _value_itemsBarrio : '0',
+        id_barrio: _value_itemsBarrio != '' ? _value_itemsBarrio : '0',
         telefono: myControllerTelefono.text.trim(),
         telefono_celular: myControllerTelefonoCelular.text.trim(),
         id_actividad: _value_itemsClasification,
@@ -597,10 +602,13 @@ class _HomePageState extends State<HomePage> {
             '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
         nombre_sucursal: !isCheckedDV
             ? myControllerRazonSocial.text.trim()
-            : myControllerPrimerNombre.text.trim() + ' ' +
-              myControllerSegundoNombre.text.trim()+  ' '+
-              myControllerPrimerApellido.text.trim() + ' ' +
-              myControllerSegundoApellido.text.trim() ,
+            : myControllerPrimerNombre.text.trim() +
+                ' ' +
+                myControllerSegundoNombre.text.trim() +
+                ' ' +
+                myControllerPrimerApellido.text.trim() +
+                ' ' +
+                myControllerSegundoApellido.text.trim(),
         primer_apellido:
             isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
         segundo_apellido:
@@ -622,21 +630,21 @@ class _HomePageState extends State<HomePage> {
         usuario: '');
     final insert = await OperationDB.insertCliente(nuevo_cliente);
     if (insert) {
-
-         final val = await validateConexion.checkInternetConnection();
-          setState(() {
-          _isConnected = val!;
-        });
-       _showBarMsg('Creación exitosa del cliente', true);
-     // _isConnected ?  await _saveClient_api() :
-      _isConnected ?   await SendataSincronizacion.sendTercero(false) : null;
+      final val = await validateConexion.checkInternetConnection();
+      setState(() {
+        _isConnected = val!;
+      });
+      _showBarMsg('Creación exitosa del cliente', true);
+      // _isConnected ?  await _saveClient_api() :
+      _isConnected ? await SendataSincronizacion.sendTercero(false) : null;
       Navigator.pushNamed(context, 'home');
     } else {
       _showBarMsg('Error, identificación ya existe', false);
       Navigator.pushNamed(context, 'home');
     }
   }
-  Future<void> getConsecutivo(bool pedido) async { 
+
+  Future<void> getConsecutivo(bool pedido) async {
     var idTipoDoc = pedido ? idPedidoUser : idReciboUser;
     final allConse =
         await OperationDB.getConsecutivoTipoDoc(_nit, idTipoDoc, id_empresa);
@@ -655,14 +663,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> ObtieneCarrito() async { 
-    final data = await OperationDB.getCarrito(
-        _nit, id_tercero, _value_automatico);
+  Future<void> ObtieneCarrito() async {
+    final data =
+        await OperationDB.getCarrito(_nit, id_tercero, _value_automatico);
     if (data != false) {
       _cartProductos =
           (data as List).map((dynamic e) => e as Map<String, dynamic>).toList();
 
-  if(_value_automatico== '' && id_tercero == '' && id_empresa == '') {
+      if (_value_automatico == '' && id_tercero == '' && id_empresa == '') {
         nombre_tercero = _cartProductos[0]['nombre_sucursal'];
         _value_automatico = _cartProductos[0]['numero'].toString();
         id_empresa = _cartProductos[0]['id_empresa'];
@@ -676,25 +684,26 @@ class _HomePageState extends State<HomePage> {
         id_direccion_factura = _cartProductos[0]['id_direccion_factura'];
       }
     }
-    setState(()   {
-      totalPedido =  valorTotal();
+    setState(() {
+      totalPedido = valorTotal();
     });
-   
   }
 
   late List<Map<String, dynamic>> _direccionClient = [];
   late List<Map<String, dynamic>> _direccionClienMercancia = [];
   Future<void> searchClientDireccion() async {
-    final allDireccionMercancia = await OperationDB.getDireccion(_nit, id_tercero,'Mercancia');
+    final allDireccionMercancia =
+        await OperationDB.getDireccion(_nit, id_tercero, 'Mercancia');
     if (allDireccionMercancia != false) {
       _direccionClienMercancia = (allDireccionMercancia as List)
           .map((dynamic e) => e as Map<String, dynamic>)
           .toList();
-    }else{
+    } else {
       _showBarMsg('El cliente no registra dirección', false);
     }
 
-    final allDireccion = await OperationDB.getDireccion(_nit, id_tercero,'Factura');
+    final allDireccion =
+        await OperationDB.getDireccion(_nit, id_tercero, 'Factura');
     if (allDireccion != false && allDireccionMercancia != false) {
       setState(() {
         _direccionClient = (allDireccion as List)
@@ -731,7 +740,7 @@ class _HomePageState extends State<HomePage> {
           _productosShow
               ? _productos(context, _datClasificacionProductos)
               : Container();
-            getListPrecio();
+          getListPrecio();
         }
       });
     } else {
@@ -740,7 +749,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> selectProducto() async {
-    String _search = '@'; 
+    String _search = '@';
     var data = await OperationDB.getClasificacionProductos(
         _nit, '1', '', true, _search);
     if (data != false) {
@@ -771,8 +780,7 @@ class _HomePageState extends State<HomePage> {
       _datClasificacionProductosNivel = data;
       _countClasificacionNivel = data.length;
       setState(() {
-        idClasificacion =
-        '${_datClasificacionProductosNivel[0]['id_padre']}';
+        idClasificacion = '${_datClasificacionProductosNivel[0]['id_padre']}';
         searchProductosPedido();
       });
     } else {
@@ -785,7 +793,8 @@ class _HomePageState extends State<HomePage> {
         ? myControllerBuscarProd.text.trim()
         : '@';
 
-    var data = await OperationDB.getItems(_nit, idClasificacion, _search,listaPrecioTercero);
+    var data = await OperationDB.getItems(
+        _nit, idClasificacion, _search, listaPrecioTercero);
     if (data != false) {
       setState(() {
         _datProductos = data;
@@ -808,7 +817,9 @@ class _HomePageState extends State<HomePage> {
     if (data != false) {
       setState(() {
         _precio = double.parse(data[0]['precio']);
-       _descuento = data[0]['descuento_maximo'] != null ? double.parse(data[0]['descuento_maximo']):0;
+        _descuento = data[0]['descuento_maximo'] != null
+            ? double.parse(data[0]['descuento_maximo'])
+            : 0;
       });
     } else {
       setState(() {
@@ -882,33 +893,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-
   List<dynamic> _datCartera = [];
   //historial de cartera del cliente
   Future<void> getHistorialCarteraClienteBasico() async {
     print("entra getHistorialCarteraClienteBasico");
     final data =
-    await OperationDB.getHistorialCarteraClienteBasico(id_tercero, _nit);
+        await OperationDB.getHistorialCarteraClienteBasico(id_tercero, _nit);
     print("entra getHistorialCarteraClienteBasico 2222 $data");
     if (data != false) {
-        setState(() {
-          _datCartera= data;
-          _checkedCartera = true;
-          _checkedPedido = false;
-          _checkedRecibo = false;
-          _noDatos = false;
-        });
-
-    } else {
-
+      setState(() {
+        _datCartera = data;
         _checkedCartera = true;
         _checkedPedido = false;
         _checkedRecibo = false;
-        _noDatos = true;
+        _noDatos = false;
+      });
+    } else {
+      _checkedCartera = true;
+      _checkedPedido = false;
+      _checkedRecibo = false;
+      _noDatos = true;
       _showBarMsg('No tiene cartera este cliente', false);
     }
   }
-
 
 //fin api///////////////////////
 
@@ -943,64 +950,62 @@ class _HomePageState extends State<HomePage> {
     isValidEmail = EmailValidator.validate(email);
   }
 
-    bool  validateFormulario() {
+  bool validateFormulario() {
     bool result = false;
-    result =  _value_itemsTypeDoc!='' ? true : false;
+    result = _value_itemsTypeDoc != '' ? true : false;
 
-    if(result){
-      result =  myControllerNroDoc.text.trim() !='' ? true : false;
+    if (result) {
+      result = myControllerNroDoc.text.trim() != '' ? true : false;
     }
 
-    if(result && isCheckedDV){
-      result =  myControllerPrimerNombre.text.trim() !='' ? true : false;
+    if (result && isCheckedDV) {
+      result = myControllerPrimerNombre.text.trim() != '' ? true : false;
     }
 
-    if(result && isCheckedDV){
-      result =  myControllerPrimerApellido.text.trim() !='' ? true : false;
+    if (result && isCheckedDV) {
+      result = myControllerPrimerApellido.text.trim() != '' ? true : false;
     }
 
-    if(result && !isCheckedDV){
-    result =  myControllerRazonSocial.text.trim() !=''  ? true : false;
+    if (result && !isCheckedDV) {
+      result = myControllerRazonSocial.text.trim() != '' ? true : false;
     }
 
-    if(result){
-      result =  myControllerDireccion.text.trim() !='' ? true : false;
+    if (result) {
+      result = myControllerDireccion.text.trim() != '' ? true : false;
     }
 
-    if(result){
-      result =  myControllerTelefono.text.trim() !='' ? true : false;
+    if (result) {
+      result = myControllerTelefono.text.trim() != '' ? true : false;
     }
-    if(result){
-      result =  myControllerTelefonoCelular.text.trim() !='' ? true : false;
+    if (result) {
+      result = myControllerTelefonoCelular.text.trim() != '' ? true : false;
     }
 
-
-    if(result && !isValidEmail){
+    if (result && !isValidEmail) {
       result = false;
     }
 
-    if(result){
-      result =  _value_itemsClasification.trim() !='' ? true : false;
+    if (result) {
+      result = _value_itemsClasification.trim() != '' ? true : false;
     }
 
-    if(result){
-      result =  _value_itemsMedioContacto.trim() !='' ? true : false;
+    if (result) {
+      result = _value_itemsMedioContacto.trim() != '' ? true : false;
     }
 
-    if(result){
-      result =  _value_itemsZona.trim() !='' ? true : false;
+    if (result) {
+      result = _value_itemsZona.trim() != '' ? true : false;
     }
 
-    if(result){
-      result =  _value_itemsDepartamento.trim() !='' ? true : false;
+    if (result) {
+      result = _value_itemsDepartamento.trim() != '' ? true : false;
     }
 
-    if(result){
-      result =  _value_itemsCiudad.trim() !='' ? true : false;
+    if (result) {
+      result = _value_itemsCiudad.trim() != '' ? true : false;
     }
 
     return result;
-
   }
 
   @override
@@ -1008,8 +1013,7 @@ class _HomePageState extends State<HomePage> {
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
-        appBar: 
-       AppBar(
+        appBar: AppBar(
           toolbarHeight: 60,
           automaticallyImplyLeading: false,
           leadingWidth: 40.0,
@@ -1030,28 +1034,29 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-           actions: [
-              Badge(
-                badgeContent: Text( (_cartProductos.length).toString() ,
-                  style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
+          actions: [
+            Badge(
+              badgeContent: Text(
+                (_cartProductos.length).toString(),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              child: GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 15.0),
+                    child: Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Color(0xff0090ce),
+                      size: 30,
+                    ),
                   ),
-                  child: GestureDetector(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 15.0),
-                        child: Icon(
-                          Icons.shopping_cart_outlined,
-                          color: Color(0xff0090ce),
-                          size: 30,
-                        ),
-                      ),
-                      onTap: () => {
+                  onTap: () => {
                         _drawerscaffoldkey.currentState!.isEndDrawerOpen
                             ? Navigator.pop(context)
                             : _drawerscaffoldkey.currentState!.openEndDrawer()
                       }),
-                position: const BadgePosition(start: -18, bottom: 30),
-              ),
+              position: const BadgePosition(start: -18, bottom: 30),
+            ),
           ],
           title: Text(
             'Clientes',
@@ -1072,7 +1077,8 @@ class _HomePageState extends State<HomePage> {
         body: Scaffold(
           key: _drawerscaffoldkey,
           drawer: _menu(context),
-          endDrawer: _shoppingCart(context, _cartProductos, _cartProductos.length),
+          endDrawer:
+              _shoppingCart(context, _cartProductos, _cartProductos.length),
           body: CustomScrollView(
             slivers: [
               SliverList(
@@ -1095,8 +1101,8 @@ class _HomePageState extends State<HomePage> {
                                   ? TextField(
                                       controller: myControllerSearch,
                                       textInputAction: TextInputAction.done,
-                                      onSubmitted: (String str){
-                                        setState((){
+                                      onSubmitted: (String str) {
+                                        setState(() {
                                           validateAndSubmit();
                                         });
                                       },
@@ -1153,10 +1159,12 @@ class _HomePageState extends State<HomePage> {
                                     )
                                   : SizedBox(height: 10.0),
                           SizedBox(height: 10.0),
-                          _clientShow &&   !_clientShowNoFound
+                          _clientShow && !_clientShowNoFound
                               ? _client(context, _datClient)
-                             :  Container(),
-                          _clientShowNoFound && !_clientShow ? _clientNotFound(context) :  Container(),
+                              : Container(),
+                          _clientShowNoFound && !_clientShow
+                              ? _clientNotFound(context)
+                              : Container(),
                           _productosShow
                               ? _productos(context, _datClasificacionProductos)
                               : Container(),
@@ -1196,7 +1204,9 @@ class _HomePageState extends State<HomePage> {
       id_tercero = '${data['id_tercero']}';
       nombre_tercero = '${data['nombre_sucursal']}  ';
       direccion_tercero = '${data['direccion']}';
-      tlf_tercero =  data['telefono_celular']!=null   ? data['telefono_celular'] : data['telefono'];
+      tlf_tercero = data['telefono_celular'] != null
+          ? data['telefono_celular']
+          : data['telefono'];
       id_empresa = '${data['id_empresa']}';
       id_sucursal_tercero = '${data['id_sucursal_tercero']}';
       limite_credito = '${data['limite_credito']}';
@@ -1250,7 +1260,7 @@ class _HomePageState extends State<HomePage> {
                     getItemDepartamento();
                     getItemClasificacion();
                     getItemMedioContacto();
-                    getItemZona();                 
+                    getItemZona();
                     _clientShow = false;
                     _clientShowNoFound = false;
                     _formShow = true;
@@ -1262,7 +1272,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _clientNotFound(BuildContext context) {
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1272,27 +1281,27 @@ class _HomePageState extends State<HomePage> {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic)),
-
         SizedBox(height: 200.0),
         BtnForm(
             text: 'Crear cliente',
             color: Color(0xff0894FD),
             callback: () => {
-              setState(() {
-                getItemTypeIdentication();
-                getItemDepartamento();
-                getItemClasificacion();
-                getItemMedioContacto();
-                getItemZona();
-                _clientShow = false;
-                _clientShowNoFound = false;
-                _formShow = true;
-              })
-            }),
+                  setState(() {
+                    getItemTypeIdentication();
+                    getItemDepartamento();
+                    getItemClasificacion();
+                    getItemMedioContacto();
+                    getItemZona();
+                    _clientShow = false;
+                    _clientShowNoFound = false;
+                    _formShow = true;
+                  })
+                }),
         SizedBox(height: 10.0),
       ],
     );
   }
+
   Widget InputCallback(
       BuildContext context, hintText, iconCallback, callback, controller) {
     final _size = MediaQuery.of(context).size;
@@ -1460,7 +1469,8 @@ class _HomePageState extends State<HomePage> {
                   height: 41.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5.0),
-                      color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                      color: (_cartProductos.length > 0 &&
+                              double.parse(totalPedido) > 0)
                           ? Color(0xff0894FD)
                           : Color.fromARGB(255, 146, 144, 144)),
                   child: Material(
@@ -1477,7 +1487,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       onTap: () {
-                        (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                        (_cartProductos.length > 0 &&
+                                double.parse(totalPedido) > 0)
                             ? createPedido()
                             : modalSinPedido();
                       },
@@ -1489,8 +1500,8 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
- 
-    Widget _shoppingCart(BuildContext context, data, index) {
+
+  Widget _shoppingCart(BuildContext context, data, index) {
     final _size = MediaQuery.of(context).size;
     final nombre = nombre_tercero.toUpperCase();
     return SafeArea(
@@ -1517,11 +1528,11 @@ class _HomePageState extends State<HomePage> {
                               fontWeight: FontWeight.w700),
                         ),
                         GestureDetector(
-                        child:Icon(
-                          Icons.disabled_by_default_outlined,
-                          color: Color(0xff0f538d),
-                          size: 30.0,
-                        ),
+                          child: Icon(
+                            Icons.disabled_by_default_outlined,
+                            color: Color(0xff0f538d),
+                            size: 30.0,
+                          ),
                           onTap: () {
                             myControllerBuscarProd.clear();
                             Navigator.pop(context);
@@ -1567,7 +1578,7 @@ class _HomePageState extends State<HomePage> {
                               Navigator.pop(context);
                               _productosShowCat = false;
                               _clientShow = false;
-                              _clientShowNoFound=  false;
+                              _clientShowNoFound = false;
                               _formShow = false;
                               searchClasificacionProductos();
                             }),
@@ -1598,15 +1609,14 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       height: 15.0,
                     ),
-                 
-                      SizedBox(
-                  height: 300.0,
-                     child: ListView.builder(
-                      itemCount: _cartProductos.length,
-                      itemBuilder: (context, i) =>   _ItemCategoryOrderCart(_cartProductos[i], i),
+                    SizedBox(
+                      height: 300.0,
+                      child: ListView.builder(
+                        itemCount: _cartProductos.length,
+                        itemBuilder: (context, i) =>
+                            _ItemCategoryOrderCart(_cartProductos[i], i),
+                      ),
                     ),
-
-                ),
                     SizedBox(height: 15.0),
                     TextField(
                         controller: myControllerObservacion,
@@ -1686,7 +1696,8 @@ class _HomePageState extends State<HomePage> {
                               height: 41.0,
                               decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(5.0),
-                                  color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                  color: (_cartProductos.length > 0 &&
+                                          double.parse(totalPedido) > 0)
                                       ? Color(0xff0894FD)
                                       : Color.fromARGB(255, 146, 144, 144)),
                               child: Material(
@@ -1703,7 +1714,8 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   onTap: () {
-                                    (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                    (_cartProductos.length > 0 &&
+                                            double.parse(totalPedido) > 0)
                                         ? createPedido()
                                         : modalSinPedido();
                                   },
@@ -1728,7 +1740,7 @@ class _HomePageState extends State<HomePage> {
                               fontWeight: FontWeight.w700),
                         ),
                         GestureDetector(
-                          child:Icon(
+                          child: Icon(
                             Icons.disabled_by_default_outlined,
                             color: Color(0xff0f538d),
                             size: 30.0,
@@ -1793,7 +1805,7 @@ class _HomePageState extends State<HomePage> {
                                               ),
                                               onTap: () {
                                                 Navigator.pop(context);
-                                               // Navigator.pushNamed(context, 'home');
+                                                // Navigator.pushNamed(context, 'home');
                                               },
                                             ),
                                           ),
@@ -1988,7 +2000,8 @@ class _HomePageState extends State<HomePage> {
                           height: 41.0,
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(5.0),
-                              color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                              color: (_cartProductos.length > 0 &&
+                                      double.parse(totalPedido) > 0)
                                   ? Color(0xff0894FD)
                                   : Color.fromARGB(255, 146, 144, 144)),
                           child: Material(
@@ -2005,7 +2018,8 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               onTap: () {
-                                (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                (_cartProductos.length > 0 &&
+                                        double.parse(totalPedido) > 0)
                                     ? createPedido()
                                     : modalSinPedido();
                               },
@@ -2401,21 +2415,24 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             height: 10.0,
           ),
-          _noDatos ?  _totalHistorySinDatos(context ) : Container(),
-          _checkedCartera && !_noDatos ? _totalHistoryCartera(context) : Container(),
-          _checkedPedido && !_noDatos? _totalHistoryPedido(context) : Container(),
-          _checkedRecibo && !_noDatos ? _totalHistoryRecibo(context) : Container(),
-
+          _noDatos ? _totalHistorySinDatos(context) : Container(),
+          _checkedCartera && !_noDatos
+              ? _totalHistoryCartera(context)
+              : Container(),
+          _checkedPedido && !_noDatos
+              ? _totalHistoryPedido(context)
+              : Container(),
+          _checkedRecibo && !_noDatos
+              ? _totalHistoryRecibo(context)
+              : Container(),
         ],
       ),
     );
   }
 
-
   //No tiene datos el historial
 
-
-  Widget _totalHistorySinDatos(BuildContext context ) {
+  Widget _totalHistorySinDatos(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -2431,7 +2448,6 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-
                 Text(
                   'Este cliente no tiene datos.',
                   style: TextStyle(
@@ -2442,7 +2458,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-
           SizedBox(
             height: 200.0,
           ),
@@ -2479,8 +2494,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-
 
   Widget _totalHistoryCartera(BuildContext context) {
     final _size = MediaQuery.of(context).size;
@@ -2604,7 +2617,10 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text(   '\$ ' +  expresionRegular(double.parse(_datCartera[0]['debito'].toString())),
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(double.parse(
+                                  _datCartera[0]['debito'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2841,7 +2857,7 @@ class _HomePageState extends State<HomePage> {
               itemCount: total_item,
               itemBuilder: (context, i) =>
                   ItemProductOrderHistoryNew(_datDetallePedido[i], i),
-            ),          
+            ),
           ),
           SizedBox(
             height: 20.0,
@@ -2898,11 +2914,11 @@ class _HomePageState extends State<HomePage> {
                     topRight: Radius.circular(4.0)),
                 color: Color(0xffF4F4F4)),
             width: _size.width,
-            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
-            child:
-            Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            child: Padding(
               padding: const EdgeInsets.all(7.0),
-              child:Column(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -3611,7 +3627,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-
                 SizedBox(
                   height: 20.0,
                 ),
@@ -3862,7 +3877,6 @@ class _HomePageState extends State<HomePage> {
                           color: Color(0xff0894FD),
                           callback: () {
                             createRecibo();
-
                           }),
                     )
                   ],
@@ -3941,15 +3955,16 @@ class _HomePageState extends State<HomePage> {
                 items: _itemsTipoPago,
                 onChanged: (val) => setState(() {
                   _value_itemsTipoPago = val;
-                  if (_value_itemsTipoPago == '01' ) {
+                  if (_value_itemsTipoPago == '01') {
                     isBanco = false;
                     isCheque = false;
                     myControllerNroCheque.clear();
-                  } else if (_value_itemsTipoPago != '01' && _value_itemsTipoPago != '02') {
+                  } else if (_value_itemsTipoPago != '01' &&
+                      _value_itemsTipoPago != '02') {
                     isBanco = true;
                     isCheque = false;
                     myControllerNroCheque.clear();
-                  } else if(_value_itemsTipoPago == '02') {
+                  } else if (_value_itemsTipoPago == '02') {
                     isCheque = true;
                     isBanco = false;
                   }
@@ -3965,7 +3980,6 @@ class _HomePageState extends State<HomePage> {
                 items: _itemsBanco,
                 //initialValue: _value_itemsBanco,
                 onChanged: (val) => setState(() => _value_itemsBanco = val),
-
               ),
               _itemForm(context, 'N° cheque', '00000', myControllerNroCheque,
                   false, 'number', isCheque, callback),
@@ -4035,7 +4049,8 @@ class _HomePageState extends State<HomePage> {
                           setState(() {
                             if (_value_itemsTipoPago == '') {
                               _showBarMsg('Indique una forma de pago', false);
-                            } else if ((_value_itemsTipoPago == '03' || _value_itemsTipoPago == '04') &&
+                            } else if ((_value_itemsTipoPago == '03' ||
+                                    _value_itemsTipoPago == '04') &&
                                 _value_itemsBanco == '') {
                               _showBarMsg('Indique un banco', false);
                             } else if (_value_itemsTipoPago == '02' &&
@@ -4150,7 +4165,8 @@ class _HomePageState extends State<HomePage> {
             context,
             'Total cartera',
             '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
-            '',null),
+            '',
+            null),
         SizedBox(height: 20.0),
         Column(
           children: [
@@ -4465,20 +4481,18 @@ class _HomePageState extends State<HomePage> {
           labelText: 'Tipo de documento',
           items: _itemsTypeDoc.toList(),
           onChanged: (val) => setState(() => {
-          _value_itemsTypeDoc = val,
-          if(_value_itemsTypeDoc=='31'){
-             searchDigitoVerif(),
-            isCheckedDV = false
-          }else{
-            myControllerDv.clear(),
-            if(_value_itemsTypeDoc=='13'){
-              isCheckedDV = true
-            }else{
-              isCheckedDV = false
-            }
-          }
-
-        }),
+                _value_itemsTypeDoc = val,
+                if (_value_itemsTypeDoc == '31')
+                  {searchDigitoVerif(), isCheckedDV = false}
+                else
+                  {
+                    myControllerDv.clear(),
+                    if (_value_itemsTypeDoc == '13')
+                      {isCheckedDV = true}
+                    else
+                      {isCheckedDV = false}
+                  }
+              }),
           validator: (val) {
             setState(() => _value_itemsTypeDoc = val ?? '');
             return null;
@@ -4502,8 +4516,8 @@ class _HomePageState extends State<HomePage> {
                 isCheckedDV = !isCheckedDV;
               });
             }),
-        _itemForm(context, 'DV.', '', myControllerDv, true, 'text',
-            false, callback),
+        _itemForm(
+            context, 'DV.', '', myControllerDv, true, 'text', false, callback),
         _itemForm(context, 'Primer nombre', '', myControllerPrimerNombre,
             !isCheckedDV, 'name', isCheckedDV, callback),
         _itemForm(context, 'Segundo nombre', '', myControllerSegundoNombre,
@@ -4520,8 +4534,8 @@ class _HomePageState extends State<HomePage> {
             validateEmail),
         _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,
             'phone', true, callback),
-        _itemForm(context, 'Teléfono celular', '', myControllerTelefonoCelular, false,
-            'phone', true, callback),
+        _itemForm(context, 'Teléfono celular', '', myControllerTelefonoCelular,
+            false, 'phone', true, callback),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Clasificación',
@@ -4638,9 +4652,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
-                          if(!validateFormulario()){
-                            _showBarMsg('Debe completar los campos correctamente', false);
-                          }else{
+                          if (!validateFormulario()) {
+                            _showBarMsg(
+                                'Debe completar los campos correctamente',
+                                false);
+                          } else {
                             _saveClient();
                           }
                         });
@@ -4689,26 +4705,26 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 GestureDetector(
-                    child: Row(
-                      children: [
-                        Text(
-                          'Ver detalles',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.w300,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 3.0),
-                        Icon(
-                          Icons.remove_red_eye,
+                  child: Row(
+                    children: [
+                      Text(
+                        'Ver detalles',
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w300,
+                          fontStyle: FontStyle.italic,
                           color: Colors.white,
-                          size: 15.0,
-                        )
-                      ],
-                    ),
-                   ),
+                        ),
+                      ),
+                      SizedBox(width: 3.0),
+                      Icon(
+                        Icons.remove_red_eye,
+                        color: Colors.white,
+                        size: 15.0,
+                      )
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -4856,9 +4872,9 @@ class _HomePageState extends State<HomePage> {
           width: _size.width * 0.5 - 20,
           child: Focus(
             onFocusChange: (e) {
-              setState(() {             
-                if (callback != false  && !e  && controller.text.isNotEmpty) {
-                      callback();
+              setState(() {
+                if (callback != false && !e && controller.text.isNotEmpty) {
+                  callback();
                 }
               });
             },
@@ -4880,7 +4896,11 @@ class _HomePageState extends State<HomePage> {
               decoration: InputDecoration(
                 errorText: isRequired && controller.text.isEmpty
                     ? 'Es requerido'
-                    : !isValidEmail && controller.text.isNotEmpty && type=='email'? 'Email inválido' : null,
+                    : !isValidEmail &&
+                            controller.text.isNotEmpty &&
+                            type == 'email'
+                        ? 'Email inválido'
+                        : null,
                 hintText: hintText,
                 hintStyle: TextStyle(
                   color: Color(0xff707070),
@@ -5061,8 +5081,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _itemSelectForm(
-      BuildContext context, String label, String hintText, String title,callback) {
+  Widget _itemSelectForm(BuildContext context, String label, String hintText,
+      String title, callback) {
     final _size = MediaQuery.of(context).size;
     return Row(
       children: [
@@ -5108,7 +5128,9 @@ class _HomePageState extends State<HomePage> {
 
   Widget _ItemClient(hintText, data) {
     final nombre = data['nombre_sucursal'].toUpperCase();
-    final tlf_cliente = data['telefono_celular']!=null   ? data['telefono_celular'] : data['telefono'];
+    final tlf_cliente = data['telefono_celular'] != null
+        ? data['telefono_celular']
+        : data['telefono'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -5303,9 +5325,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                           onTap: () {
                             setState(() {
-                              if (_cartProductos.isNotEmpty && data['id_tercero']!=id_tercero) {
+                              if (_cartProductos.isNotEmpty &&
+                                  data['id_tercero'] != id_tercero) {
                                 modalNuevoPedido(context, data);
-                              }else{
+                              } else {
                                 id_tercero = '${data['id_tercero']}';
                                 nombre_tercero =
                                     '${data['nombre_sucursal'].toString()}  ';
@@ -5323,9 +5346,8 @@ class _HomePageState extends State<HomePage> {
                                 id_sucursal_tercero =
                                     '${data['id_sucursal_tercero']}';
                                 limite_credito = '${data['limite_credito']}';
-                               getConsecutivo(true);
+                                getConsecutivo(true);
                               }
-
                             });
                           },
                         ),
@@ -5416,41 +5438,42 @@ class _HomePageState extends State<HomePage> {
       crossAxisCount: 2,
       children: <Widget>[
         for (var i = 0; i < _countClasificacion; i++) ...[
-         InkWell(
-           child: Container(
+          InkWell(
+            child: Container(
               decoration: BoxDecoration(
-               image: DecorationImage(
-                image:
-                //  AssetImage('assets/images/${data[i]['descripcion']}.png'),
-                AssetImage('assets/images/producto-sin-imagen.png'),
-                 fit: BoxFit.cover,
+                image: DecorationImage(
+                  image:
+                      //  AssetImage('assets/images/${data[i]['descripcion']}.png'),
+                      AssetImage('assets/images/producto-sin-imagen.png'),
+                  fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.all(
-                Radius.circular(20.0),
+                  Radius.circular(20.0),
                 ),
               ),
-           child: Column(
+              child: Column(
                 children: [
                   Padding(
                     padding: EdgeInsets.all(2),
                     child: Align(
                       alignment: Alignment.center,
-                      child: Text('${data[i]['descripcion']}',
-                        style: TextStyle(color: Colors.blue,
-                            fontSize: 14),),
+                      child: Text(
+                        '${data[i]['descripcion']}',
+                        style: TextStyle(color: Colors.blue, fontSize: 14),
+                      ),
                     ),
                   ),
                 ],
               ),
-         ),
-        onTap: () {
-          setState(() {
-            idClasificacion = '${data[i]['id_clasificacion']}';
-            _id_padre = idClasificacion;
-            selectProductoNivel();
-            });
-           },
-         ),
+            ),
+            onTap: () {
+              setState(() {
+                idClasificacion = '${data[i]['id_clasificacion']}';
+                _id_padre = idClasificacion;
+                selectProductoNivel();
+              });
+            },
+          ),
         ],
       ],
     );
@@ -5470,14 +5493,14 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: Text(
               '${data['descripcion']}',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
                 color: Colors.blue,
-
               ),
             ),
           ),
@@ -5493,7 +5516,7 @@ class _HomePageState extends State<HomePage> {
                   initialValue: listaPrecioTercero,
                   onChanged: (val) => setState(() => {
                         _value_itemsListPrecio = val,
-                        if (_value_itemsListPrecio !='0')
+                        if (_value_itemsListPrecio != '0')
                           {
                             _itemSelect = data['id_item'],
                             searchPrecioProductos('${data['id_item']}'),
@@ -5529,9 +5552,11 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 40,
                       child: Text(
-                     (_itemSelect == data['id_item'])
+                          (_itemSelect == data['id_item'])
                               ? '\$ ' + expresionRegular(_precio)
-                              : '\$ ' + expresionRegular(double.parse(data['precio'].toString())),
+                              : '\$ ' +
+                                  expresionRegular(
+                                      double.parse(data['precio'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5589,9 +5614,14 @@ class _HomePageState extends State<HomePage> {
                       height: 40.0,
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8.0),
-                          color: (_itemSelect == data['id_item'] && _precio > 0  )  && !validExistCarrito(data['id_item'])
-                              || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
-                                  && !validExistCarrito(data['id_item'])
+                          color: (_itemSelect == data['id_item'] &&
+                                          _precio > 0) &&
+                                      !validExistCarrito(data['id_item']) ||
+                                  (_itemSelect != data['id_item'] &&
+                                          double.parse(
+                                                  data['precio'].toString()) >
+                                              0) &&
+                                      !validExistCarrito(data['id_item'])
                               ? Colors.blue
                               : Colors.grey[300]),
                       child: Material(
@@ -5607,17 +5637,25 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w400),
                             ),
                           ),
-
-                            onTap: (_itemSelect == data['id_item'] && _precio > 0  ) || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
+                          onTap: (_itemSelect == data['id_item'] &&
+                                      _precio > 0) ||
+                                  (_itemSelect != data['id_item'] &&
+                                      double.parse(data['precio'].toString()) >
+                                          0)
                               ? () {
-                              if (validExistCarrito(data['id_item'])) {
-                                   _showBarMsg('Este producto ya existe en el carrito', false);
-                                  }else {
-
-                                  if(_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 ) {
-                                    _precio = double.parse(data['precio'].toString());
-                                  }
-                                  _itemSelect = data['id_item'];
+                                  if (validExistCarrito(data['id_item'])) {
+                                    _showBarMsg(
+                                        'Este producto ya existe en el carrito',
+                                        false);
+                                  } else {
+                                    if (_itemSelect != data['id_item'] &&
+                                        double.parse(
+                                                data['precio'].toString()) >
+                                            0) {
+                                      _precio = double.parse(
+                                          data['precio'].toString());
+                                    }
+                                    _itemSelect = data['id_item'];
                                     _showAlert(
                                         i,
                                         data['id_item'],
@@ -5656,7 +5694,8 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: Text(
               '$descripcion',
               style: TextStyle(
@@ -5798,8 +5837,8 @@ class _HomePageState extends State<HomePage> {
                               InkWell(
                                   onTap: () {
                                     setState(() {
-                                      _cantidadProducto =
-                                          int.parse(myControllerCantidad.text.trim());
+                                      _cantidadProducto = int.parse(
+                                          myControllerCantidad.text.trim());
                                       _cantidadProducto++;
                                       myControllerCantidad.text =
                                           _cantidadProducto.toString();
@@ -5826,7 +5865,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 TextField(
                     controller: myControllerDescuentos,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(50),
@@ -5880,7 +5920,7 @@ class _HomePageState extends State<HomePage> {
                               //backgroundColor: Colors.blue,
                               ),
                           onPressed: () {
-                            if(!validExistCarrito(idItem)) {
+                            if (!validExistCarrito(idItem)) {
                               _addProductoPedido(descripcion, idItem);
                             }
                           }),
@@ -5900,8 +5940,8 @@ class _HomePageState extends State<HomePage> {
     var cantidad = int.parse(data['cantidad'].toString());
     double total = 0.0;
     total = data['total'];
-    final descripcion = data['descripcion'] ;
-    final _size = MediaQuery.of(context).size; 
+    final descripcion = data['descripcion'];
+    final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
       decoration: BoxDecoration(
@@ -5912,42 +5952,41 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal:0.0),
-            child:Column(
+            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 0.0),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 300.0, bottom:0.0),
-                        child: Icon(
-                          Icons.do_disturb_on,
-                          color: Color(0xffCB1B1B),
-                          size: 20,
-                        ),
+              children: [
+                GestureDetector(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 300.0, bottom: 0.0),
+                      child: Icon(
+                        Icons.do_disturb_on,
+                        color: Color(0xffCB1B1B),
+                        size: 20,
                       ),
-                      onTap: () => {
+                    ),
+                    onTap: () => {
                           _showDialog(context, index),
-                      }),
-                ],
-              ),
+                        }),
+              ],
+            ),
           ),
           Padding(
-              padding: const EdgeInsets.all(10.0),
-              child:Column(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-              Text(
-              '$descripcion',
-              style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w700,
-              color: Colors.blue,
-              ),
-              ),
+                Text(
+                  '$descripcion',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blue,
+                  ),
+                ),
               ],
-              ),
-              ),
-
+            ),
+          ),
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
@@ -6084,38 +6123,34 @@ class _HomePageState extends State<HomePage> {
                                 width: _size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
-                                 child:  
-                              TextField(                                  
-                                      textAlign: TextAlign.center, 
+                                  child: TextField(
+                                      textAlign: TextAlign.center,
                                       controller: myControllerCantidadCart,
                                       keyboardType: TextInputType.number,
                                       textInputAction: TextInputAction.done,
-                                      
-                                     onSubmitted: (String str){
-                                     
-                                         if (str.isNotEmpty) {
-                                      OperationDB.updateCantidadFinal(
+                                      onSubmitted: (String str) {
+                                        if (str.isNotEmpty) {
+                                          OperationDB.updateCantidadFinal(
                                               _cartProductos[index]['id_item'],
                                               _value_automatico,
-                                            int.parse(
-                                              myControllerCantidadCart.text.trim()));
-                                            myControllerCantidadCart.clear(); 
+                                              int.parse(myControllerCantidadCart
+                                                  .text
+                                                  .trim()));
+                                          myControllerCantidadCart.clear();
                                           ObtieneCarrito();
                                         }
-                                    },
-                                   
+                                      },
                                       decoration: InputDecoration(
-                                        hintText:  cantidad.toString(),
-                                         hintStyle: TextStyle( color: Color(0xff707070),
-                                                  fontSize: 15.0,
-                                                  fontWeight: FontWeight.w700),
+                                        hintText: cantidad.toString(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize: 15.0,
+                                            fontWeight: FontWeight.w700),
                                         disabledBorder: UnderlineInputBorder(
                                             borderSide: BorderSide(
                                                 width: 0.8,
                                                 color: Color(0xff707070))),
                                       )),
-                                  
-                                 
                                 ),
                               ),
                               InkWell(
@@ -6196,7 +6231,7 @@ class _HomePageState extends State<HomePage> {
                         setState(() {
                           _checked = i;
                           idClasificacion =
-                          '${_datClasificacionProductosNivel[i]['id_padre_clasificacion']}';
+                              '${_datClasificacionProductosNivel[i]['id_padre_clasificacion']}';
                           searchProductosPedido();
                         });
                       },
@@ -6327,35 +6362,33 @@ class _HomePageState extends State<HomePage> {
   }
 
   _addProductoPedido(String descripcion, String idItem) {
+    final cantidad = int.parse(myControllerCantidad.text.trim());
+    final total = double.parse(cantidad.toString()) * _precio;
 
-      final cantidad = int.parse(myControllerCantidad.text.trim());
-      final total = double.parse(cantidad.toString()) * _precio;
+    _cartProductos.add({
+      "descripcion": descripcion,
+      "id_item": idItem,
+      "precio": _precio,
+      "cantidad": cantidad,
+      "total_dcto": double.parse(myControllerDescuentos.text.trim()),
+      "dcto": double.parse(myControllerDescuentos.text.trim()),
+      "id_precio_item": _value_itemsListPrecio != '0'
+          ? _value_itemsListPrecio
+          : listaPrecioTercero,
+      "total": total
+    });
 
-      _cartProductos.add({
-        "descripcion": descripcion,
-        "id_item": idItem,
-        "precio": _precio,
-        "cantidad": cantidad,
-        "total_dcto": double.parse(myControllerDescuentos.text.trim()),
-        "dcto": double.parse(myControllerDescuentos.text.trim()),
-        "id_precio_item":  _value_itemsListPrecio !='0'
-            ? _value_itemsListPrecio
-            : listaPrecioTercero,
-        "total": total
-      });
-
-      setState(() {
-        totalPedido = valorTotal();
-        myControllerCantidad.clear();
-        myControllerDescuentos.clear();
-        myControllerDescuentos.text = '0';
-        myControllerCantidad.text = '1';
-        _cantidadProducto = 1;
-        sendCarritoBD();
-      });
-      Navigator.of(context).pop();
-      _showBarMsg('Has agregado estos productos a tu carrito', true);
-
+    setState(() {
+      totalPedido = valorTotal();
+      myControllerCantidad.clear();
+      myControllerDescuentos.clear();
+      myControllerDescuentos.text = '0';
+      myControllerCantidad.text = '1';
+      _cantidadProducto = 1;
+      sendCarritoBD();
+    });
+    Navigator.of(context).pop();
+    _showBarMsg('Has agregado estos productos a tu carrito', true);
   }
 
   Future sendCarritoBD() async {
@@ -6430,16 +6463,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   bool validExistCarrito(String idItem) {
-  bool flag = false;
-  findById(_cartProductos) => _cartProductos['id_item'] == idItem;
-  var result = _cartProductos.where(findById);
+    bool flag = false;
+    findById(_cartProductos) => _cartProductos['id_item'] == idItem;
+    var result = _cartProductos.where(findById);
     if (result.isNotEmpty) {
       flag = true;
     }
     return flag;
   }
 
-  modalNuevoPedido(BuildContext context, data,) {
+  modalNuevoPedido(
+    BuildContext context,
+    data,
+  ) {
     Widget cancelButton = ElevatedButton(
       child: Text("Cancelar"),
       onPressed: () {
@@ -6462,7 +6498,7 @@ class _HomePageState extends State<HomePage> {
         totalDescuento = '0.00';
         totalPedido = valorTotal();
         _letras = '';
-      //  numeroAletra('');
+        //  numeroAletra('');
 
         Navigator.pop(context);
       },
@@ -6471,7 +6507,7 @@ class _HomePageState extends State<HomePage> {
     AlertDialog alert = AlertDialog(
       title: Text("¡Espera!"),
       content: Text(
-        'Tiene productos en el carrito que pertenecen a otro cliente, si continua estos se descartarán.'),
+          'Tiene productos en el carrito que pertenecen a otro cliente, si continua estos se descartarán.'),
       actions: [
         cancelButton,
         continueButton,
@@ -6548,7 +6584,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future createPedido() async {
-    if(id_sucursal_tercero=='' || id_suc_vendedor=='') {
+    if (id_sucursal_tercero == '' || id_suc_vendedor == '') {
       var data1 = await OperationDB.getidSuc(id_tercero, _nit);
       if (data1 != false) {
         setState(() {
@@ -6557,9 +6593,9 @@ class _HomePageState extends State<HomePage> {
         });
       }
     }
-  
+
     await numeroAletra(totalPedido.toString());
-     _submitDialog(context);
+    _submitDialog(context);
 
     final total_costo =
         double.parse(totalPedido) + double.parse(totalDescuento);
@@ -6574,7 +6610,7 @@ class _HomePageState extends State<HomePage> {
 
     final fecha_final = '$ano-$mes-$dia';
     orden_compra =
-    orden_compra != '' ? orden_compra : myControllerOrdenCompra.text.trim();
+        orden_compra != '' ? orden_compra : myControllerOrdenCompra.text.trim();
 
     final nuevo_pedido = Pedido(
         nit: _nit,
@@ -6592,7 +6628,9 @@ class _HomePageState extends State<HomePage> {
         fecha_trm: fecha_final,
         id_forma_pago: '$_value_itemsFormaPago',
         id_precio_item: '$listaPrecioTercero',
-        id_direccion:  _value_DireccionMercancia != '0' ?_value_DireccionMercancia: id_direccion ,
+        id_direccion: _value_DireccionMercancia != '0'
+            ? _value_DireccionMercancia
+            : id_direccion,
         id_moneda: "COLP",
         trm: "1",
         subtotal: '$totalSubTotal',
@@ -6607,7 +6645,9 @@ class _HomePageState extends State<HomePage> {
         comentario: "PRUEBA",
         observacion: myControllerObservacion.text.trim(),
         letras: _letras,
-        id_direccion_factura: _value_DireccionFactura != '0' ?_value_DireccionFactura: id_direccion_factura  ,
+        id_direccion_factura: _value_DireccionFactura != '0'
+            ? _value_DireccionFactura
+            : id_direccion_factura,
         usuario: _user,
         id_tiempo_entrega: "0",
         flag_enviado: "NO");
@@ -6656,7 +6696,8 @@ class _HomePageState extends State<HomePage> {
           precio_kit: "0",
           tasa_dcto_cliente: "0",
           total_dcto_cliente: "0");
-      flag_pedido_det = await OperationDB.insertPedidoDet(nuevo_pedido_det,true);
+      flag_pedido_det =
+          await OperationDB.insertPedidoDet(nuevo_pedido_det, true);
     }
 
     if (flag_pedido && flag_pedido_det) {
@@ -6670,7 +6711,7 @@ class _HomePageState extends State<HomePage> {
 
       Navigator.pop(context);
       modalExitosa();
-      _isConnected ? await SendataSincronizacion.createPedidoAPI() :null;
+      _isConnected ? await SendataSincronizacion.createPedidoAPI() : null;
     } else {
       _showBarMsg('Error en la creación del pedido', false);
     }
@@ -6735,7 +6776,6 @@ class _HomePageState extends State<HomePage> {
           )),
     );
   }
-
 
   ///////////////////////////////////RECIBOS DE CAJA////////////////////
 
@@ -6863,10 +6903,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void searchDocumentPend(data) async {
+    final recibos =
+        await OperationDB.getCarteraRecibo(id_tercero, id_sucursal_tercero);
 
-      final recibos = await OperationDB.getCarteraRecibo(id_tercero, id_sucursal_tercero);
-
-      if (recibos != false) {
+    if (recibos != false) {
       _dataDocumentPend = recibos;
       getTipoPago();
       getItemBanco();
@@ -7208,7 +7248,7 @@ class _HomePageState extends State<HomePage> {
               child: TextField(
                 readOnly: false,
                 controller: myControllerValorPagoRecibo,
-                keyboardType:  TextInputType.numberWithOptions(decimal: true),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 style: TextStyle(
                   color: Color(0xff707070),
                   fontSize: 13.0,
@@ -7251,9 +7291,9 @@ class _HomePageState extends State<HomePage> {
                     text: 'Confirmar',
                     color: Color(0xff0894FD),
                     callback: () {
-                    //  setState(() {
-                        documentoPagar();
-                    //  });
+                      //  setState(() {
+                      documentoPagar();
+                      //  });
                     })),
           ],
         ),
@@ -7262,7 +7302,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget confirm(BuildContext context, data, i) {
-    final  restante = double.parse(data['DEBITO'].toString()) - double.parse(filterAbono(i).toString());
+    final restante = double.parse(data['DEBITO'].toString()) -
+        double.parse(filterAbono(i).toString());
     final _size = MediaQuery.of(context).size;
     return Column(
       children: [
@@ -7309,8 +7350,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               width: _size.width * 0.5 - 42,
               child: Text(
-                '\$ ' +
-                    expresionRegular(double.parse(restante.toString())),
+                '\$ ' + expresionRegular(double.parse(restante.toString())),
                 style: TextStyle(
                   color: Color(0xff707070),
                   fontSize: 13.0,
@@ -7412,7 +7452,7 @@ class _HomePageState extends State<HomePage> {
                     color: Color(0xffCB1B1B),
                     callback: () {
                       setState(() {
-                    /*    _confirm = false;
+                        /*    _confirm = false;
                         _pay = true;*/
                         documentoPagarDelete(data);
                       });
@@ -7467,16 +7507,15 @@ class _HomePageState extends State<HomePage> {
         SizedBox(
           height: 5.0,
         ),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              width: _size.width  * 0.7,
+              width: _size.width * 0.7,
               child: Row(
                 children: [
                   SizedBox(
-                    width: _size.width * 0.6 ,
+                    width: _size.width * 0.6,
                     child: Text(
                       '${data['descripcion']}',
                       style: TextStyle(
@@ -7501,8 +7540,7 @@ class _HomePageState extends State<HomePage> {
               width: 120.0,
               height: 40.0,
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
-                  color:  Colors.blue),
+                  borderRadius: BorderRadius.circular(8.0), color: Colors.blue),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -7516,20 +7554,17 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w400),
                       ),
                     ),
-
-                    onTap:  () {
+                    onTap: () {
                       setState(() {
                         seeDescuento = true;
                         _isPagarDescuento = i;
                       });
-                    }
-
-                ),
+                    }),
               ),
             ),
           ],
         ),
-      /*  Row(
+        /*  Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
@@ -7606,7 +7641,8 @@ class _HomePageState extends State<HomePage> {
                     child: TextField(
                       readOnly: false,
                       controller: myControllerDescuentorec,
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
                       style: TextStyle(
                         color: Color(0xff707070),
                         fontSize: 13.0,
@@ -7653,7 +7689,8 @@ class _HomePageState extends State<HomePage> {
                     child: TextField(
                       readOnly: false,
                       controller: myControllerDescuentorec,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
                       style: TextStyle(
                         color: Color(0xff707070),
                         fontSize: 13.0,
@@ -7763,8 +7800,11 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           onTap: () {
-                            _dataDescuentoAgregados.removeWhere((_dataDescuentoAgregados) => _dataDescuentoAgregados['id_concepto'] == data['id_concepto']);
-                          Navigator.pop(context);
+                            _dataDescuentoAgregados.removeWhere(
+                                (_dataDescuentoAgregados) =>
+                                    _dataDescuentoAgregados['id_concepto'] ==
+                                    data['id_concepto']);
+                            Navigator.pop(context);
                             setState(() {
                               seeDescuento = false;
                               _isPagarDescuento = 99999;
@@ -7785,12 +7825,14 @@ class _HomePageState extends State<HomePage> {
 
   //agregar carrito de recibo
   documentoPagar() {
-    final abonoReciboUnico = double.parse(myControllerValorPagoRecibo.text.trim());
+    final abonoReciboUnico =
+        double.parse(myControllerValorPagoRecibo.text.trim());
 
     final restanteReciboUnico =
-        double.parse(_dataDocumentPend[_isPagar]['DEBITO'].toString()) - abonoReciboUnico;
+        double.parse(_dataDocumentPend[_isPagar]['DEBITO'].toString()) -
+            abonoReciboUnico;
 
-    if(restanteReciboUnico >= 0 ) {
+    if (restanteReciboUnico >= 0) {
       _documentosPagados.add({
         "id": _isPagar,
         "tipo_doc": _dataDocumentPend[_isPagar]['tipo_doc'],
@@ -7816,7 +7858,7 @@ class _HomePageState extends State<HomePage> {
         abonoRecibo = abonoReciboUnico.toStringAsFixed(2);
         totalReciboPagado = valorTotalRecibo(_documentosPagados);
       });
-    }else{
+    } else {
       _showBarMsg('EL MONTO DEBE SER MENOR O IGUAL', false);
     }
   }
@@ -7838,7 +7880,8 @@ class _HomePageState extends State<HomePage> {
 
   //eliminar recibo del carrito de recibo
   documentoPagarDelete(data) {
-    _documentosPagados.removeWhere((_documentosPagados) => _documentosPagados['numero'] == data['numero']);
+    _documentosPagados.removeWhere(
+        (_documentosPagados) => _documentosPagados['numero'] == data['numero']);
     setState(() {
       _confirm = false;
       _pay = true;
@@ -7855,7 +7898,7 @@ class _HomePageState extends State<HomePage> {
     for (int i = 0; i < _dataDescuentoAgregados.length; i++) {
       descuento = descuento + _dataDescuentoAgregados[i]['monto_descontar'];
     }
-      numeroAletra(totalRecibo);
+    numeroAletra(totalRecibo);
     setState(() {
       totalRecibo = total.toStringAsFixed(2);
       totalReciboDescuento = descuento.toStringAsFixed(2);
@@ -7874,7 +7917,7 @@ class _HomePageState extends State<HomePage> {
 
   Future createRecibo() async {
     _submitDialog(context);
-    if(id_sucursal_tercero=='' || id_suc_vendedor=='') {
+    if (id_sucursal_tercero == '' || id_suc_vendedor == '') {
       var data1 = await OperationDB.getidSuc(id_tercero, _nit);
       if (data1 != false) {
         setState(() {
@@ -7884,7 +7927,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-   await numeroAletra(totalPedido.toString());
+    await numeroAletra(totalPedido.toString());
 
     var dia = (_selectedDate.day).toString();
     var mes = (_selectedDate.month).toString();
@@ -7893,36 +7936,33 @@ class _HomePageState extends State<HomePage> {
     dia = dia.length == 1 ? '0$dia' : dia;
     mes = mes.length == 1 ? '0$mes' : mes;
 
-   final fecha_otra = '$dia/$mes/$ano';
-   var flag_recibo =false;
+    final fecha_otra = '$dia/$mes/$ano';
+    var flag_recibo = false;
     for (var i = 0; i < _documentosPagados.length; i++) {
       final cuentaTercero = CuentaTercero(
-        nit: _nit,
-        id_empresa: '$id_empresa',
-        id_sucursal: "01",
-        tipo_doc: idReciboUser,
-        numero: int.parse(_value_automatico),
-        cuota:  _documentosPagados[i]['cuota'],
-        dias: _documentosPagados[i]['dias'],
-        id_tercero:id_tercero,
-        id_vendedor: id_vendedor,
-        id_sucursal_tercero: int.parse(id_sucursal_tercero),
-        fecha:fecha_otra,
-        vencimiento:fecha_otra,
-        credito: _documentosPagados[i]['monto_pagar'].toString(),
-        dctomax: "0",
-        debito: "0",
-        id_destino: "",
-        id_proyecto: "",
-        id_empresa_cruce:
-        _documentosPagados[i]['id_empresa'].toString(),
-        id_sucursal_cruce:
-        _documentosPagados[i]['id_sucursal'].toString(),
-        tipo_doc_cruce: _documentosPagados[i]['tipo_doc'].toString(),
-        numero_cruce: _documentosPagados[i]['numero'].toString(),
-        cuota_cruce: _documentosPagados[i]['cuota'].toString(),
-        flag_enviado:'NO'
-      );
+          nit: _nit,
+          id_empresa: '$id_empresa',
+          id_sucursal: "01",
+          tipo_doc: idReciboUser,
+          numero: int.parse(_value_automatico),
+          cuota: _documentosPagados[i]['cuota'],
+          dias: _documentosPagados[i]['dias'],
+          id_tercero: id_tercero,
+          id_vendedor: id_vendedor,
+          id_sucursal_tercero: int.parse(id_sucursal_tercero),
+          fecha: fecha_otra,
+          vencimiento: fecha_otra,
+          credito: _documentosPagados[i]['monto_pagar'].toString(),
+          dctomax: "0",
+          debito: "0",
+          id_destino: "",
+          id_proyecto: "",
+          id_empresa_cruce: _documentosPagados[i]['id_empresa'].toString(),
+          id_sucursal_cruce: _documentosPagados[i]['id_sucursal'].toString(),
+          tipo_doc_cruce: _documentosPagados[i]['tipo_doc'].toString(),
+          numero_cruce: _documentosPagados[i]['numero'].toString(),
+          cuota_cruce: _documentosPagados[i]['cuota'].toString(),
+          flag_enviado: 'NO');
       flag_recibo = await OperationDB.insertCuentaTercero(cuentaTercero);
     }
 
@@ -7934,7 +7974,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future createReciboCartera() async {
-
     late int cuota_cruce_cpd = 0;
     late int cuota = 0;
     late int conse = 0;
@@ -7950,146 +7989,144 @@ class _HomePageState extends State<HomePage> {
 
     final fechaFinal = '$ano-$mes-$dia';
     final cartera = CarteraProveedores(
-        nit:  _nit,
-        id_empresa:id_empresa,
+        nit: _nit,
+        id_empresa: id_empresa,
         id_sucursal: "1",
-        id_tipo_doc : idReciboUser,
-        numero:int.parse(_value_automatico),
-        total:totalReciboPagado,
+        id_tipo_doc: idReciboUser,
+        numero: int.parse(_value_automatico),
+        total: totalReciboPagado,
         fecha: fechaFinal,
         vencimiento: fechaFinal,
-        id_moneda:"COLP",
-        letras:_letras,
+        id_moneda: "COLP",
+        letras: _letras,
         id_tercero: id_tercero,
         id_sucursal_tercero: int.parse(id_sucursal_tercero),
-        id_recaudador:"0",
-        fecha_trm:'${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-        trm:"1",
-        observaciones:myControllerObservacion.text.trim(),
-        usuario:_user,
-        flag_enviado:'NO'
-    );
-    flagCartera =   await OperationDB.insertCarteraProveedores(cartera);
+        id_recaudador: "0",
+        fecha_trm:
+            '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+        trm: "1",
+        observaciones: myControllerObservacion.text.trim(),
+        usuario: _user,
+        flag_enviado: 'NO');
+    flagCartera = await OperationDB.insertCarteraProveedores(cartera);
     //detalle
-    if(flagCartera){
+    if (flagCartera) {
       final carteraDetDocIni = CarteraProveedoresDet(
-          id_empresa:id_empresa,
+          id_empresa: id_empresa,
           id_sucursal: "1",
-          id_tipo_doc : idReciboUser,
-          numero:int.parse(_value_automatico),
-          consecutivo:conse = conse + 1,
-          id_empresa_cruce:  _documentosPagados[0]['id_empresa'].toString(),
+          id_tipo_doc: idReciboUser,
+          numero: int.parse(_value_automatico),
+          consecutivo: conse = conse + 1,
+          id_empresa_cruce: _documentosPagados[0]['id_empresa'].toString(),
           id_sucursal_cruce: _documentosPagados[0]['id_sucursal'].toString(),
           id_tipo_doc_cruce: idReciboUser,
-          numero_cruce:int.parse(_value_automatico),
+          numero_cruce: int.parse(_value_automatico),
           debito: totalReciboPagado,
-          credito:"0",
-          id_vendedor:id_vendedor,
+          credito: "0",
+          id_vendedor: id_vendedor,
           id_forma_pago: _value_itemsTipoPago,
-          documento_forma_pago:"",
-          cuota:  cuota = cuota + 1,
+          documento_forma_pago: "",
+          cuota: cuota = cuota + 1,
           distribucion: "FP",
           descripcion: _value_itemsTipoPago == '01'
               ? 'Pago en Efectivo por el valor de $totalReciboPagado '
               : '',
-          id_suc_recaudador:1,
-          total_factura:"0",
-          id_concepto:"",
-          id_moneda:"COLP",
-          id_destino:"",
-          id_proyecto:"",
+          id_suc_recaudador: 1,
+          total_factura: "0",
+          id_concepto: "",
+          id_moneda: "COLP",
+          id_destino: "",
+          id_proyecto: "",
           cuota_cruce: cuota_cruce_cpd = cuota_cruce_cpd + 1,
-          id_banco:_value_itemsBanco,
+          id_banco: _value_itemsBanco,
           fecha: _documentosPagados[0]['fecha'].toString(),
-          vencimiento:_documentosPagados[0]['vencimiento'].toString(),
-          id_tercero: id_tercero ,
+          vencimiento: _documentosPagados[0]['vencimiento'].toString(),
+          id_tercero: id_tercero,
           id_sucursal_tercero: int.parse(id_sucursal_tercero),
-          id_recaudador:"",
-          fecha_trm:fechaFinal,
-          trm:"1",
-          nit: _nit
-      );
+          id_recaudador: "",
+          fecha_trm: fechaFinal,
+          trm: "1",
+          nit: _nit);
       await OperationDB.insertCarteraProveedoresDet(carteraDetDocIni);
 
-      for (var i = 0; i < _documentosPagados.length; i++) {//documentos pagados
+      for (var i = 0; i < _documentosPagados.length; i++) {
+        //documentos pagados
         final carteraDetDoc = CarteraProveedoresDet(
-            id_empresa:id_empresa,
+            id_empresa: id_empresa,
             id_sucursal: "1",
-            id_tipo_doc : idReciboUser,
-            numero:int.parse(_value_automatico),
+            id_tipo_doc: idReciboUser,
+            numero: int.parse(_value_automatico),
             consecutivo: conse = conse + 1,
-            id_empresa_cruce:  _documentosPagados[i]['id_empresa'].toString(),
+            id_empresa_cruce: _documentosPagados[i]['id_empresa'].toString(),
             id_sucursal_cruce: _documentosPagados[i]['id_sucursal'].toString(),
-            id_tipo_doc_cruce:  _documentosPagados[i]['tipo_doc'],
-            numero_cruce:_documentosPagados[i]['numero'],
-            debito:"0",
+            id_tipo_doc_cruce: _documentosPagados[i]['tipo_doc'],
+            numero_cruce: _documentosPagados[i]['numero'],
+            debito: "0",
             credito: _documentosPagados[i]['monto_pagar'].toString(),
-            id_vendedor:id_vendedor,
+            id_vendedor: id_vendedor,
             id_forma_pago: _value_itemsTipoPago,
-            documento_forma_pago:"",
-            cuota:  cuota =_documentosPagados[i]['cuota'],
+            documento_forma_pago: "",
+            cuota: cuota = _documentosPagados[i]['cuota'],
             distribucion: "DC",
             descripcion: ' Abonó el documento',
-            id_suc_recaudador:1,
-            total_factura:"0",
-            id_concepto:"",
-            id_moneda:"COLP",
-            id_destino:"",
-            id_proyecto:"",
+            id_suc_recaudador: 1,
+            total_factura: "0",
+            id_concepto: "",
+            id_moneda: "COLP",
+            id_destino: "",
+            id_proyecto: "",
             cuota_cruce: cuota_cruce_cpd =
                 int.parse(_documentosPagados[i]['cuota'].toString()),
-            id_banco:_value_itemsBanco,
+            id_banco: _value_itemsBanco,
             fecha: _documentosPagados[i]['fecha'].toString(),
-            vencimiento:_documentosPagados[i]['vencimiento'].toString(),
-            id_tercero: id_tercero ,
+            vencimiento: _documentosPagados[i]['vencimiento'].toString(),
+            id_tercero: id_tercero,
             id_sucursal_tercero: int.parse(id_sucursal_tercero),
-            id_recaudador:"",
-            fecha_trm:fechaFinal,
-            trm:"1",
-            nit: _nit
-        );
+            id_recaudador: "",
+            fecha_trm: fechaFinal,
+            trm: "1",
+            nit: _nit);
         await OperationDB.insertCarteraProveedoresDet(carteraDetDoc);
       }
 
       for (var i = 0; i < _dataDescuentoAgregados.length; i++) {
         final carteraDetDesc = CarteraProveedoresDet(
-            id_empresa:id_empresa,
+            id_empresa: id_empresa,
             id_sucursal: "1",
-            id_tipo_doc : idReciboUser,
-            numero:int.parse(_value_automatico),
+            id_tipo_doc: idReciboUser,
+            numero: int.parse(_value_automatico),
             consecutivo: conse = conse + 1,
-            id_empresa_cruce:  _documentosPagados[0]['id_empresa'].toString(),
-            id_sucursal_cruce:  _documentosPagados[0]['id_empresa'].toString(),
+            id_empresa_cruce: _documentosPagados[0]['id_empresa'].toString(),
+            id_sucursal_cruce: _documentosPagados[0]['id_empresa'].toString(),
             id_tipo_doc_cruce: idReciboUser,
-            numero_cruce:int.parse(_value_automatico),
-            debito:_dataDescuentoAgregados[i]['monto_descontar'].toString(),
+            numero_cruce: int.parse(_value_automatico),
+            debito: _dataDescuentoAgregados[i]['monto_descontar'].toString(),
             credito: "0",
-            id_vendedor:id_vendedor,
+            id_vendedor: id_vendedor,
             id_forma_pago: _value_itemsTipoPago,
-            documento_forma_pago:"",
+            documento_forma_pago: "",
             cuota: cuota,
             distribucion: "CN",
             descripcion:
-            'Pago de descuento ${_dataDescuentoAgregados[i]['monto_descontar']} ',
+                'Pago de descuento ${_dataDescuentoAgregados[i]['monto_descontar']} ',
             id_suc_recaudador: 1,
-            total_factura:"0",
+            total_factura: "0",
             id_concepto: _dataDescuentoAgregados[i]['id_concepto'],
-            id_moneda:"COLP",
-            id_destino:"",
-            id_proyecto:"",
+            id_moneda: "COLP",
+            id_destino: "",
+            id_proyecto: "",
             cuota_cruce: cuota_cruce_cpd = cuota_cruce_cpd + 1,
-            id_banco:_value_itemsBanco,
-           /*fecha:fechaFinal,
+            id_banco: _value_itemsBanco,
+            /*fecha:fechaFinal,
             vencimiento: fechaFinal,*/
             fecha: _documentosPagados[0]['fecha'].toString(),
-            vencimiento:_documentosPagados[0]['vencimiento'].toString(),
-            id_tercero: id_tercero ,
+            vencimiento: _documentosPagados[0]['vencimiento'].toString(),
+            id_tercero: id_tercero,
             id_sucursal_tercero: int.parse(id_sucursal_tercero),
-            id_recaudador:"",
-            fecha_trm:fechaFinal,
-            trm:"1",
-            nit: _nit
-        );
+            id_recaudador: "",
+            fecha_trm: fechaFinal,
+            trm: "1",
+            nit: _nit);
         await OperationDB.insertCarteraProveedoresDet(carteraDetDesc);
       }
 
@@ -8097,46 +8134,44 @@ class _HomePageState extends State<HomePage> {
           int.parse(_value_automatico), _nit, idReciboUser, id_empresa);
 
       final val = await validateConexion.checkInternetConnection();
-        setState(() {
-          _isConnected = val!;
-        });
+      setState(() {
+        _isConnected = val!;
+      });
 
       Navigator.pop(context);
-       modalExitosaRecibo();
-       removeCarritoRecibo();
-      _isConnected ?  await SendataSincronizacion.createReciboApi() :null;
+      modalExitosaRecibo();
+      removeCarritoRecibo();
+      _isConnected ? await SendataSincronizacion.createReciboApi() : null;
     }
   }
 
-
   Future<void> numeroAletra(String numero) async {
-
     _submitDialog(context);
     final val = await validateConexion.checkInternetConnection();
-      setState(() {
+    setState(() {
       _isConnected = val!;
-      });
+    });
 
-      if (_isConnected){
-          final response = await http.get(Uri.parse("${Constant.URL}/letras/$numero"));
-          var jsonResponse =
+    if (_isConnected) {
+      final response =
+          await http.get(Uri.parse("${Constant.URL}/letras/$numero"));
+      var jsonResponse =
           convert.jsonDecode(response.body) as Map<String, dynamic>;
-          var success = jsonResponse['success'];
-          if (response.statusCode == 200 && success) {
-            var data = jsonResponse['data'];
-              setState(() {
-                _letras = data ;
-              });
-           } else{
-             // _letras = await LetraN.convertirLetras(numero);
-            }
-        }else{
-       // _letras = await LetraN.convertirLetras(numero);
-       }
+      var success = jsonResponse['success'];
+      if (response.statusCode == 200 && success) {
+        var data = jsonResponse['data'];
+        setState(() {
+          _letras = data;
+        });
+      } else {
+        // _letras = await LetraN.convertirLetras(numero);
+      }
+    } else {
+      // _letras = await LetraN.convertirLetras(numero);
+    }
 
     Navigator.pop(context);
   }
-
 
   void _showBarMsg(msg, bool type) {
     showTopSnackBar(

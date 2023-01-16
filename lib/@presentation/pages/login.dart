@@ -262,8 +262,7 @@ class _LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.only(top: 0.0),
       child: Focus(
         onFocusChange: (e) {
-          setState(() {
-            print("eee $e");
+          setState(() {           
             focusPass = e;
           });
         },
@@ -330,8 +329,7 @@ class _LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.only(top: 0.0),
       child: Focus(
         onFocusChange: (e) {
-          setState(() {
-            print("eee usuario $e");
+          setState(() { 
             focus = e;
           });
         },

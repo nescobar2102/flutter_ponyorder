@@ -32,6 +32,7 @@ class _UnitsPageState extends State<UnitsPage> {
   String _nit = '';
 
   
+  
   late int _countProductos = 0;
   List<dynamic> _datProductos = []; 
   final myControllerSearch = TextEditingController();
@@ -103,9 +104,7 @@ class _UnitsPageState extends State<UnitsPage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? ''); 
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
-      id_vendedor = (prefs.getString('id_vendedor') ?? '');
-
-      print("el usuario es $_user $_nit $id_vendedor");
+      id_vendedor = (prefs.getString('id_vendedor') ?? ''); 
       if (_nit != '') {
         searchClasificacionProductos('2','',false);
       }
@@ -153,7 +152,8 @@ class _UnitsPageState extends State<UnitsPage> {
         });
   }
   Future<void> searchClasificacionProductos( String nivel,String id_padre, bool pedido) async {
-    _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text.trim() :'@';
+    _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text.trim().trim() :'@';
+
 
       var data= await  OperationDB.getClasificacionProductos(_nit,nivel,id_padre,pedido,_search);
       if (data != false) {  
@@ -167,6 +167,7 @@ class _UnitsPageState extends State<UnitsPage> {
                 idClasificacion =
                 '${_datClasificacionProductos[0]['id_padre']}';
 
+
                 searchProductos();
                 _formShowCategories = false;
                 _clientShow = true;
@@ -175,6 +176,7 @@ class _UnitsPageState extends State<UnitsPage> {
                     : Container();
 
               } else {
+
 
                  _clientShow = false;
                  _formShowCategories = true;
@@ -919,8 +921,7 @@ class _UnitsPageState extends State<UnitsPage> {
                         _itemSelect = data['id_item'],
                         searchPrecioProductos('${data['id_item']}'),
                       }
-                  }),
-                  onSaved: (val) => print(val),
+                  }),                
                 ),
                 SizedBox(height: 10.0),
                 Row(
@@ -1394,8 +1395,7 @@ class _UnitsPageState extends State<UnitsPage> {
     _submitDialog(context);
     final val = await validateConexion.checkInternetConnection();
     setState(() {
-      _isConnected = val!;
-      print("valida la conexion $_isConnected");
+      _isConnected = val!;      
     });
 
     late int conse = 0;
@@ -1616,7 +1616,7 @@ class _UnitsPageState extends State<UnitsPage> {
       print("actualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI");
     } else {
       print("error en la creacion del pedido online $msg");
-
+    //  _showBarMsg('Error en la creacion del pedido ONLINE $msg', false);
     }
     removeCarrito();
     modalExitosa();
@@ -2151,12 +2151,13 @@ class _UnitsPageState extends State<UnitsPage> {
                                         _cantidadProducto--;
                                         myControllerCantidad.text =
                                             _cantidadProducto.toString();
-
+                                        print(
+                                            "cantidad resta $_cantidadProducto");
                                       }
                                     });
                                   },
                                   child: Container(
-                                    width: 30.0,
+                                    width: 30.0, 
                                     height: 30.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
@@ -3074,8 +3075,7 @@ class _UnitsPageState extends State<UnitsPage> {
     _submitDialog(context);
     final val = await validateConexion.checkInternetConnection();
     setState(() {
-      _isConnected = val!;
-      print("LA CONEXION $_isConnected");
+      _isConnected = val!;      
     });
 
     if (_isConnected){

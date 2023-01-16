@@ -10,14 +10,14 @@ import '../../db/operationDB.dart';
 import '../../httpConexion/validateConexion.dart';
 import '../../Common/Constant.dart';
 
-import '../../models/tercero_direccion.dart'; 
+import '../../models/tercero_direccion.dart';
 import '../../models/sale.dart';
 import '../../models/tercero.dart';
 import '../../models/tercero_cliente.dart';
-import '../../models/tipo_pago.dart';  
+import '../../models/tipo_pago.dart';
 import '../../models/factura.dart';
 import '../../models/clasificacion_item.dart';
-import '../../models/precio_item.dart'; 
+import '../../models/precio_item.dart';
 import '../../models/pedido.dart';
 import '../../models/recibo_caja.dart';
 
@@ -54,7 +54,6 @@ class LoginPages extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPages> {
-
   bool focus = false;
   bool _isConnected = false;
   String date = '';
@@ -70,27 +69,26 @@ class _LoginPageState extends State<LoginPages> {
             backgroundColor: Colors.transparent,
             children: <Widget>[
               Center(
-                child:   CircularProgressIndicator(),               
+                child: CircularProgressIndicator(),
               ),
             ],
           );
         });
   }
 
- void _showMSG(msg) {
-   showTopSnackBar(
-     context,
-     CustomSnackBar.info(
-       message: msg,
-     ),
-   );
- }
+  void _showMSG(msg) {
+    showTopSnackBar(
+      context,
+      CustomSnackBar.info(
+        message: msg,
+      ),
+    );
+  }
 
   static convertDateFormat(fecha) {
     var info = fecha.split('T00:00:00.000Z');
     var nuevaFecha2 = info[0];
     return nuevaFecha2;
-
   }
 
   @override
@@ -100,12 +98,12 @@ class _LoginPageState extends State<LoginPages> {
   }
 
   Future getSincronizacion() async {
-   var data =  await OperationDB.getSincronizacion();
-   if (data  != false) {
-     setState(() {
-      date = data[0]['create_at'];
-     });
-   }
+    var data = await OperationDB.getSincronizacion();
+    if (data != false) {
+      setState(() {
+        date = data[0]['create_at'];
+      });
+    }
   }
 
   Future getTipoPagoSincronizacion() async {
@@ -125,330 +123,360 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     }
-      setState(() {
+    setState(() {
       porcentajeAvance = 28;
     });
-      await getFacturaSincronizacion(); 
+    await getFacturaSincronizacion();
   }
- 
 
   Future getPedido() async {
     final response = await http.get(Uri.parse("${Constant.URL}/pedido_all"));
     var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final pedido = Pedido(
-              id_empresa:data[i]['id_empresa'],id_sucursal:data[i]['id_sucursal'],
-              id_tipo_doc:data[i]['id_tipo_doc'],numero:data[i]['numero'].toString(),
-              id_tercero:data[i]['id_tercero'],id_sucursal_tercero:data[i]['id_sucursal_tercero'].toString(),
-              id_vendedor:data[i]['id_vendedor'], id_suc_vendedor:data[i]['id_suc_vendedor'].toString(),
-              fecha:convertDateFormat(data[i]['fecha']),vencimiento:convertDateFormat(data[i]['vencimiento']),
-              fecha_entrega:convertDateFormat(data[i]['fecha_entrega']),  fecha_trm:convertDateFormat(data[i]['fecha_trm']),
-              id_forma_pago:data[i]['id_forma_pago'], id_precio_item:data[i]['id_precio_item'],
-              id_direccion:data[i]['id_direccion'],id_moneda:data[i]['id_moneda'],
-              trm :data[i]['trm'], subtotal:data[i]['subtotal'],
-              total_costo:data[i]['total_costo'], total_iva:data[i]['total_iva'],
-              total_dcto:data[i]['total_dcto'],total:data[i]['total'],
-              total_item:data[i]['total_item'],  orden_compra:data[i]['orden_compra'],
-              estado:data[i]['estado'], flag_autorizado:data[i]['flag_autorizado'],
-              comentario:data[i]['comentario'],observacion:data[i]['observacion'],
-              letras:data[i]['letras'], id_direccion_factura:data[i]['id_direccion_factura'],
-              usuario:data[i]['usuario'],  id_tiempo_entrega:data[i]['id_tiempo_entrega'].toString(),
-              flag_enviado:data[i]['flag_enviado'], nit:data[i]['nit']              );
-          await OperationDB.insertPedido(pedido,false);
+              id_empresa: data[i]['id_empresa'],
+              id_sucursal: data[i]['id_sucursal'],
+              id_tipo_doc: data[i]['id_tipo_doc'],
+              numero: data[i]['numero'].toString(),
+              id_tercero: data[i]['id_tercero'],
+              id_sucursal_tercero: data[i]['id_sucursal_tercero'].toString(),
+              id_vendedor: data[i]['id_vendedor'],
+              id_suc_vendedor: data[i]['id_suc_vendedor'].toString(),
+              fecha: convertDateFormat(data[i]['fecha']),
+              vencimiento: convertDateFormat(data[i]['vencimiento']),
+              fecha_entrega: convertDateFormat(data[i]['fecha_entrega']),
+              fecha_trm: convertDateFormat(data[i]['fecha_trm']),
+              id_forma_pago: data[i]['id_forma_pago'],
+              id_precio_item: data[i]['id_precio_item'],
+              id_direccion: data[i]['id_direccion'],
+              id_moneda: data[i]['id_moneda'],
+              trm: data[i]['trm'],
+              subtotal: data[i]['subtotal'],
+              total_costo: data[i]['total_costo'],
+              total_iva: data[i]['total_iva'],
+              total_dcto: data[i]['total_dcto'],
+              total: data[i]['total'],
+              total_item: data[i]['total_item'],
+              orden_compra: data[i]['orden_compra'],
+              estado: data[i]['estado'],
+              flag_autorizado: data[i]['flag_autorizado'],
+              comentario: data[i]['comentario'],
+              observacion: data[i]['observacion'],
+              letras: data[i]['letras'],
+              id_direccion_factura: data[i]['id_direccion_factura'],
+              usuario: data[i]['usuario'],
+              id_tiempo_entrega: data[i]['id_tiempo_entrega'].toString(),
+              flag_enviado: data[i]['flag_enviado'],
+              nit: data[i]['nit']);
+          await OperationDB.insertPedido(pedido, false);
         }
       }
     }
-       setState(() {
+    setState(() {
       porcentajeAvance = 62;
     });
     await getPedidoDet();
   }
 
   Future getPedidoDet() async {
-    final response = await http.get(Uri.parse("${Constant.URL}/pedido_det_all"));
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/pedido_det_all"));
     var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
         for (int i = 0; i < data.length; i++) {
           final pedidodet = PedidoDet(
-                    id_empresa:data[i]['id_empresa'],id_sucursal:data[i]['id_sucursal'],
-                    id_tipo_doc:data[i]['id_tipo_doc'],numero:data[i]['numero'].toString(),
-                    id_precio_item:data[i]['id_precio_item'],
-                    subtotal:data[i]['subtotal'],
-                    descripcion_item:data[i]['descripcion_item'],
-                    total_iva:data[i]['total_iva'],
-                    total_dcto:data[i]['total_dcto'],total:data[i]['total'],
-                    total_item:data[i]['total_item'],
-                    nit:data[i]['nit'],consecutivo:data[i]['consecutivo'],id_item:data[i]['id_item'],id_bodega:data[i]['id_bodega'],
-                    cantidad: data[i]['cantidad'],precio:data[i]['precio'],precio_lista:data[i]['precio_lista'],tasa_iva:data[i]['tasa_iva'],
-                    tasa_dcto_fijo:data[i]['tasa_dcto_fijo'],total_dcto_fijo:data[i]['total_dcto_fijo'],costo:data[i]['costo'],
-                    id_unidad:data[i]['id_unidad'],cantidad_kit:data[i]['cantidad_kit'], cantidad_de_kit:data[i]['cantidad_de_kit'],
-                    recno:data[i]['recno'].toString(),factor:data[i]['factor'],id_impuesto_iva:data[i]['id_impuesto_iva'],total_dcto_adicional:data[i]['total_dcto_adicional'],
-                    tasa_dcto_adicional:data[i]['tasa_dcto_adicional'],id_kit:data[i]['id_kit'],precio_kit:data[i]['precio_kit'],
-                    tasa_dcto_cliente:data[i]['tasa_dcto_cliente'].toString(),total_dcto_cliente:data[i]['total_dcto_cliente'].toString()
-          );
-          await OperationDB.insertPedidoDet(pedidodet,false);
+              id_empresa: data[i]['id_empresa'],
+              id_sucursal: data[i]['id_sucursal'],
+              id_tipo_doc: data[i]['id_tipo_doc'],
+              numero: data[i]['numero'].toString(),
+              id_precio_item: data[i]['id_precio_item'],
+              subtotal: data[i]['subtotal'],
+              descripcion_item: data[i]['descripcion_item'],
+              total_iva: data[i]['total_iva'],
+              total_dcto: data[i]['total_dcto'],
+              total: data[i]['total'],
+              total_item: data[i]['total_item'],
+              nit: data[i]['nit'],
+              consecutivo: data[i]['consecutivo'],
+              id_item: data[i]['id_item'],
+              id_bodega: data[i]['id_bodega'],
+              cantidad: data[i]['cantidad'],
+              precio: data[i]['precio'],
+              precio_lista: data[i]['precio_lista'],
+              tasa_iva: data[i]['tasa_iva'],
+              tasa_dcto_fijo: data[i]['tasa_dcto_fijo'],
+              total_dcto_fijo: data[i]['total_dcto_fijo'],
+              costo: data[i]['costo'],
+              id_unidad: data[i]['id_unidad'],
+              cantidad_kit: data[i]['cantidad_kit'],
+              cantidad_de_kit: data[i]['cantidad_de_kit'],
+              recno: data[i]['recno'].toString(),
+              factor: data[i]['factor'],
+              id_impuesto_iva: data[i]['id_impuesto_iva'],
+              total_dcto_adicional: data[i]['total_dcto_adicional'],
+              tasa_dcto_adicional: data[i]['tasa_dcto_adicional'],
+              id_kit: data[i]['id_kit'],
+              precio_kit: data[i]['precio_kit'],
+              tasa_dcto_cliente: data[i]['tasa_dcto_cliente'].toString(),
+              total_dcto_cliente: data[i]['total_dcto_cliente'].toString());
+          await OperationDB.insertPedidoDet(pedidodet, false);
         }
       }
     }
-       setState(() {
+    setState(() {
       porcentajeAvance = 66;
     });
-   await getCuentaTercero();
+    await getCuentaTercero();
   }
 
- Future getCuentaTercero() async  {
-      final response = await http.get(Uri.parse("${Constant.URL}/cuentaportercero_all"));
-      var jsonResponse =
-      convert.jsonDecode(response.body) as Map<String, dynamic>;
-      var success = jsonResponse['success'];
-      if (response.statusCode == 200 && success) {
-        var data = jsonResponse['data'];
-        if (data.length > 0) {
-          for (int i = 0; i < data.length; i++) {
-            final cuenta_tercero = CuentaTercero(
-                id_empresa:data[i]['id_empresa'],
-                id_sucursal: data[i]['id_sucursal'],
-                tipo_doc: data[i]['tipo_doc'],
-                numero: data[i]['numero'] ,
-                cuota: data[i]['cuota'],
-                dias: data[i]['dias'],
-                id_tercero: data[i]['id_tercero'].toString(),
-                id_vendedor: data[i]['id_vendedor'].toString(),
-                id_sucursal_tercero: data[i]['id_sucursal_tercero'],
-                fecha: data[i]['fecha'],
-                vencimiento: data[i]['vencimiento'],
-                credito: data[i]['credito'].toString(),
-                dctomax: data[i]['dctomax'].toString(),
-                debito: data[i]['debito'].toString(),
-                id_destino: data[i]['id_destino'].toString(),
-                id_proyecto: data[i]['id_proyecto'].toString(),
-                nit: data[i]['nit'],
-                id_empresa_cruce: data[i]['id_empresa_cruce'],
-                id_sucursal_cruce: data[i]['id_sucursal_cruce'],
-                tipo_doc_cruce: data[i]['tipo_doc_cruce'],
-                numero_cruce: data[i]['numero_cruce'].toString(),
-                cuota_cruce: data[i]['cuota_cruce'].toString(),
-                flag_enviado:'SI'
-            );
-            await OperationDB.insertCuentaTercero(cuenta_tercero);
-          }
+  Future getCuentaTercero() async {
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/cuentaportercero_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final cuenta_tercero = CuentaTercero(
+              id_empresa: data[i]['id_empresa'],
+              id_sucursal: data[i]['id_sucursal'],
+              tipo_doc: data[i]['tipo_doc'],
+              numero: data[i]['numero'],
+              cuota: data[i]['cuota'],
+              dias: data[i]['dias'],
+              id_tercero: data[i]['id_tercero'].toString(),
+              id_vendedor: data[i]['id_vendedor'].toString(),
+              id_sucursal_tercero: data[i]['id_sucursal_tercero'],
+              fecha: data[i]['fecha'],
+              vencimiento: data[i]['vencimiento'],
+              credito: data[i]['credito'].toString(),
+              dctomax: data[i]['dctomax'].toString(),
+              debito: data[i]['debito'].toString(),
+              id_destino: data[i]['id_destino'].toString(),
+              id_proyecto: data[i]['id_proyecto'].toString(),
+              nit: data[i]['nit'],
+              id_empresa_cruce: data[i]['id_empresa_cruce'],
+              id_sucursal_cruce: data[i]['id_sucursal_cruce'],
+              tipo_doc_cruce: data[i]['tipo_doc_cruce'],
+              numero_cruce: data[i]['numero_cruce'].toString(),
+              cuota_cruce: data[i]['cuota_cruce'].toString(),
+              flag_enviado: 'SI');
+          await OperationDB.insertCuentaTercero(cuenta_tercero);
         }
       }
-         setState(() {
+    }
+    setState(() {
       porcentajeAvance = 70;
     });
-      await getCarteraProveedores();
- }
+    await getCarteraProveedores();
+  }
 
-
- Future getCarteraProveedores() async  {
-   final response = await http.get(Uri.parse("${Constant.URL}/carteraproveedores_all"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-       for (int i = 0; i < data.length; i++) {
-         final cartera = CarteraProveedores(
-             id_empresa:data[i]['id_empresa'],
-             id_sucursal: data[i]['id_sucursal'],
-             id_tipo_doc : data[i]['id_tipo_doc'],
-             numero: data[i]['numero'] ,
-             fecha: convertDateFormat(data[i]['fecha']),
-             total:data[i]['total'].toString(),
-             vencimiento:convertDateFormat(data[i]['vencimiento']),
-             letras:data[i]['letras'],
-             id_moneda:data[i]['id_moneda'],
-             id_tercero: data[i]['id_tercero'].toString(),
-             id_sucursal_tercero:  data[i]['id_sucursal_tercero'],
-             id_recaudador:data[i]['id_recaudador'].toString(),
-             fecha_trm:convertDateFormat(data[i]['fecha_trm']),
-              trm:data[i]['trm'].toString(),
-              observaciones:data[i]['observaciones'],
-              usuario:data[i]['usuario'],
-              flag_enviado:data[i]['flag_enviado'],
-               nit:  data[i]['nit'],
-
-         );
-         await OperationDB.insertCarteraProveedores(cartera);
-         await getCarteraProveedoresDet(cartera.id_empresa,cartera.numero,cartera.nit);
-       }
-     }
-   }
-      setState(() {
+  Future getCarteraProveedores() async {
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/carteraproveedores_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final cartera = CarteraProveedores(
+            id_empresa: data[i]['id_empresa'],
+            id_sucursal: data[i]['id_sucursal'],
+            id_tipo_doc: data[i]['id_tipo_doc'],
+            numero: data[i]['numero'],
+            fecha: convertDateFormat(data[i]['fecha']),
+            total: data[i]['total'].toString(),
+            vencimiento: convertDateFormat(data[i]['vencimiento']),
+            letras: data[i]['letras'],
+            id_moneda: data[i]['id_moneda'],
+            id_tercero: data[i]['id_tercero'].toString(),
+            id_sucursal_tercero: data[i]['id_sucursal_tercero'],
+            id_recaudador: data[i]['id_recaudador'].toString(),
+            fecha_trm: convertDateFormat(data[i]['fecha_trm']),
+            trm: data[i]['trm'].toString(),
+            observaciones: data[i]['observaciones'],
+            usuario: data[i]['usuario'],
+            flag_enviado: data[i]['flag_enviado'],
+            nit: data[i]['nit'],
+          );
+          await OperationDB.insertCarteraProveedores(cartera);
+          await getCarteraProveedoresDet(
+              cartera.id_empresa, cartera.numero, cartera.nit);
+        }
+      }
+    }
+    setState(() {
       porcentajeAvance = 75;
     });
-   await getAuxiliar();
- }
+    await getAuxiliar();
+  }
 
+  Future getCarteraProveedoresDet(id_empresa, numero, nit) async {
+    final response = await http.get(Uri.parse(
+        "${Constant.URL}/carteraproveedoresdet_all/$id_empresa/$numero/$nit"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final carteraDet = CarteraProveedoresDet(
+              id_empresa: data[i]['id_empresa'],
+              id_sucursal: data[i]['id_sucursal'],
+              id_tipo_doc: data[i]['id_tipo_doc'],
+              numero: data[i]['numero'],
+              consecutivo: data[i]['consecutivo'],
+              id_empresa_cruce: data[i]['id_empresa_cruce'],
+              id_sucursal_cruce: data[i]['id_sucursal_cruce'],
+              id_tipo_doc_cruce: data[i]['id_tipo_doc_cruce'],
+              numero_cruce: data[i]['numero_cruce'],
+              debito: data[i]['debito'].toString(),
+              credito: data[i]['credito'].toString(),
+              id_vendedor: data[i]['id_vendedor'].toString(),
+              id_forma_pago: data[i]['id_forma_pago'],
+              documento_forma_pago: data[i]['documento_forma_pago'],
+              cuota: data[i]['cuota'],
+              distribucion: data[i]['distribucion'],
+              descripcion: data[i]['descripcion'],
+              id_suc_recaudador: data[i]['id_suc_recaudador'],
+              total_factura: data[i]['total_factura'].toString(),
+              id_concepto: data[i]['id_concepto'],
+              id_moneda: data[i]['id_moneda'],
+              id_destino: data[i]['id_destino'],
+              id_proyecto: data[i]['id_proyecto'],
+              cuota_cruce: data[i]['cuota_cruce'],
+              id_banco: data[i]['id_banco'],
+              fecha: data[i]['fecha'],
+              vencimiento: data[i]['vencimiento'],
+              id_tercero: data[i]['id_tercero'].toString(),
+              id_sucursal_tercero: data[i]['id_sucursal_tercero'],
+              id_recaudador: data[i]['id_recaudador'].toString(),
+              fecha_trm: data[i]['fecha_trm'],
+              trm: data[i]['trm'].toString(),
+              nit: data[i]['nit']);
+          await OperationDB.insertCarteraProveedoresDet(carteraDet);
+        }
+      }
+    }
+  }
 
- Future getCarteraProveedoresDet(id_empresa,numero,nit) async  {
-   final response = await http.get(Uri.parse("${Constant.URL}/carteraproveedoresdet_all/$id_empresa/$numero/$nit"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-       for (int i = 0; i < data.length; i++) {
-         final carteraDet = CarteraProveedoresDet(
-             id_empresa:data[i]['id_empresa'],
-             id_sucursal: data[i]['id_sucursal'],
-             id_tipo_doc : data[i]['id_tipo_doc'],
-             numero: data[i]['numero'],
-             consecutivo: data[i]['consecutivo'],
-             id_empresa_cruce:data[i]['id_empresa_cruce'],
-             id_sucursal_cruce:data[i]['id_sucursal_cruce'],
-             id_tipo_doc_cruce:data[i]['id_tipo_doc_cruce'],
-             numero_cruce:data[i]['numero_cruce'],
-             debito:data[i]['debito'].toString(),
-             credito: data[i]['credito'].toString(),
-             id_vendedor:data[i]['id_vendedor'].toString(),
-             id_forma_pago: data[i]['id_forma_pago'],
-             documento_forma_pago:data[i]['documento_forma_pago'],
-             cuota: data[i]['cuota'],
-             distribucion:data[i]['distribucion'],
-             descripcion: data[i]['descripcion'],
-             id_suc_recaudador:data[i]['id_suc_recaudador'],
-             total_factura:data[i]['total_factura'].toString(),
-             id_concepto:data[i]['id_concepto'],
-             id_moneda:data[i]['id_moneda'],
-             id_destino:data[i]['id_destino'],
-             id_proyecto:data[i]['id_proyecto'],
-             cuota_cruce:data[i]['cuota_cruce'],
-             id_banco:data[i]['id_banco'],
-             fecha: data[i]['fecha'] ,
-             vencimiento:data[i]['vencimiento'] ,
-             id_tercero: data[i]['id_tercero'].toString(),
-             id_sucursal_tercero:  data[i]['id_sucursal_tercero'],
-             id_recaudador:data[i]['id_recaudador'].toString(),
-             fecha_trm:data[i]['fecha_trm'],
-             trm:data[i]['trm'].toString(),
-             nit:  data[i]['nit']
-         );
-         await OperationDB.insertCarteraProveedoresDet(carteraDet);
-       }
-     }
-   }
- }
-
- Future getAuxiliar() async  {
-   final response = await http.get(Uri.parse("${Constant.URL}/auxiliar_all"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-     await OperationDB.deleteAuxiliar();
-       for (int i = 0; i < data.length; i++) {
-         final auxiliar = Auxiliar(
-             id_auxiliar:data[i]['id_auxiliar'],
-             descripcion: data[i]['descripcion'],
-             flag_flujo_caja : data[i]['flag_flujo_caja'],
-             id_tipo_cuenta : data[i]['id_tipo_cuenta'],
-             nit: data[i]['nit']
-         );
-         await OperationDB.insertAuxiliar(auxiliar);
-       }
-     }
-   }
-      setState(() {
+  Future getAuxiliar() async {
+    final response = await http.get(Uri.parse("${Constant.URL}/auxiliar_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        await OperationDB.deleteAuxiliar();
+        for (int i = 0; i < data.length; i++) {
+          final auxiliar = Auxiliar(
+              id_auxiliar: data[i]['id_auxiliar'],
+              descripcion: data[i]['descripcion'],
+              flag_flujo_caja: data[i]['flag_flujo_caja'],
+              id_tipo_cuenta: data[i]['id_tipo_cuenta'],
+              nit: data[i]['nit']);
+          await OperationDB.insertAuxiliar(auxiliar);
+        }
+      }
+    }
+    setState(() {
       porcentajeAvance = 78;
     });
-   await getConcepto();
- }
+    await getConcepto();
+  }
 
- Future getConcepto() async  {
-   final response = await http.get(Uri.parse("${Constant.URL}/concepto_all"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-       for (int i = 0; i < data.length; i++) {
-         final concepto = Concepto(
-           id_concepto:data[i]['id_concepto'],
-           descripcion: data[i]['descripcion'],
-           naturalezacta : data[i]['naturalezacta'],
-           id_auxiliar : data[i]['id_auxiliar'],
-           nit:  data[i]['nit']
-         );
-         await OperationDB.insertConcepto(concepto);
-       }
-     }
-   }
-      setState(() {
+  Future getConcepto() async {
+    final response = await http.get(Uri.parse("${Constant.URL}/concepto_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final concepto = Concepto(
+              id_concepto: data[i]['id_concepto'],
+              descripcion: data[i]['descripcion'],
+              naturalezacta: data[i]['naturalezacta'],
+              id_auxiliar: data[i]['id_auxiliar'],
+              nit: data[i]['nit']);
+          await OperationDB.insertConcepto(concepto);
+        }
+      }
+    }
+    setState(() {
       porcentajeAvance = 80;
     });
-   await getBanco();
- }
+    await getBanco();
+  }
 
-
- Future getBanco() async  {
-   final response = await http.get(Uri.parse("${Constant.URL}/banco_all"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-       for (int i = 0; i < data.length; i++) {
-         final banco = Banco(
-             id_banco:data[i]['id_banco'],
-             descripcion: data[i]['descripcion'],
-             nit:  data[i]['nit']
-         );
-         await OperationDB.insertBanco(banco);
-       }
-     }
-   }
-      setState(() {
+  Future getBanco() async {
+    final response = await http.get(Uri.parse("${Constant.URL}/banco_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final banco = Banco(
+              id_banco: data[i]['id_banco'],
+              descripcion: data[i]['descripcion'],
+              nit: data[i]['nit']);
+          await OperationDB.insertBanco(banco);
+        }
+      }
+    }
+    setState(() {
       porcentajeAvance = 84;
     });
-   await getFormaPago();
- }
+    await getFormaPago();
+  }
 
- Future getFormaPago() async  {
-   //ULTIMO
-   final response = await http.get(Uri.parse("${Constant.URL}/formapago_all"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-       for (int i = 0; i < data.length; i++) {
-         final formapago = FormaPago(
-             id_forma_pago:data[i]['id_forma_pago'],
-             descripcion: data[i]['descripcion'],
-             id_precio_item:  data[i]['id_precio_item'],
-             nit: data[i]['nit'],
-         );
-         await OperationDB.insertFormaPago(formapago);
-       }
-     }
-   }
+  Future getFormaPago() async {
+    //ULTIMO
+    final response = await http.get(Uri.parse("${Constant.URL}/formapago_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final formapago = FormaPago(
+            id_forma_pago: data[i]['id_forma_pago'],
+            descripcion: data[i]['descripcion'],
+            id_precio_item: data[i]['id_precio_item'],
+            nit: data[i]['nit'],
+          );
+          await OperationDB.insertFormaPago(formapago);
+        }
+      }
+    }
     await OperationDB.insertSincronizacion();
-      setState(() {
+    setState(() {
       porcentajeAvance = 100;
     });
     Navigator.pop(context);
     _showMSG('Sincronización exitosa');
- }
+  }
 
- Future searchTercero() async {
+  Future searchTercero() async {
     final response = await http.get(Uri.parse("${Constant.URL}/tercero_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -469,7 +497,7 @@ class _LoginPageState extends State<LoginPages> {
               id_ciudad: data[i]['id_ciudad'],
               id_barrio: data[i]['id_barrio'],
               telefono: data[i]['telefono'],
-               id_actividad: data[i]['id_actividad'] != null
+              id_actividad: data[i]['id_actividad'] != null
                   ? data[i]['id_actividad']
                   : '',
               id_tipo_empresa: data[i]['id_tipo_empresa'],
@@ -504,13 +532,10 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     }
-     setState(() {
+    setState(() {
       porcentajeAvance = 15;
     });
     await searchTerceroCliente();
-
-   
- 
   }
 
   Future searchTerceroCliente() async {
@@ -571,7 +596,7 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     }
-     setState(() {
+    setState(() {
       porcentajeAvance = 20;
     });
     await searchTerceroDireccion();
@@ -609,8 +634,8 @@ class _LoginPageState extends State<LoginPages> {
 
   /////api obtiene todos los registros de cuota venta de la bd de postgres
   Future getCuotaVentaSincronizacion() async {
-
-    final response = await http.get(Uri.parse("${Constant.URL}/cuotaventas_all"));
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/cuotaventas_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -635,9 +660,11 @@ class _LoginPageState extends State<LoginPages> {
       porcentajeAvance = 10;
     });
     await searchTercero();
-  } 
+  }
+
   Future getFacturaSincronizacion() async {
-    final response = await http.get(Uri.parse("${Constant.URL}/factura_app_movil"));
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/factura_app_movil"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -659,14 +686,15 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     }
-         setState(() {
+    setState(() {
       porcentajeAvance = 30;
     });
     await getClasificacionItemSincronizacion();
   }
 
   Future getClasificacionItemSincronizacion() async {
-    final response = await http.get(Uri.parse("${Constant.URL}/clasificacionItems_all"));
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/clasificacionItems_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -692,14 +720,15 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     }
-         setState(() {
+    setState(() {
       porcentajeAvance = 35;
     });
     await getPrecioItemSincronizacion();
   }
 
   Future getPrecioItemSincronizacion() async {
-    final response = await http.get(Uri.parse("${Constant.URL}/precioitem_all"));
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/precioitem_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
@@ -729,19 +758,19 @@ class _LoginPageState extends State<LoginPages> {
       }
     }
 
-     setState(() {
+    setState(() {
       porcentajeAvance = 38;
     });
     await getPrecioItemDetSincronizacion();
   }
 
   Future getPrecioItemDetSincronizacion() async {
-    final response = await http.get(Uri.parse("${Constant.URL}/precioitemdet_all"));
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/precioitemdet_all"));
     var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     if (response.statusCode == 200 && success) {
-
       var data = jsonResponse['data'];
       if (data.length > 0) {
         await OperationDB.deletePrecioItem();
@@ -806,76 +835,74 @@ class _LoginPageState extends State<LoginPages> {
         }
       }
     }
-           setState(() {
+    setState(() {
       porcentajeAvance = 50;
     });
     await getKitSincronizacion();
   }
 
-
- Future getKitSincronizacion() async {
-   final response = await http.get(Uri.parse("${Constant.URL}/kit_all"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-       for (int i = 0; i < data.length; i++) {
-         final kit = Kit(
-           id_kit: data[i]['id_kit'].toString(),
-           descripcion: data[i]['descripcion'].toString(),
-           precio_kit: data[i]['precio_kit'].toString(),
-           precio_kit_iva: data[i]['precio_kit_iva'].toString(),
-           flag_vigencia: data[i]['flag_vigencia'].toString(),
-           fecha_inicial: data[i]['fecha_inicial'].toString(),
-           fecha_final: data[i]['fecha_final'].toString(),
-           ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
-           nit: data[i]['nit']
-         );
-         await OperationDB.insertKit(kit);
-       }
-     }
-   }
-         setState(() {
+  Future getKitSincronizacion() async {
+    final response = await http.get(Uri.parse("${Constant.URL}/kit_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final kit = Kit(
+              id_kit: data[i]['id_kit'].toString(),
+              descripcion: data[i]['descripcion'].toString(),
+              precio_kit: data[i]['precio_kit'].toString(),
+              precio_kit_iva: data[i]['precio_kit_iva'].toString(),
+              flag_vigencia: data[i]['flag_vigencia'].toString(),
+              fecha_inicial: data[i]['fecha_inicial'].toString(),
+              fecha_final: data[i]['fecha_final'].toString(),
+              ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
+              nit: data[i]['nit']);
+          await OperationDB.insertKit(kit);
+        }
+      }
+    }
+    setState(() {
       porcentajeAvance = 54;
     });
-   await getKitDetSincronizacion();
- }
+    await getKitDetSincronizacion();
+  }
 
- Future getKitDetSincronizacion() async {
-   final response = await http.get(Uri.parse("${Constant.URL}/kit_det_all"));
-   var jsonResponse =
-   convert.jsonDecode(response.body) as Map<String, dynamic>;
-   var success = jsonResponse['success'];
-   if (response.statusCode == 200 && success) {
-     var data = jsonResponse['data'];
-     if (data.length > 0) {
-       for (int i = 0; i < data.length; i++) {
-         final kitdet = KitDet(
-             id_kit: data[i]['id_kit'].toString(),
-             id_item: data[i]['id_item'].toString(),
-             id_bodega: data[i]['id_bodega'].toString(),
-             cantidad: data[i]['cantidad'].toString(),
-             tasa_dcto: data[i]['tasa_dcto'].toString(),
-             precio: data[i]['precio'].toString(),
-             valor_total: data[i]['valor_total'].toString(),
-             tasa_iva: data[i]['tasa_iva'].toString(),
-             valor_iva: data[i]['valor_iva'].toString(),
-             total: data[i]['total'].toString(),
-             ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
-             nit: data[i]['nit']
-         );
-         await OperationDB.insertKitDet(kitdet);
-       }
-     }
-   }
+  Future getKitDetSincronizacion() async {
+    final response = await http.get(Uri.parse("${Constant.URL}/kit_det_all"));
+    var jsonResponse =
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
+    var success = jsonResponse['success'];
+    if (response.statusCode == 200 && success) {
+      var data = jsonResponse['data'];
+      if (data.length > 0) {
+        for (int i = 0; i < data.length; i++) {
+          final kitdet = KitDet(
+              id_kit: data[i]['id_kit'].toString(),
+              id_item: data[i]['id_item'].toString(),
+              id_bodega: data[i]['id_bodega'].toString(),
+              cantidad: data[i]['cantidad'].toString(),
+              tasa_dcto: data[i]['tasa_dcto'].toString(),
+              precio: data[i]['precio'].toString(),
+              valor_total: data[i]['valor_total'].toString(),
+              tasa_iva: data[i]['tasa_iva'].toString(),
+              valor_iva: data[i]['valor_iva'].toString(),
+              total: data[i]['total'].toString(),
+              ultima_actualizacion: data[i]['ultima_actualizacion'].toString(),
+              nit: data[i]['nit']);
+          await OperationDB.insertKitDet(kitdet);
+        }
+      }
+    }
     setState(() {
       porcentajeAvance = 58;
     });
- 
-     await getPedido();
- }
+
+    await getPedido();
+  }
+
   //visual
   @override
   Widget build(BuildContext context) {
@@ -888,7 +915,7 @@ class _LoginPageState extends State<LoginPages> {
             slivers: <Widget>[
               SliverList(
                   delegate: SliverChildListDelegate([
-              _form(context),
+                _form(context),
               ]))
             ],
           ),
@@ -916,9 +943,7 @@ class _LoginPageState extends State<LoginPages> {
               ),
             ),
             onPressed: () {
-              action
-                  ? startSin()
-                  : Navigator.pushNamed(context, 'home');
+              action ? startSin() : Navigator.pushNamed(context, 'home');
             },
           ),
         ));
@@ -930,7 +955,7 @@ class _LoginPageState extends State<LoginPages> {
     setState(() {
       _isConnected = val!;
     });
-    if(!_isConnected) {
+    if (!_isConnected) {
       _showMSG('Sin conexión a internet');
       return;
     }
@@ -981,16 +1006,15 @@ class _LoginPageState extends State<LoginPages> {
                           fontSize: 14.0,
                           fontStyle: FontStyle.italic),
                     ),
-
-
                   ],
                 ),
               ),
               SizedBox(
                 height: 40.0,
               ),
-
-            startSincro ?  showPrimaryButton('En progreso $porcentajeAvance %', true): showPrimaryButton('Sincronizar', true),
+              startSincro
+                  ? showPrimaryButton('En progreso $porcentajeAvance %', true)
+                  : showPrimaryButton('Sincronizar', true),
               SizedBox(
                 height: 20.0,
               ),
@@ -1001,6 +1025,4 @@ class _LoginPageState extends State<LoginPages> {
       ),
     );
   }
-
- 
 }

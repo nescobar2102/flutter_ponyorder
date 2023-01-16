@@ -67,7 +67,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       id_vendedor = (prefs.getString('id_vendedor') ?? '');
-      print("el usuario es $_user $_nit $id_vendedor");
+      
       if (_nit != '' &&  id_vendedor!='') {
         searchVisitados();
       }else{
@@ -216,9 +216,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                               Colors.blue,
                                                           title: const Text(
                                                               "Más reciente al más antiguo"),
-                                                          onChanged: (val) {
-                                                            print(
-                                                                "Radio1 $val");
+                                                          onChanged: (val) {                                                            
                                                             setState(() {
                                                               selectedRadio =
                                                                   val as int;
@@ -226,8 +224,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                                   true;
                                                               _isSelected2 =
                                                                   !_isSelected;
-                                                              print(
-                                                                  "Radio111 $val $selectedRadio");
+                                                             
                                                             });
                                                           },
                                                           selected: _isSelected,
@@ -242,18 +239,14 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                               selectedRadio,
                                                           activeColor:
                                                               Colors.blue,
-                                                          onChanged: (val) {
-                                                            print(
-                                                                "Radio2 $val");
+                                                          onChanged: (val) {                                                          
                                                             setState(() {
                                                               selectedRadio =
                                                                   val as int;
                                                               _isSelected2 =
                                                                   true;
                                                               _isSelected =
-                                                                  !_isSelected2;
-                                                              print(
-                                                                  "Radio2222 $val $selectedRadio");
+                                                                  !_isSelected2;                                                               
                                                             });
                                                           },
                                                           selected:

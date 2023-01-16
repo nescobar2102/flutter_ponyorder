@@ -13,7 +13,7 @@ class validateConexion {
     } on SocketException catch (err) {     
       value = false;
     }
-    print("retorna el resultado de la conexion $value");
+ 
     return value;
   }
 
