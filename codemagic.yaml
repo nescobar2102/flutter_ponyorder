@@ -55,8 +55,7 @@ workflows:
         notify:
           success: true # To receive a notification when a build succeeds
           failure: false # To not receive a notification when a build fails
-      app_store_connect:
-        publishing:
+      app_store_connect: 
 
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
