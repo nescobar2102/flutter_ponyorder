@@ -9,7 +9,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.example.appPony
       vars:
-        APP_ID: 1111111111 # <-- Put your APP ID here
+        APP_ID: 1603656658 # <-- Put your APP ID here
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -56,7 +56,15 @@ workflows:
           success: true # To receive a notification when a build succeeds
           failure: false # To not receive a notification when a build fails
       app_store_connect:
-        auth: integration
+        publishing:
+
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+
+        submit_to_app_store: true
+        release_type: AFTER_APPROVAL
+        
         
         # Configuration related to TestFlight (optional)
         # Note: This action is performed during post-processing.
@@ -65,6 +73,4 @@ workflows:
           - group name 1
           - group name 2
 
-        # Configuration related to App Store (optional)
-        # Note: This action is performed during post-processing.
-        submit_to_app_store: false
+      
