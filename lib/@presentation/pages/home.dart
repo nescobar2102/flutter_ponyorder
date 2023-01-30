@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:select_form_field/select_form_field.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
+
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 
@@ -19,6 +20,9 @@ import '../../Common/Letras.dart';
 import '../../Common/Constant.dart';
 import '../../models/cliente.dart';
 import '../../models/pedido.dart';
+import '../../models/recibo_caja.dart';
+
+import './sendData.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -26,9 +30,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   bool _isConnected = false;
   bool _clientShow = false;
+  bool _clientShowNoFound = false;
   bool _productosShow = false;
   bool _productosShowCat = false;
   bool _formShow = false;
@@ -37,13 +41,13 @@ class _HomePageState extends State<HomePage> {
   bool _formHistoryShow = false;
   bool _formNewClientShow = false;
   bool _formNewClientShowDescuento = false;
-  bool _checkedCartera = true;
+  bool _checkedCartera = false;
   bool _checkedPedido = false;
   bool _checkedRecibo = false;
+  bool _noDatos = true;
   late int _checked = 0;
   bool isCheckedDV = false;
-  bool isReadOnly = true;
- 
+
   bool isValidEmail = true;
 
   //data
@@ -96,15 +100,13 @@ class _HomePageState extends State<HomePage> {
   final myControllerDireccion = TextEditingController();
   final myControllerEmail = TextEditingController();
   final myControllerTelefono = TextEditingController();
+  final myControllerTelefonoCelular = TextEditingController();
+  final myControllerCantidadCart = TextEditingController();
+
 //nuevo cliente
 
 //nuevo pedido
-  List<Map<String, dynamic>> _itemsFormaPago = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "01", "label": "EFECTIVO"},
-    {"value": "02", "label": "CREDITO 8 DIAS"},
-    {"value": "03", "label": "CREDITO 30 DIAS"}
-  ];
+
   String _value_itemsFormaPago = '';
   late String _value_automatico = '';
   String _value_DireccionFactura = '0';
@@ -124,11 +126,10 @@ class _HomePageState extends State<HomePage> {
   late String _saldoCartera = '0.00';
 
   //pantalla 2 de seleccion de productos para pedidos
-  late String _searchProducto = '@';
+
   late int _countProductos = 0;
   List<dynamic> _datProductos = [];
   List<Map<String, dynamic>> _cartProductos = [];
-
 
   //variables de pedidos
   bool selectItem = false;
@@ -155,20 +156,12 @@ class _HomePageState extends State<HomePage> {
 
   //nuevo pedido
 
-  List<Map<String, dynamic>> _itemsTipoPago = [
-    {"value": "", "label": "Seleccione"},
-    {"value": "01", "label": "EFECTIVO"},
-    {"value": "02", "label": "TRANSFERENCIA"},
-    {"value": "03", "label": "PAGO CON CHEQUES"},
-  ];
-
-  get callback => null;
+  get callback => false;
 
   @override
   void initState() {
     super.initState();
-     _loadDataUserLogin();
-
+    _loadDataUserLogin();
   }
 
   /// This implementation is just to simulate a load data behavior
@@ -176,6 +169,7 @@ class _HomePageState extends State<HomePage> {
   Future sleep1() {
     return new Future.delayed(const Duration(seconds: 5), () => "4");
   }
+
   Future<Null> _submitDialog(BuildContext context) async {
     return await showDialog<Null>(
         context: context,
@@ -202,21 +196,18 @@ class _HomePageState extends State<HomePage> {
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
       idReciboUser = (prefs.getString('idReciboUser') ?? '');
-      print("el usuario es $_user $_nit $idPedidoUser");
     });
-      if (_nit != '') {
-        searchClient();
-        if (id_vendedor == '') {
-          searchVendedor(_nit.trim(), _user.trim());
-        }
+    if (_nit != '') {
+      if (id_vendedor == '') {
+        searchVendedor(_nit.trim(), _user.trim());
       }
+      // await SendataSincronizacion.initSincronizacion();
 
-     Navigator.pop(context);
+    }
   }
 
   String id_sucursal_tercero_cliente = '';
@@ -226,11 +217,8 @@ class _HomePageState extends State<HomePage> {
   String id_suc_vendedor_cliente = '';
 
   Future<void> searchVendedor(_nit, user) async {
-    print("-----searchVendedor---");
     final vendedor = await OperationDB.getVendedor(_nit, _user);
-    print("resultado del vendedor $vendedor");
     if (vendedor != false) {
-
       setState(() {
         id_vendedor = vendedor[0]['id_tercero'];
         id_sucursal_tercero_cliente =
@@ -239,7 +227,6 @@ class _HomePageState extends State<HomePage> {
         id_precio_item_cliente = vendedor[0]['id_precio_item'];
         id_lista_precio_cliente = vendedor[0]['id_lista_precio'];
         id_suc_vendedor_cliente = vendedor[0]['id_suc_vendedor'].toString();
-        print("-----el di del vendedor es $id_vendedor");
       });
       final prefs = await SharedPreferences.getInstance();
       setState(() {
@@ -251,18 +238,83 @@ class _HomePageState extends State<HomePage> {
         prefs.setString("id_suc_vendedor", id_suc_vendedor_cliente);
       });
     }
+    if (id_vendedor != '') {
+      await searchClient(); //validar esto con pony
+    } else {
+      showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => Dialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0))),
+            child: Container(
+              height: 250.0,
+              width: 300.0,
+              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 15.0),
+                  Text(
+                    '¡Atención!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Color(0xff06538D),
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 20.0),
+                  Text(
+                    'No se obtuvo información del vendedor. \n Sincronice los datos.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Color(0xff0894FD),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 30.0),
+                  Container(
+                    width: 110,
+                    height: 41.0,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0),
+                        color: Color(0xff0894FD)),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(5.0),
+                        child: Center(
+                          child: Text(
+                            'Entendido',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, 'data');
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+      );
+    }
   }
 
   Future<void> searchDigitoVerif() async {
     final val = await validateConexion.checkInternetConnection();
     setState(() {
       _isConnected = val!;
-        print("valida la conexion $_isConnected");
     });
-    if (myControllerNroDoc.text.isNotEmpty && _isConnected) {  
+    if (myControllerNroDoc.text.isNotEmpty &&
+        _isConnected &&
+        _value_itemsTypeDoc == '31') {
       final numeroId = myControllerNroDoc.text.trim();
-     
-      final response = await http.get(Uri.parse("${Constant.URL}/cliente_dv/$numeroId"));
+      final response =
+          await http.get(Uri.parse("${Constant.URL}/cliente_dv/$numeroId"));
       var jsonResponse =
           convert.jsonDecode(response.body) as Map<String, dynamic>;
       var success = jsonResponse['success'];
@@ -279,7 +331,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   late List<Map<String, dynamic>> itemsListPrecio = [];
-  Future  getListPrecio() async {
+  Future getListPrecio() async {
     final data = await OperationDB.getListPrecio(_nit);
     if (data != false) {
       setState(() {
@@ -290,6 +342,23 @@ class _HomePageState extends State<HomePage> {
     } else {
       setState(() {
         itemsListPrecio = [];
+      });
+      _showBarMsg('No se obtuvo el precio', false);
+    }
+  }
+
+  late List<Map<String, dynamic>> _itemsTipoPago = [];
+  Future getTipoPago() async {
+    final data = await OperationDB.getTipoPago(_nit);
+    if (data != false) {
+      setState(() {
+        _itemsTipoPago = (data as List)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .toList();
+      });
+    } else {
+      setState(() {
+        _itemsTipoPago = [];
       });
       _showBarMsg('Error', false);
     }
@@ -310,8 +379,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   late List<Map<String, dynamic>> _itemsBarrio = [];
-  Future getItemBarrio(id_ciudad) async {
-    final data = await OperationDB.getBarrioList(_nit, id_ciudad);
+  Future getItemBarrio(idCiudad) async {
+    final data = await OperationDB.getBarrioList(_nit, idCiudad);
     if (data != false) {
       setState(() {
         _itemsBarrio = (data as List)
@@ -322,7 +391,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _itemsBarrio = [];
       });
-      _showBarMsg('Error', false);
+      //  _showBarMsg('Error', false);
     }
   }
 
@@ -400,7 +469,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   late List<Map<String, dynamic>> _itemsBanco = [];
-  Future getItemBanco(iddepto) async {
+  Future getItemBanco() async {
     final data = await OperationDB.getBancoList(_nit);
     if (data != false) {
       setState(() {
@@ -422,9 +491,7 @@ class _HomePageState extends State<HomePage> {
       new GlobalKey<ScaffoldState>();
 
   Future<void> searchClient() async {
-    _submitDialog(context);
     isCheckedDV = false;
-    isReadOnly = false;
     myControllerNroDoc.clear();
     myControllerDv.clear();
     myControllerPrimerNombre.clear();
@@ -435,35 +502,42 @@ class _HomePageState extends State<HomePage> {
     myControllerDireccion.clear();
     myControllerEmail.clear();
     myControllerTelefono.clear();
-
-    final allClient = await OperationDB.getClient(_nit, _search.trim());
-    if (allClient != false) {
+    myControllerTelefonoCelular.clear();
+    final allClient =
+        await OperationDB.getClient(_nit, _search.trim(), id_vendedor);
+    if (allClient != false && id_vendedor != '') {
       setState(() {
         _count = allClient.length;
         _datClient = allClient;
         _clientShow = true;
+        _clientShowNoFound = false;
         _productosShowCat = false;
         _productosShow = false;
         _formNewClientShowDescuento = false;
         _formNewClientShow = false;
       });
-      await ObtieneCarrito(false);
-    } else {
+      if (_search == '@') {
+        await ObtieneCarrito();
+      }
+    } else if (allClient == false && id_vendedor != '') {
       _showBarMsg('No existen clientes', false);
+      setState(() {
+        _clientShow = false;
+        _clientShowNoFound = true;
+        _productosShowCat = false;
+        _productosShow = false;
+        _formNewClientShowDescuento = false;
+        _formNewClientShow = false;
+      });
+    } else {
+      _clientShow = false;
+      _clientShowNoFound = false;
+      _showBarMsg(
+          'No se obtuvo información del vendedor,sincronice los datos', false);
     }
-
-    setState(() {
-      _clientShow = true;
-      _productosShowCat = false;
-      _productosShow = false;
-      _formNewClientShowDescuento = false;
-      _formNewClientShow = false;
-    });
-
   }
 
   Future<void> saldoCartera(bool pedido) async {
-    print("busca saldoCartera");
     var data =
         await OperationDB.getSaldoCartera(id_tercero, id_sucursal_tercero);
     if (data != false) {
@@ -471,7 +545,6 @@ class _HomePageState extends State<HomePage> {
         _saldoCartera =
             data[0]['DEBITO'] != null ? data[0]['DEBITO'].toString() : '0';
       });
-      print("saldo cartera $_saldoCartera");
       var data1 = await OperationDB.getFormPago(id_tercero, _nit);
       if (data1 != false) {
         setState(() {
@@ -484,43 +557,46 @@ class _HomePageState extends State<HomePage> {
       }
       if (_value_automatico != '' && pedido) {
         _direccionClient = [];
+        _direccionClienMercancia = [];
         searchClientDireccion();
       }
     } else {
-      Navigator.pop(context);
       _showBarMsg('No se obtuvo  el saldo', false);
     }
   }
 
   Future<void> searchFactura() async {
-    print("busca factura");
     final allFactura = await OperationDB.getFacturaId(id_tercero);
     if (allFactura != false) {
       setState(() {
         _datFactura = allFactura;
       });
-    } else {
-      print("no tiene factura ");
     }
   }
 
   Future<void> _saveClient() async {
-    print("Save client A la bd");
-
+    final dv = myControllerDv.text != '' ? myControllerDv.text.trim() : "'-'";
     final nuevo_cliente = Cliente(
         id_tercero: myControllerNroDoc.text.trim(),
         id_sucursal_tercero: id_sucursal_tercero_cliente,
         id_tipo_identificacion: _value_itemsTypeDoc,
-        dv: myControllerDv.text.trim(),
+        dv: dv,
         nombre: isCheckedDV
-            ? myControllerPrimerNombre.text.trim()
+            ? myControllerPrimerNombre.text.trim() +
+                ' ' +
+                myControllerSegundoNombre.text.trim() +
+                ' ' +
+                myControllerPrimerApellido.text.trim() +
+                ' ' +
+                myControllerSegundoApellido.text.trim()
             : myControllerRazonSocial.text.trim(),
         direccion: myControllerDireccion.text.trim(),
-        id_pais: "57",
+        id_pais: "",
         id_depto: _value_itemsDepartamento,
         id_ciudad: _value_itemsCiudad,
-        id_barrio: _value_itemsBarrio !='' ? _value_itemsBarrio : '0',
+        id_barrio: _value_itemsBarrio != '' ? _value_itemsBarrio : '0',
         telefono: myControllerTelefono.text.trim(),
+        telefono_celular: myControllerTelefonoCelular.text.trim(),
         id_actividad: _value_itemsClasification,
         fecha_creacion:
             '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
@@ -528,7 +604,11 @@ class _HomePageState extends State<HomePage> {
             ? myControllerRazonSocial.text.trim()
             : myControllerPrimerNombre.text.trim() +
                 ' ' +
-                myControllerPrimerApellido.text.trim(),
+                myControllerSegundoNombre.text.trim() +
+                ' ' +
+                myControllerPrimerApellido.text.trim() +
+                ' ' +
+                myControllerSegundoApellido.text.trim(),
         primer_apellido:
             isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
         segundo_apellido:
@@ -547,95 +627,32 @@ class _HomePageState extends State<HomePage> {
         nit: _nit,
         id_tipo_empresa: '',
         flag_persona_nat: isCheckedDV ? 'SI' : 'NO',
-        usuario: _user);
+        usuario: '');
     final insert = await OperationDB.insertCliente(nuevo_cliente);
     if (insert) {
+      final val = await validateConexion.checkInternetConnection();
+      setState(() {
+        _isConnected = val!;
+      });
       _showBarMsg('Creación exitosa del cliente', true);
-         final val = await validateConexion.checkInternetConnection();
-          setState(() {
-          _isConnected = val!;
-        });
-
-      _isConnected ?  await _saveClient_api() : null;
-
+      // _isConnected ?  await _saveClient_api() :
+      _isConnected ? await SendataSincronizacion.sendTercero(false) : null;
+      Navigator.pushNamed(context, 'home');
     } else {
       _showBarMsg('Error, identificación ya existe', false);
       Navigator.pushNamed(context, 'home');
     }
   }
 
-  Future<void> _saveClient_api() async {
-    final tercero_update = myControllerNroDoc.text;
-    print("Save clientapi ");
-    final response = await http.post(Uri.parse("${Constant.URL}/nuevo_cliente_app"),
-        body: ({
-          "id_tercero": tercero_update.trim(),
-          "id_sucursal_tercero": id_sucursal_tercero_cliente,
-          "id_tipo_identificacion": _value_itemsTypeDoc,
-          "dv": myControllerDv.text.trim(),
-          "nombre": isCheckedDV
-              ? myControllerPrimerNombre.text.trim()
-              : myControllerRazonSocial.text.trim(),
-          "direccion": myControllerDireccion.text.trim(),
-          "id_pais": "57",
-          "id_depto": _value_itemsDepartamento,
-          "id_ciudad": _value_itemsCiudad,
-          "id_barrio": _value_itemsBarrio !='' ? _value_itemsBarrio : '0',
-          "telefono": myControllerTelefono.text.trim(),
-          "id_actividad": _value_itemsClasification,
-          "nombre_sucursal": !isCheckedDV
-              ? myControllerRazonSocial.text.trim()
-              : myControllerPrimerNombre.text.trim() +
-                  ' ' +
-                  myControllerPrimerApellido.text.trim(),
-          "primer_apellido":
-              isCheckedDV ? myControllerPrimerApellido.text.trim() : '',
-          "segundo_apellido":
-              isCheckedDV ? myControllerSegundoApellido.text.trim() : '',
-          "primer_nombre":
-              isCheckedDV ? myControllerPrimerNombre.text.trim() : '',
-          "segundo_nombre":
-              isCheckedDV ? myControllerSegundoNombre.text.trim() : '',
-          "e_mail": myControllerEmail.text.trim(),
-          "telefono_celular": myControllerTelefono.text.trim(),
-          "id_forma_pago": id_forma_pago_cliente,
-          "id_precio_item": id_precio_item_cliente,
-          "id_lista_precio": id_lista_precio_cliente,
-          "id_vendedor": id_vendedor,
-          "id_medio_contacto": _value_itemsMedioContacto,
-          "id_zona": _value_itemsZona,
-          "id_direccion": "1",
-          "tipo_direccion": "Factura",
-          "id_suc_vendedor": id_suc_vendedor_cliente,
-          'nit': _nit,
-          'flag_persona_nat': isCheckedDV ? 'SI' : 'NO',
-          'usuario': _user
-        }));
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    if (response.statusCode != 201 && !success) {
-      _showBarMsg('No se sincronizó el cliente', false);
-    } else {
-      print("se actualiza el status del cliente");
-      await OperationDB.updateCliente(tercero_update, _nit);
-    }
-    Navigator.pushNamed(context, 'home');
-  }
-
   Future<void> getConsecutivo(bool pedido) async {
-    print(
-        "--------------getConsecutivo getConsecutivo $idPedidoUser $idReciboUser $id_tercero $nombre_tercero $id_empresa");
     var idTipoDoc = pedido ? idPedidoUser : idReciboUser;
     final allConse =
         await OperationDB.getConsecutivoTipoDoc(_nit, idTipoDoc, id_empresa);
     if (allConse != false) {
       _value_automatico = allConse[0]['consecutivo'].toString();
       if (_value_automatico != '') {
-        print("se busca el carrito en el home");
-       await ObtieneCarrito(false);
-        saldoCartera(pedido);
+        await ObtieneCarrito();
+        await saldoCartera(pedido);
       } else {
         setState(() {
           _formRecipeShow = true;
@@ -646,15 +663,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> ObtieneCarrito(bool update) async {
-    print("---------------ObtieneCarrito----------");
-    final data = await OperationDB.getCarrito(
-        _nit, id_tercero, _value_automatico);
+  Future<void> ObtieneCarrito() async {
+    final data =
+        await OperationDB.getCarrito(_nit, id_tercero, _value_automatico);
     if (data != false) {
       _cartProductos =
           (data as List).map((dynamic e) => e as Map<String, dynamic>).toList();
 
-  if(_value_automatico== '' && id_tercero == '' && id_empresa == '') {
+      if (_value_automatico == '' && id_tercero == '' && id_empresa == '') {
         nombre_tercero = _cartProductos[0]['nombre_sucursal'];
         _value_automatico = _cartProductos[0]['numero'].toString();
         id_empresa = _cartProductos[0]['id_empresa'];
@@ -668,39 +684,46 @@ class _HomePageState extends State<HomePage> {
         id_direccion_factura = _cartProductos[0]['id_direccion_factura'];
       }
     }
-    totalPedido = await valorTotal();
-     // await numeroAletra(totalPedido.toString());
-    if (update) {
-      await OperationDB.updateCarritoG(
-          _value_automatico, totalDescuento, totalPedido, _letras);
-
-    }//
+    setState(() {
+      totalPedido = valorTotal();
+    });
   }
 
   late List<Map<String, dynamic>> _direccionClient = [];
+  late List<Map<String, dynamic>> _direccionClienMercancia = [];
   Future<void> searchClientDireccion() async {
-    final allDireccion = await OperationDB.getDireccion(_nit, id_tercero);
-    if (allDireccion != false) {
+    final allDireccionMercancia =
+        await OperationDB.getDireccion(_nit, id_tercero, 'Mercancia');
+    if (allDireccionMercancia != false) {
+      _direccionClienMercancia = (allDireccionMercancia as List)
+          .map((dynamic e) => e as Map<String, dynamic>)
+          .toList();
+    } else {
+      _showBarMsg('El cliente no registra dirección', false);
+    }
+
+    final allDireccion =
+        await OperationDB.getDireccion(_nit, id_tercero, 'Factura');
+    if (allDireccion != false && allDireccionMercancia != false) {
       setState(() {
         _direccionClient = (allDireccion as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
 
-        Navigator.pop(context);
         _clientShow = false;
+        _clientShowNoFound = false;
         _formOrderShow = true;
         _productosShow = false;
         searchFactura(); //busca las facturas
       });
     } else {
-      Navigator.pop(context);
       _showBarMsg('El cliente no registra dirección', false);
     }
   }
 
   Future<void> searchClasificacionProductos() async {
     _search = myControllerBuscarCatego.text.isNotEmpty
-        ? myControllerBuscarCatego.text
+        ? myControllerBuscarCatego.text.trim()
         : '@';
 
     var data = await OperationDB.getClasificacionProductos(
@@ -717,7 +740,7 @@ class _HomePageState extends State<HomePage> {
           _productosShow
               ? _productos(context, _datClasificacionProductos)
               : Container();
-            getListPrecio();
+          getListPrecio();
         }
       });
     } else {
@@ -727,7 +750,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> selectProducto() async {
     String _search = '@';
-    print("-************selectProducto*********** $_search");
     var data = await OperationDB.getClasificacionProductos(
         _nit, '1', '', true, _search);
     if (data != false) {
@@ -758,10 +780,7 @@ class _HomePageState extends State<HomePage> {
       _datClasificacionProductosNivel = data;
       _countClasificacionNivel = data.length;
       setState(() {
-       /* idClasificacion =
-            '${_datClasificacionProductosNivel[0]['id_clasificacion']}';*/
-        idClasificacion =
-        '${_datClasificacionProductosNivel[0]['id_padre']}';
+        idClasificacion = '${_datClasificacionProductosNivel[0]['id_padre']}';
         searchProductosPedido();
       });
     } else {
@@ -771,11 +790,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> searchProductosPedido() async {
     final _search = myControllerBuscarProd.text.isNotEmpty
-        ? myControllerBuscarProd.text
+        ? myControllerBuscarProd.text.trim()
         : '@';
 
-    print("-------*-*--------searchProductosPedido *---------**-*-- $_search");
-    var data = await OperationDB.getItems(_nit, idClasificacion, _search,listaPrecioTercero);
+    var data = await OperationDB.getItems(
+        _nit, idClasificacion, _search, listaPrecioTercero);
     if (data != false) {
       setState(() {
         _datProductos = data;
@@ -798,7 +817,9 @@ class _HomePageState extends State<HomePage> {
     if (data != false) {
       setState(() {
         _precio = double.parse(data[0]['precio']);
-       _descuento = data[0]['descuento_maximo'] != null ? double.parse(data[0]['descuento_maximo']):0;
+        _descuento = data[0]['descuento_maximo'] != null
+            ? double.parse(data[0]['descuento_maximo'])
+            : 0;
       });
     } else {
       setState(() {
@@ -833,9 +854,14 @@ class _HomePageState extends State<HomePage> {
           _checkedCartera = false;
           _checkedPedido = true;
           _checkedRecibo = false;
+          _noDatos = false;
         });
       }
     } else {
+      _checkedPedido = true;
+      _checkedCartera = false;
+      _checkedRecibo = false;
+      _noDatos = true;
       _showBarMsg('No tiene pedidos este cliente', false);
     }
   }
@@ -859,7 +885,35 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } else {
+      _checkedRecibo = true;
+      _checkedCartera = false;
+      _checkedPedido = false;
+      _noDatos = true;
       _showBarMsg('No tiene recibos este cliente', false);
+    }
+  }
+
+  List<dynamic> _datCartera = [];
+  //historial de cartera del cliente
+  Future<void> getHistorialCarteraClienteBasico() async {
+    print("entra getHistorialCarteraClienteBasico");
+    final data =
+        await OperationDB.getHistorialCarteraClienteBasico(id_tercero, _nit);
+    print("entra getHistorialCarteraClienteBasico 2222 $data");
+    if (data != false) {
+      setState(() {
+        _datCartera = data;
+        _checkedCartera = true;
+        _checkedPedido = false;
+        _checkedRecibo = false;
+        _noDatos = false;
+      });
+    } else {
+      _checkedCartera = true;
+      _checkedPedido = false;
+      _checkedRecibo = false;
+      _noDatos = true;
+      _showBarMsg('No tiene cartera este cliente', false);
     }
   }
 
@@ -892,67 +946,66 @@ class _HomePageState extends State<HomePage> {
   }
 
   void validateEmail() {
-    String email = myControllerEmail.text;
+    String email = myControllerEmail.text.trim();
     isValidEmail = EmailValidator.validate(email);
   }
 
-    bool  validateFormulario() {
+  bool validateFormulario() {
     bool result = false;
-    result =  _value_itemsTypeDoc!='' ? true : false;
-    print("result _value_itemsTypeDoc $result");
-    if(result){
-      result =  myControllerNroDoc.text.trim() !='' ? true : false;
-    }
-    print("resultmyControllerNroDoc $result");
-    if(result && isCheckedDV){
-      result =  myControllerPrimerNombre.text.trim() !='' ? true : false;
-    }
-    print(" result myControllerPrimerNombre $result");
-    if(result && isCheckedDV){
-      result =  myControllerPrimerApellido.text.trim() !='' ? true : false;
-    }
-    print("result myControllerPrimerApellido $result");
-    if(result && !isCheckedDV){
-    result =  myControllerRazonSocial.text.trim() !=''  ? true : false;
-    }
-    print("resul myControllerRazonSocial $result");
+    result = _value_itemsTypeDoc != '' ? true : false;
 
-    if(result){
-      result =  myControllerDireccion.text.trim() !='' ? true : false;
+    if (result) {
+      result = myControllerNroDoc.text.trim() != '' ? true : false;
     }
-    print("result myControllerDireccion $result");
-    if(result){
-      result =  myControllerTelefono.text.trim() !='' ? true : false;
+
+    if (result && isCheckedDV) {
+      result = myControllerPrimerNombre.text.trim() != '' ? true : false;
     }
-    print("resutl myControllerTelefono $result");
-    if(result && !isValidEmail){
+
+    if (result && isCheckedDV) {
+      result = myControllerPrimerApellido.text.trim() != '' ? true : false;
+    }
+
+    if (result && !isCheckedDV) {
+      result = myControllerRazonSocial.text.trim() != '' ? true : false;
+    }
+
+    if (result) {
+      result = myControllerDireccion.text.trim() != '' ? true : false;
+    }
+
+    if (result) {
+      result = myControllerTelefono.text.trim() != '' ? true : false;
+    }
+    if (result) {
+      result = myControllerTelefonoCelular.text.trim() != '' ? true : false;
+    }
+
+    if (result && !isValidEmail) {
       result = false;
     }
-    print("resutl isValidEmail $result");
-    if(result){
-      result =  _value_itemsClasification.trim() !='' ? true : false;
-    }
-    print("resutl _value_itemsClasification $result");
-    if(result){
-      result =  _value_itemsMedioContacto.trim() !='' ? true : false;
-    }
-    print("resutl _value_itemsMedioContacto $result");
-    if(result){
-      result =  _value_itemsZona.trim() !='' ? true : false;
-    }
-    print("resutl _value_itemsZona $result");
-    if(result){
-      result =  _value_itemsDepartamento.trim() !='' ? true : false;
-    }
-    print("resutl _value_itemsDepartamento $result");
-    if(result){
-      result =  _value_itemsCiudad.trim() !='' ? true : false;
-    }
-    print("resutl _value_itemsCiudad $result");
 
-    print("resultado de validacion de formaulario $result");
+    if (result) {
+      result = _value_itemsClasification.trim() != '' ? true : false;
+    }
+
+    if (result) {
+      result = _value_itemsMedioContacto.trim() != '' ? true : false;
+    }
+
+    if (result) {
+      result = _value_itemsZona.trim() != '' ? true : false;
+    }
+
+    if (result) {
+      result = _value_itemsDepartamento.trim() != '' ? true : false;
+    }
+
+    if (result) {
+      result = _value_itemsCiudad.trim() != '' ? true : false;
+    }
+
     return result;
-
   }
 
   @override
@@ -960,8 +1013,7 @@ class _HomePageState extends State<HomePage> {
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
-        appBar: 
-       AppBar(
+        appBar: AppBar(
           toolbarHeight: 60,
           automaticallyImplyLeading: false,
           leadingWidth: 40.0,
@@ -982,13 +1034,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-           actions: [
-              Badge(
-                badgeContent: Text( (_cartProductos.length).toString() ,
-                  style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                  child: GestureDetector(
+            actions: [
+             GestureDetector(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 15.0),
                         child: Icon(
@@ -1001,10 +1048,8 @@ class _HomePageState extends State<HomePage> {
                         _drawerscaffoldkey.currentState!.isEndDrawerOpen
                             ? Navigator.pop(context)
                             : _drawerscaffoldkey.currentState!.openEndDrawer()
-                      }),
-                position: const BadgePosition(start: -18, bottom: 30),
-              ),
-          ],
+                      }), 
+          ],          
           title: Text(
             'Clientes',
             style: TextStyle(
@@ -1024,7 +1069,8 @@ class _HomePageState extends State<HomePage> {
         body: Scaffold(
           key: _drawerscaffoldkey,
           drawer: _menu(context),
-          endDrawer: _shoppingCart(context),
+          endDrawer:
+              _shoppingCart(context, _cartProductos, _cartProductos.length),
           body: CustomScrollView(
             slivers: [
               SliverList(
@@ -1047,8 +1093,8 @@ class _HomePageState extends State<HomePage> {
                                   ? TextField(
                                       controller: myControllerSearch,
                                       textInputAction: TextInputAction.done,
-                                      onSubmitted: (String str){
-                                        setState((){
+                                      onSubmitted: (String str) {
+                                        setState(() {
                                           validateAndSubmit();
                                         });
                                       },
@@ -1059,8 +1105,8 @@ class _HomePageState extends State<HomePage> {
                                       },
                                       decoration: InputDecoration(
                                         hintText: !_productosShow
-                                            ? 'Buscar cliente'
-                                            : 'Buscar Categoria',
+                                            ? 'Buscar cliente (identificación ó nombre)'
+                                            : 'Buscar Categoriaaaa',
                                         fillColor: Colors.white,
                                         filled: true,
                                         contentPadding: EdgeInsets.only(
@@ -1105,8 +1151,11 @@ class _HomePageState extends State<HomePage> {
                                     )
                                   : SizedBox(height: 10.0),
                           SizedBox(height: 10.0),
-                          _clientShow
+                          _clientShow && !_clientShowNoFound
                               ? _client(context, _datClient)
+                              : Container(),
+                          _clientShowNoFound && !_clientShow
+                              ? _clientNotFound(context)
                               : Container(),
                           _productosShow
                               ? _productos(context, _datClasificacionProductos)
@@ -1147,14 +1196,18 @@ class _HomePageState extends State<HomePage> {
       id_tercero = '${data['id_tercero']}';
       nombre_tercero = '${data['nombre_sucursal']}  ';
       direccion_tercero = '${data['direccion']}';
-      tlf_tercero = '${data['telefono']}';
+      tlf_tercero = data['telefono_celular'] != null
+          ? data['telefono_celular']
+          : data['telefono'];
       id_empresa = '${data['id_empresa']}';
       id_sucursal_tercero = '${data['id_sucursal_tercero']}';
       limite_credito = '${data['limite_credito']}';
       _formHistoryShow = true;
       _clientShow = false;
+      _clientShowNoFound = false;
       _productosShow = false;
     });
+    getHistorialCarteraClienteBasico();
   }
 
   void callbackRecipe(data) {
@@ -1183,7 +1236,7 @@ class _HomePageState extends State<HomePage> {
                 fontStyle: FontStyle.italic)),
         SizedBox(height: 10.0),
         SizedBox(
-          height: 535.0,
+          height: 530.0,
           child: ListView.builder(
             itemCount: _count,
             itemBuilder: (context, i) => _ItemClient('$_count', _datClient[i]),
@@ -1199,8 +1252,40 @@ class _HomePageState extends State<HomePage> {
                     getItemDepartamento();
                     getItemClasificacion();
                     getItemMedioContacto();
-                    getItemZona();                 
+                    getItemZona();
                     _clientShow = false;
+                    _clientShowNoFound = false;
+                    _formShow = true;
+                  })
+                }),
+        SizedBox(height: 10.0),
+      ],
+    );
+  }
+
+  Widget _clientNotFound(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Se encontraron $_count resultados',
+            style: TextStyle(
+                color: Color(0xff0f538d),
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                fontStyle: FontStyle.italic)),
+        SizedBox(height: 200.0),
+        BtnForm(
+            text: 'Crear cliente',
+            color: Color(0xff0894FD),
+            callback: () => {
+                  setState(() {
+                    getItemTypeIdentication();
+                    getItemDepartamento();
+                    getItemClasificacion();
+                    getItemMedioContacto();
+                    getItemZona();
+                    _clientShow = false;
+                    _clientShowNoFound = false;
                     _formShow = true;
                   })
                 }),
@@ -1376,7 +1461,8 @@ class _HomePageState extends State<HomePage> {
                   height: 41.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5.0),
-                      color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                      color: (_cartProductos.length > 0 &&
+                              double.parse(totalPedido) > 0)
                           ? Color(0xff0894FD)
                           : Color.fromARGB(255, 146, 144, 144)),
                   child: Material(
@@ -1393,7 +1479,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       onTap: () {
-                        (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                        (_cartProductos.length > 0 &&
+                                double.parse(totalPedido) > 0)
                             ? createPedido()
                             : modalSinPedido();
                       },
@@ -1406,7 +1493,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _shoppingCart(BuildContext context) {
+  Widget _shoppingCart(BuildContext context, data, index) {
     final _size = MediaQuery.of(context).size;
     final nombre = nombre_tercero.toUpperCase();
     return SafeArea(
@@ -1433,12 +1520,13 @@ class _HomePageState extends State<HomePage> {
                               fontWeight: FontWeight.w700),
                         ),
                         GestureDetector(
-                        child:Icon(
-                          Icons.disabled_by_default_outlined,
-                          color: Color(0xff0f538d),
-                          size: 30.0,
-                        ),
+                          child: Icon(
+                            Icons.disabled_by_default_outlined,
+                            color: Color(0xff0f538d),
+                            size: 30.0,
+                          ),
                           onTap: () {
+                            myControllerBuscarProd.clear();
                             Navigator.pop(context);
                           },
                         ),
@@ -1464,7 +1552,7 @@ class _HomePageState extends State<HomePage> {
                       height: 10.0,
                     ),
                     InputCallback(context, 'Buscar producto', Icons.search,
-                        _searchProducto, myControllerBuscarProd),
+                        callback, myControllerBuscarProd),
                     SizedBox(height: 15.0),
                     Container(
                       width: 160.0,
@@ -1482,6 +1570,7 @@ class _HomePageState extends State<HomePage> {
                               Navigator.pop(context);
                               _productosShowCat = false;
                               _clientShow = false;
+                              _clientShowNoFound = false;
                               _formShow = false;
                               searchClasificacionProductos();
                             }),
@@ -1513,7 +1602,7 @@ class _HomePageState extends State<HomePage> {
                       height: 15.0,
                     ),
                     SizedBox(
-                      height: 310.0,
+                      height: 300.0,
                       child: ListView.builder(
                         itemCount: _cartProductos.length,
                         itemBuilder: (context, i) =>
@@ -1585,9 +1674,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   onTap: () => {
                                     setState(() {
-                                      print("vaciar carrito");
                                       removeCarrito();
-
                                     }),
                                   },
                                 ),
@@ -1601,7 +1688,8 @@ class _HomePageState extends State<HomePage> {
                               height: 41.0,
                               decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(5.0),
-                                  color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                  color: (_cartProductos.length > 0 &&
+                                          double.parse(totalPedido) > 0)
                                       ? Color(0xff0894FD)
                                       : Color.fromARGB(255, 146, 144, 144)),
                               child: Material(
@@ -1618,8 +1706,8 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   onTap: () {
-                                    print("guardar pedido desde carrito");
-                                    (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                    (_cartProductos.length > 0 &&
+                                            double.parse(totalPedido) > 0)
                                         ? createPedido()
                                         : modalSinPedido();
                                   },
@@ -1644,7 +1732,7 @@ class _HomePageState extends State<HomePage> {
                               fontWeight: FontWeight.w700),
                         ),
                         GestureDetector(
-                          child:Icon(
+                          child: Icon(
                             Icons.disabled_by_default_outlined,
                             color: Color(0xff0f538d),
                             size: 30.0,
@@ -1709,7 +1797,7 @@ class _HomePageState extends State<HomePage> {
                                               ),
                                               onTap: () {
                                                 Navigator.pop(context);
-                                               // Navigator.pushNamed(context, 'home');
+                                                // Navigator.pushNamed(context, 'home');
                                               },
                                             ),
                                           ),
@@ -1904,7 +1992,8 @@ class _HomePageState extends State<HomePage> {
                           height: 41.0,
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(5.0),
-                              color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                              color: (_cartProductos.length > 0 &&
+                                      double.parse(totalPedido) > 0)
                                   ? Color(0xff0894FD)
                                   : Color.fromARGB(255, 146, 144, 144)),
                           child: Material(
@@ -1921,8 +2010,8 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               onTap: () {
-                                print("guardar pedido");
-                                (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                                (_cartProductos.length > 0 &&
+                                        double.parse(totalPedido) > 0)
                                     ? createPedido()
                                     : modalSinPedido();
                               },
@@ -2040,7 +2129,7 @@ class _HomePageState extends State<HomePage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.attach_money_sharp,
+                    Icons.paid,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
@@ -2091,12 +2180,12 @@ class _HomePageState extends State<HomePage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.remove_red_eye,
+                    Icons.backup,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
                   title: Text(
-                    'Sincronizacion',
+                    'Sincronización',
                     style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
                   ),
                   onTap: () => Navigator.pushNamed(context, 'data'),
@@ -2291,9 +2380,7 @@ class _HomePageState extends State<HomePage> {
                     _checkedCartera ? Color(0xff06538D) : Color(0xff0894FD),
                     () {
                   setState(() {
-                    _checkedCartera = true;
-                    _checkedPedido = false;
-                    _checkedRecibo = false;
+                    getHistorialCarteraClienteBasico();
                   });
                 }),
                 SizedBox(
@@ -2320,9 +2407,81 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             height: 10.0,
           ),
-          _checkedCartera ? _totalHistoryCartera(context) : Container(),
-          _checkedPedido ? _totalHistoryPedido(context) : Container(),
-          _checkedRecibo ? _totalHistoryRecibo(context) : Container(),
+          _noDatos ? _totalHistorySinDatos(context) : Container(),
+          _checkedCartera && !_noDatos
+              ? _totalHistoryCartera(context)
+              : Container(),
+          _checkedPedido && !_noDatos
+              ? _totalHistoryPedido(context)
+              : Container(),
+          _checkedRecibo && !_noDatos
+              ? _totalHistoryRecibo(context)
+              : Container(),
+        ],
+      ),
+    );
+  }
+
+  //No tiene datos el historial
+
+  Widget _totalHistorySinDatos(BuildContext context) {
+    final _size = MediaQuery.of(context).size;
+    return Container(
+      width: _size.width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+            decoration: BoxDecoration(
+                color: Color(0xffE8E8E8),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(color: Color(0xffE8E8E8), width: 1.0)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Este cliente no tiene datos.',
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 21.0,
+                      fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 200.0,
+          ),
+          Container(
+            width: _size.width,
+            height: 50.0,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      Navigator.pushNamed(context, 'home');
+                    });
+                  }),
+            ),
+          ),
         ],
       ),
     );
@@ -2413,7 +2572,7 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('Cr 74 # 37 - 38',
+                      child: Text('${_datCartera[0]['numero']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2450,7 +2609,10 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('\$ 347.281',
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(double.parse(
+                                  _datCartera[0]['debito'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2487,7 +2649,7 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(width: 4),
                     SizedBox(
                       width: _size.width * 0.5 - 33,
-                      child: Text('3 Días',
+                      child: Text('${_datCartera[0]['numero']} Días',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 13.0,
@@ -2682,16 +2844,11 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 10.0),
           SizedBox(
             height: 160.0,
-            child: ListView(
+            child: ListView.builder(
               scrollDirection: Axis.vertical,
-              children: [
-                for (var i = 0; i < total_item; i++) ...[
-                  if (_datDetallePedido.isNotEmpty) ...[
-                    ItemProductOrderHistoryNew(_datDetallePedido[i], i),
-                    SizedBox(height: 10.0),
-                  ],
-                ],
-              ],
+              itemCount: total_item,
+              itemBuilder: (context, i) =>
+                  ItemProductOrderHistoryNew(_datDetallePedido[i], i),
             ),
           ),
           SizedBox(
@@ -2732,7 +2889,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget ItemProductOrderHistoryNew(data, i) {
-    print("detale del pedido ItemProductOrderHistoryNew $data");
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -2744,26 +2900,30 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            // color: Colors.blue,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(4.0),
                     topRight: Radius.circular(4.0)),
                 color: Color(0xffF4F4F4)),
             width: _size.width,
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${data['descripcion_item']}',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xff707070),
+            padding:
+                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            child: Padding(
+              padding: const EdgeInsets.all(7.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${data['descripcion_item']}',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xff707070),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           SizedBox(height: 5.0),
@@ -3352,15 +3512,15 @@ class _HomePageState extends State<HomePage> {
                       hintText: 'Ingrese observacion',
                     )),
                 SizedBox(
-                  height: 20.0,
+                  height: 10.0,
                 ),
                 SizedBox(
-                  height: 420.0,
+                  height: 300.0,
                   child: ListView(
                     children: [
                       for (var i = 0; i < _dataDocumentPend.length; i++) ...[
                         _ItemDocumentClient(_dataDocumentPend[i], i),
-                        SizedBox(height: 10.0),
+                        SizedBox(height: 5.0),
                       ]
                     ],
                   ),
@@ -3458,9 +3618,6 @@ class _HomePageState extends State<HomePage> {
                       )
                     ],
                   ),
-                ),
-                SizedBox(
-                  height: 20.0,
                 ),
                 SizedBox(
                   height: 20.0,
@@ -3581,12 +3738,12 @@ class _HomePageState extends State<HomePage> {
                   height: 20.0,
                 ),
                 SizedBox(
-                  height: 420.0,
+                  height: 350.0,
                   child: ListView(
                     children: [
                       for (var i = 0; i < _dataDescuento.length; i++) ...[
                         _ItemDescuento(_dataDescuento[i], i),
-                        SizedBox(height: 10.0),
+                        SizedBox(height: 5.0),
                       ]
                     ],
                   ),
@@ -3712,11 +3869,6 @@ class _HomePageState extends State<HomePage> {
                           color: Color(0xff0894FD),
                           callback: () {
                             createRecibo();
-
-                            setState(() {
-                              /*   _clientShow = false;
-                              _formNewClientShow = true;   */
-                            });
                           }),
                     )
                   ],
@@ -3751,7 +3903,7 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(height: 20.0),
               _itemForm(context, 'Recibo N°', '$_value_automatico',
-                  myControllerNroRecibo, false, 'number', true, callback),
+                  myControllerNroRecibo, false, 'number', false, callback),
               InkWell(
                 onTap: () {
                   _pickDateDialog();
@@ -3773,7 +3925,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: 10),
-              _itemForm(context, 'Nombre', '$nombre_tercero', null, false,
+              _itemForm(context, 'Nombre', '$nombre_tercero', null, true,
                   'text', false, callback),
               _itemForm(
                   context,
@@ -3781,7 +3933,7 @@ class _HomePageState extends State<HomePage> {
                   '\$ ' +
                       expresionRegular(double.parse(_saldoCartera.toString())),
                   null,
-                  false,
+                  true,
                   'number',
                   false,
                   callback),
@@ -3795,12 +3947,16 @@ class _HomePageState extends State<HomePage> {
                 items: _itemsTipoPago,
                 onChanged: (val) => setState(() {
                   _value_itemsTipoPago = val;
-                  if (_value_itemsTipoPago == '02') {
+                  if (_value_itemsTipoPago == '01') {
+                    isBanco = false;
+                    isCheque = false;
+                    myControllerNroCheque.clear();
+                  } else if (_value_itemsTipoPago != '01' &&
+                      _value_itemsTipoPago != '02') {
                     isBanco = true;
                     isCheque = false;
                     myControllerNroCheque.clear();
-                  }
-                  if (_value_itemsTipoPago == '03') {
+                  } else if (_value_itemsTipoPago == '02') {
                     isCheque = true;
                     isBanco = false;
                   }
@@ -3814,12 +3970,8 @@ class _HomePageState extends State<HomePage> {
                 type: SelectFormFieldType.dropdown, // or can be dialog
                 labelText: 'Banco',
                 items: _itemsBanco,
-                initialValue: _value_itemsBanco,
+                //initialValue: _value_itemsBanco,
                 onChanged: (val) => setState(() => _value_itemsBanco = val),
-                validator: (val) {
-                  setState(() => _value_itemsBanco = val ?? '');
-                  return null;
-                },
               ),
               _itemForm(context, 'N° cheque', '00000', myControllerNroCheque,
                   false, 'number', isCheque, callback),
@@ -3889,11 +4041,12 @@ class _HomePageState extends State<HomePage> {
                           setState(() {
                             if (_value_itemsTipoPago == '') {
                               _showBarMsg('Indique una forma de pago', false);
-                            } else if (_value_itemsTipoPago == '02' &&
+                            } else if ((_value_itemsTipoPago == '03' ||
+                                    _value_itemsTipoPago == '04') &&
                                 _value_itemsBanco == '') {
                               _showBarMsg('Indique un banco', false);
-                            } else if (_value_itemsTipoPago == '03' &&
-                                myControllerNroCheque.text == '') {
+                            } else if (_value_itemsTipoPago == '02' &&
+                                myControllerNroCheque.text.trim() == '') {
                               _showBarMsg('Indique el N° Cheque', false);
                             } else {
                               _formRecipeShow = false;
@@ -3965,11 +4118,10 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
-
           type: SelectFormFieldType.dropdown, // or can be dialog
 
           labelText: 'Dir. envío mercancia',
-          items: _direccionClient,
+          items: _direccionClienMercancia,
           onChanged: (val) => setState(() => _value_DireccionMercancia = val),
           validator: (val) {
             setState(() => _value_DireccionMercancia = val ?? 'Es requerido');
@@ -4005,7 +4157,8 @@ class _HomePageState extends State<HomePage> {
             context,
             'Total cartera',
             '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
-            '',null),
+            '',
+            null),
         SizedBox(height: 20.0),
         Column(
           children: [
@@ -4319,7 +4472,19 @@ class _HomePageState extends State<HomePage> {
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Tipo de documento',
           items: _itemsTypeDoc.toList(),
-          onChanged: (val) => setState(() => _value_itemsTypeDoc = val),
+          onChanged: (val) => setState(() => {
+                _value_itemsTypeDoc = val,
+                if (_value_itemsTypeDoc == '31')
+                  {searchDigitoVerif(), isCheckedDV = false}
+                else
+                  {
+                    myControllerDv.clear(),
+                    if (_value_itemsTypeDoc == '13')
+                      {isCheckedDV = true}
+                    else
+                      {isCheckedDV = false}
+                  }
+              }),
           validator: (val) {
             setState(() => _value_itemsTypeDoc = val ?? '');
             return null;
@@ -4338,22 +4503,21 @@ class _HomePageState extends State<HomePage> {
             ),
             value: this.isCheckedDV,
             onChanged: (bool? value) {
+              print("*** $value");
               setState(() {
-                print(value);
                 isCheckedDV = !isCheckedDV;
-                isReadOnly = value!;
               });
             }),
-        _itemForm(context, 'DV.', '', myControllerDv, true, 'text',
-            !isCheckedDV, callback),
+        _itemForm(
+            context, 'DV.', '', myControllerDv, true, 'text', false, callback),
         _itemForm(context, 'Primer nombre', '', myControllerPrimerNombre,
-            !isReadOnly, 'name', isCheckedDV, callback),
+            !isCheckedDV, 'name', isCheckedDV, callback),
         _itemForm(context, 'Segundo nombre', '', myControllerSegundoNombre,
-            !isReadOnly, 'name', false, callback),
+            !isCheckedDV, 'name', false, callback),
         _itemForm(context, 'Primer apellido', '', myControllerPrimerApellido,
-            !isReadOnly, 'name', isCheckedDV, callback),
+            !isCheckedDV, 'name', isCheckedDV, callback),
         _itemForm(context, 'Segundo apellido', '', myControllerSegundoApellido,
-            !isReadOnly, 'name', false, callback),
+            !isCheckedDV, 'name', false, callback),
         _itemForm(context, 'Razón social', '', myControllerRazonSocial,
             isCheckedDV, 'name', !isCheckedDV, callback),
         _itemForm(context, 'Dirección', '', myControllerDireccion, false,
@@ -4362,6 +4526,8 @@ class _HomePageState extends State<HomePage> {
             validateEmail),
         _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,
             'phone', true, callback),
+        _itemForm(context, 'Teléfono celular', '', myControllerTelefonoCelular,
+            false, 'phone', true, callback),
         SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Clasificación',
@@ -4442,6 +4608,7 @@ class _HomePageState extends State<HomePage> {
                       onTap: () {
                         setState(() {
                           _clientShow = false;
+                          _clientShowNoFound = false;
                           _formShow = false;
                           _formNewClientShow = false;
                           _search = '@';
@@ -4477,9 +4644,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
-                          if(!validateFormulario()){
-                            _showBarMsg('Debe completar los campos correctamente', false);
-                          }else{
+                          if (!validateFormulario()) {
+                            _showBarMsg(
+                                'Debe completar los campos correctamente',
+                                false);
+                          } else {
                             _saveClient();
                           }
                         });
@@ -4528,31 +4697,26 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 GestureDetector(
-                    child: Row(
-                      children: [
-                        Text(
-                          'Ver detalles',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.w300,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 3.0),
-                        Icon(
-                          Icons.remove_red_eye,
+                  child: Row(
+                    children: [
+                      Text(
+                        'Ver detalles',
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w300,
+                          fontStyle: FontStyle.italic,
                           color: Colors.white,
-                          size: 15.0,
-                        )
-                      ],
-                    ),
-                    onTap: () => {
-                          setState(() {
-                            //  _seePedido = i;
-                            // searchDetallePedido(data['numero']);
-                          })
-                        }),
+                        ),
+                      ),
+                      SizedBox(width: 3.0),
+                      Icon(
+                        Icons.remove_red_eye,
+                        color: Colors.white,
+                        size: 15.0,
+                      )
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -4701,7 +4865,7 @@ class _HomePageState extends State<HomePage> {
           child: Focus(
             onFocusChange: (e) {
               setState(() {
-                if (callback != null && !e && controller.text.isNotEmpty) {
+                if (callback != false && !e && controller.text.isNotEmpty) {
                   callback();
                 }
               });
@@ -4724,7 +4888,11 @@ class _HomePageState extends State<HomePage> {
               decoration: InputDecoration(
                 errorText: isRequired && controller.text.isEmpty
                     ? 'Es requerido'
-                    : !isValidEmail && controller.text.isNotEmpty && type=='email'? 'Email inválido' : null,
+                    : !isValidEmail &&
+                            controller.text.isNotEmpty &&
+                            type == 'email'
+                        ? 'Email inválido'
+                        : null,
                 hintText: hintText,
                 hintStyle: TextStyle(
                   color: Color(0xff707070),
@@ -4905,8 +5073,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _itemSelectForm(
-      BuildContext context, String label, String hintText, String title,callback) {
+  Widget _itemSelectForm(BuildContext context, String label, String hintText,
+      String title, callback) {
     final _size = MediaQuery.of(context).size;
     return Row(
       children: [
@@ -4938,13 +5106,6 @@ class _HomePageState extends State<HomePage> {
                 ),
                 contentPadding: EdgeInsets.only(bottom: 0, top: 15),
                 suffixIcon: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (callback == null) {
-                        print("EL CAMPO ES  del select   $callback");
-                      }
-                    });
-                  },
                   child: Icon(
                     Icons.keyboard_arrow_down,
                     size: 24.0,
@@ -4959,7 +5120,9 @@ class _HomePageState extends State<HomePage> {
 
   Widget _ItemClient(hintText, data) {
     final nombre = data['nombre_sucursal'].toUpperCase();
-    final tlf_cliente = data['telefono_celular']!=null   ? data['telefono_celular'] : data['telefono'];
+    final tlf_cliente = data['telefono_celular'] != null
+        ? data['telefono_celular']
+        : data['telefono'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -5154,13 +5317,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                           onTap: () {
                             setState(() {
-                              print("el tercero es $id_tercero");
-                              print(data['id_tercero']);
-                              if (_cartProductos.isNotEmpty && data['id_tercero']!=id_tercero) {
+                              if (_cartProductos.isNotEmpty &&
+                                  data['id_tercero'] != id_tercero) {
                                 modalNuevoPedido(context, data);
-                              }else{
-                                _submitDialog(context);
-
+                              } else {
                                 id_tercero = '${data['id_tercero']}';
                                 nombre_tercero =
                                     '${data['nombre_sucursal'].toString()}  ';
@@ -5180,7 +5340,6 @@ class _HomePageState extends State<HomePage> {
                                 limite_credito = '${data['limite_credito']}';
                                 getConsecutivo(true);
                               }
-
                             });
                           },
                         ),
@@ -5208,8 +5367,6 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           onTap: () {
-
-                            print("------------data recibo $data");
                             setState(() {
                               id_tercero = '${data['id_tercero']}';
                               nombre_tercero =
@@ -5267,7 +5424,7 @@ class _HomePageState extends State<HomePage> {
       scrollDirection: Axis.vertical,
       primary: false,
       shrinkWrap: true,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(10),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
       crossAxisCount: 2,
@@ -5278,15 +5435,29 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image:
-                     // AssetImage('assets/images/${data[i]['descripcion']}.png'),
-                  AssetImage('assets/images/producto-sin-imagen.png'),
+                      //  AssetImage('assets/images/${data[i]['descripcion']}.png'),
+                      AssetImage('assets/images/producto-sin-imagen.png'),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.all(
                   Radius.circular(20.0),
                 ),
               ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${data[i]['descripcion']}',
+                        style: TextStyle(color: Colors.blue, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            ),
             onTap: () {
               setState(() {
                 idClasificacion = '${data[i]['id_clasificacion']}';
@@ -5294,14 +5465,6 @@ class _HomePageState extends State<HomePage> {
                 selectProductoNivel();
               });
             },
-          ),
-          Text(
-            '${data[i]['descripcion']}',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                color: Color(0xff0f538d),
-                fontSize: 14,
-                fontWeight: FontWeight.w500),
           ),
         ],
       ],
@@ -5322,14 +5485,14 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: Text(
               '${data['descripcion']}',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
                 color: Colors.blue,
-
               ),
             ),
           ),
@@ -5345,13 +5508,12 @@ class _HomePageState extends State<HomePage> {
                   initialValue: listaPrecioTercero,
                   onChanged: (val) => setState(() => {
                         _value_itemsListPrecio = val,
-                        if (_value_itemsListPrecio !='0')
+                        if (_value_itemsListPrecio != '0')
                           {
                             _itemSelect = data['id_item'],
                             searchPrecioProductos('${data['id_item']}'),
                           }
                       }),
-                  onSaved: (val) => print(val),
                 ),
                 SizedBox(height: 10.0),
                 Row(
@@ -5382,9 +5544,11 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 40,
                       child: Text(
-                     (_itemSelect == data['id_item'])
+                          (_itemSelect == data['id_item'])
                               ? '\$ ' + expresionRegular(_precio)
-                              : '\$ ' + expresionRegular(double.parse(data['precio'].toString())),
+                              : '\$ ' +
+                                  expresionRegular(
+                                      double.parse(data['precio'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5442,8 +5606,14 @@ class _HomePageState extends State<HomePage> {
                       height: 40.0,
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8.0),
-                          color: (_itemSelect == data['id_item'] && _precio > 0  )
-                              || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
+                          color: (_itemSelect == data['id_item'] &&
+                                          _precio > 0) &&
+                                      !validExistCarrito(data['id_item']) ||
+                                  (_itemSelect != data['id_item'] &&
+                                          double.parse(
+                                                  data['precio'].toString()) >
+                                              0) &&
+                                      !validExistCarrito(data['id_item'])
                               ? Colors.blue
                               : Colors.grey[300]),
                       child: Material(
@@ -5459,19 +5629,25 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w400),
                             ),
                           ),
-
-                            onTap: (_itemSelect == data['id_item'] && _precio > 0  ) || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
+                          onTap: (_itemSelect == data['id_item'] &&
+                                      _precio > 0) ||
+                                  (_itemSelect != data['id_item'] &&
+                                      double.parse(data['precio'].toString()) >
+                                          0)
                               ? () {
-                            var findById = (_cartProductos) => _cartProductos['id_item'] == data['id_item'];
-                            var result = _cartProductos.where(findById);
-                              if (result.isNotEmpty) {
-                                  _showBarMsg('Este producto ya existe en el carrito', false);
-                                  }else {
-
-                                  if(_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 ) {
-                                    _precio = double.parse(data['precio'].toString());
-                                  }
-                                  _itemSelect = data['id_item'];
+                                  if (validExistCarrito(data['id_item'])) {
+                                    _showBarMsg(
+                                        'Este producto ya existe en el carrito',
+                                        false);
+                                  } else {
+                                    if (_itemSelect != data['id_item'] &&
+                                        double.parse(
+                                                data['precio'].toString()) >
+                                            0) {
+                                      _precio = double.parse(
+                                          data['precio'].toString());
+                                    }
+                                    _itemSelect = data['id_item'];
                                     _showAlert(
                                         i,
                                         data['id_item'],
@@ -5501,7 +5677,7 @@ class _HomePageState extends State<HomePage> {
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
     return Container(
       width: maxWidth,
-      height: 360.0,
+      height: 355.0,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
@@ -5510,7 +5686,8 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: Text(
               '$descripcion',
               style: TextStyle(
@@ -5610,12 +5787,10 @@ class _HomePageState extends State<HomePage> {
                                     setState(() {
                                       if (_cantidadProducto > 1) {
                                         _cantidadProducto = int.parse(
-                                            myControllerCantidad.text);
+                                            myControllerCantidad.text.trim());
                                         _cantidadProducto--;
                                         myControllerCantidad.text =
                                             _cantidadProducto.toString();
-                                        print(
-                                            "cantidad resta $_cantidadProducto");
                                       }
                                     });
                                   },
@@ -5654,8 +5829,8 @@ class _HomePageState extends State<HomePage> {
                               InkWell(
                                   onTap: () {
                                     setState(() {
-                                      _cantidadProducto =
-                                          int.parse(myControllerCantidad.text);
+                                      _cantidadProducto = int.parse(
+                                          myControllerCantidad.text.trim());
                                       _cantidadProducto++;
                                       myControllerCantidad.text =
                                           _cantidadProducto.toString();
@@ -5682,7 +5857,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 TextField(
                     controller: myControllerDescuentos,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(50),
@@ -5736,7 +5912,9 @@ class _HomePageState extends State<HomePage> {
                               //backgroundColor: Colors.blue,
                               ),
                           onPressed: () {
-                            _addProductoPedido(descripcion, idItem);
+                            if (!validExistCarrito(idItem)) {
+                              _addProductoPedido(descripcion, idItem);
+                            }
                           }),
                     )
                   ],
@@ -5754,7 +5932,7 @@ class _HomePageState extends State<HomePage> {
     var cantidad = int.parse(data['cantidad'].toString());
     double total = 0.0;
     total = data['total'];
-    final descripcion = data['descripcion'] ;
+    final descripcion = data['descripcion'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -5766,42 +5944,41 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal:0.0),
-            child:Column(
+            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 0.0),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 300.0, bottom:0.0),
-                        child: Icon(
-                          Icons.do_disturb_on,
-                          color: Color(0xffCB1B1B),
-                          size: 20,
-                        ),
+              children: [
+                GestureDetector(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 300.0, bottom: 0.0),
+                      child: Icon(
+                        Icons.do_disturb_on,
+                        color: Color(0xffCB1B1B),
+                        size: 20,
                       ),
-                      onTap: () => {
+                    ),
+                    onTap: () => {
                           _showDialog(context, index),
-                      }),
-                ],
-              ),
+                        }),
+              ],
+            ),
           ),
           Padding(
-              padding: const EdgeInsets.all(10.0),
-              child:Column(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-              Text(
-              '$descripcion',
-              style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w700,
-              color: Colors.blue,
-              ),
-              ),
+                Text(
+                  '$descripcion',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blue,
+                  ),
+                ),
               ],
-              ),
-              ),
-
+            ),
+          ),
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
@@ -5892,7 +6069,7 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 40,
                       child: Text(
-                        'Cantidad',
+                        'Cantidad aaaa',
                         style: TextStyle(
                             color: Color(0xff707070),
                             fontSize: 15.0,
@@ -5908,19 +6085,13 @@ class _HomePageState extends State<HomePage> {
                             children: <Widget>[
                               InkWell(
                                   onTap: () {
-                                    print("resta en carrito");
                                     setState(() {
                                       if (cantidad > 1) {
-
-                                        cantidad = cantidad--;
                                         OperationDB.updateCantidad(
                                             _cartProductos[index]['id_item'],
                                             _value_automatico,
                                             false);
-
-                                        ObtieneCarrito(true);
-
-                                        print("nueva cantidad resta $cantidad");
+                                        ObtieneCarrito();
                                       }
                                     });
                                   },
@@ -5944,33 +6115,47 @@ class _HomePageState extends State<HomePage> {
                                 width: _size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
-                                  child: Text(
-                                    cantidad.toString(),
-                                    style: TextStyle(
-                                        color: Color(0xff707070),
-                                        fontSize: 15.0,
-                                        fontWeight: FontWeight.w700),
-                                  ),
+                                  child: TextField(
+                                      textAlign: TextAlign.center,
+                                      controller: myControllerCantidadCart,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (String str) {
+                                        if (str.isNotEmpty) {
+                                          OperationDB.updateCantidadFinal(
+                                              _cartProductos[index]['id_item'],
+                                              _value_automatico,
+                                              int.parse(myControllerCantidadCart
+                                                  .text
+                                                  .trim()));
+                                          myControllerCantidadCart.clear();
+                                          ObtieneCarrito();
+                                        }
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: cantidad.toString(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize: 15.0,
+                                            fontWeight: FontWeight.w700),
+                                        disabledBorder: UnderlineInputBorder(
+                                            borderSide: BorderSide(
+                                                width: 0.8,
+                                                color: Color(0xff707070))),
+                                      )),
                                 ),
                               ),
                               InkWell(
                                   onTap: () {
-
                                     setState(() {
                                       if (cantidad >= 0) {
-                                        cantidad = cantidad++;
                                         OperationDB.updateCantidad(
                                             _cartProductos[index]['id_item'],
                                             _value_automatico,
                                             true);
-                                        ObtieneCarrito(true);
-
-                                        print("nueva cantidad suma $cantidad");
-
+                                        ObtieneCarrito();
                                       }
-
                                     });
-
                                   },
                                   child: Container(
                                     width: 30.0,
@@ -6018,7 +6203,6 @@ class _HomePageState extends State<HomePage> {
                       color: i == _checked
                           ? Color(0xff06538D)
                           : Color(0xff0894FD)),
-                  //
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -6038,12 +6222,8 @@ class _HomePageState extends State<HomePage> {
                       onTap: () {
                         setState(() {
                           _checked = i;
-                         /* idClasificacion =
-                              '${_datClasificacionProductosNivel[i]['id_clasificacion']}';*/
                           idClasificacion =
-                          '${_datClasificacionProductosNivel[i]['id_padre_clasificacion']}';
-                          print(
-                              "----------filtrar por categoria $idClasificacion");
+                              '${_datClasificacionProductosNivel[i]['id_padre_clasificacion']}';
                           searchProductosPedido();
                         });
                       },
@@ -6158,7 +6338,6 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               _cartProductos.removeAt(index);
                               totalPedido = valorTotal();
-                             // numeroAletra(totalPedido.toString());
                             });
                             sendCarritoBD();
                             Navigator.pop(context);
@@ -6175,45 +6354,33 @@ class _HomePageState extends State<HomePage> {
   }
 
   _addProductoPedido(String descripcion, String idItem) {
-    var findById = (_cartProductos) => _cartProductos['id_item'] == idItem;
-    var result = _cartProductos.where(findById);
-    var cantidad = int.parse(myControllerCantidad.text);
-    print("se filtra el listado de carrito $result la cantidad $cantidad");
+    final cantidad = int.parse(myControllerCantidad.text.trim());
+    final total = double.parse(cantidad.toString()) * _precio;
 
-    if (result.isEmpty) {
-      final cantidad = int.parse(myControllerCantidad.text);
+    _cartProductos.add({
+      "descripcion": descripcion,
+      "id_item": idItem,
+      "precio": _precio,
+      "cantidad": cantidad,
+      "total_dcto": double.parse(myControllerDescuentos.text.trim()),
+      "dcto": double.parse(myControllerDescuentos.text.trim()),
+      "id_precio_item": _value_itemsListPrecio != '0'
+          ? _value_itemsListPrecio
+          : listaPrecioTercero,
+      "total": total
+    });
 
-      final total = double.parse(cantidad.toString()) * _precio;
-      print("No existe se agrega al carrito el producto $result");
-
-      _cartProductos.add({
-        "descripcion": descripcion,
-        "id_item": idItem,
-        "precio": _precio,
-        "cantidad": cantidad,
-        "total_dcto": double.parse(myControllerDescuentos.text),
-        "dcto": double.parse(myControllerDescuentos.text),
-        "id_precio_item":  _value_itemsListPrecio !='0'
-            ? _value_itemsListPrecio
-            : listaPrecioTercero,
-        "total": total
-      });
-
-      setState(() {
-        totalPedido = valorTotal();
-      //  numeroAletra(totalPedido.toString());
-        myControllerCantidad.clear();
-        myControllerDescuentos.clear();
-        myControllerDescuentos.text = '0';
-        myControllerCantidad.text = '1';
-        _cantidadProducto = 1;
-        sendCarritoBD();
-      });
-      Navigator.of(context).pop();
-      _showBarMsg('Has agregado estos productos a tu carrito', true);
-    } else {
-      _showBarMsg('Este producto existe en el carrito', false);
-    }
+    setState(() {
+      totalPedido = valorTotal();
+      myControllerCantidad.clear();
+      myControllerDescuentos.clear();
+      myControllerDescuentos.text = '0';
+      myControllerCantidad.text = '1';
+      _cantidadProducto = 1;
+      sendCarritoBD();
+    });
+    Navigator.of(context).pop();
+    _showBarMsg('Has agregado estos productos a tu carrito', true);
   }
 
   Future sendCarritoBD() async {
@@ -6237,7 +6404,7 @@ class _HomePageState extends State<HomePage> {
         total_costo: totalCosto.toString(),
         total_dcto: '$totalDescuento',
         total: '$totalPedido',
-        orden_compra: myControllerOrdenCompra.text,
+        orden_compra: myControllerOrdenCompra.text.trim(),
         observacion: 'CARRITO',
         letras: _letras,
         id_direccion_factura: _value_DireccionFactura,
@@ -6262,7 +6429,6 @@ class _HomePageState extends State<HomePage> {
   valorTotal() {
     double total = 0.0;
     double total_descuento = 0.0;
-    print("el valor todal toald $_cartProductos");
     for (int i = 0; i < _cartProductos.length; i++) {
       double descuento = 0.0;
       double totalProducto = 0.0;
@@ -6275,7 +6441,7 @@ class _HomePageState extends State<HomePage> {
     }
     totalDescuento = total_descuento.toStringAsFixed(2);
     totalPedido = total.toStringAsFixed(2);
-    print(total.toStringAsFixed(2));
+
     return total.toStringAsFixed(2);
   }
 
@@ -6286,11 +6452,22 @@ class _HomePageState extends State<HomePage> {
     totalSubTotal = '0.00';
     totalDescuento = '0.00';
     _letras = '';
-   // numeroAletra('');
   }
 
+  bool validExistCarrito(String idItem) {
+    bool flag = false;
+    findById(_cartProductos) => _cartProductos['id_item'] == idItem;
+    var result = _cartProductos.where(findById);
+    if (result.isNotEmpty) {
+      flag = true;
+    }
+    return flag;
+  }
 
-  modalNuevoPedido(BuildContext context, data,) {
+  modalNuevoPedido(
+    BuildContext context,
+    data,
+  ) {
     Widget cancelButton = ElevatedButton(
       child: Text("Cancelar"),
       onPressed: () {
@@ -6313,7 +6490,7 @@ class _HomePageState extends State<HomePage> {
         totalDescuento = '0.00';
         totalPedido = valorTotal();
         _letras = '';
-      //  numeroAletra('');
+        //  numeroAletra('');
 
         Navigator.pop(context);
       },
@@ -6322,7 +6499,7 @@ class _HomePageState extends State<HomePage> {
     AlertDialog alert = AlertDialog(
       title: Text("¡Espera!"),
       content: Text(
-        'Tiene productos en el carrito que pertenecen a otro cliente, si continua estos se descartarán.'),
+          'Tiene productos en el carrito que pertenecen a otro cliente, si continua estos se descartarán.'),
       actions: [
         cancelButton,
         continueButton,
@@ -6399,6 +6576,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future createPedido() async {
+    if (id_sucursal_tercero == '' || id_suc_vendedor == '') {
+      var data1 = await OperationDB.getidSuc(id_tercero, _nit);
+      if (data1 != false) {
+        setState(() {
+          id_sucursal_tercero = data1[0]['id_sucursal_tercero'].toString();
+          id_suc_vendedor = data1[0]['id_suc_vendedor'].toString();
+        });
+      }
+    }
+
     await numeroAletra(totalPedido.toString());
     _submitDialog(context);
 
@@ -6415,7 +6602,7 @@ class _HomePageState extends State<HomePage> {
 
     final fecha_final = '$ano-$mes-$dia';
     orden_compra =
-    orden_compra != '' ? orden_compra : myControllerOrdenCompra.text;
+        orden_compra != '' ? orden_compra : myControllerOrdenCompra.text.trim();
 
     final nuevo_pedido = Pedido(
         nit: _nit,
@@ -6433,7 +6620,9 @@ class _HomePageState extends State<HomePage> {
         fecha_trm: fecha_final,
         id_forma_pago: '$_value_itemsFormaPago',
         id_precio_item: '$listaPrecioTercero',
-        id_direccion:  _value_DireccionMercancia != '0' ?_value_DireccionMercancia: id_direccion ,
+        id_direccion: _value_DireccionMercancia != '0'
+            ? _value_DireccionMercancia
+            : id_direccion,
         id_moneda: "COLP",
         trm: "1",
         subtotal: '$totalSubTotal',
@@ -6446,12 +6635,15 @@ class _HomePageState extends State<HomePage> {
         estado: "PENDIENTE",
         flag_autorizado: "SI",
         comentario: "PRUEBA",
-        observacion: myControllerObservacion.text,
+        observacion: myControllerObservacion.text.trim(),
         letras: _letras,
-        id_direccion_factura: _value_DireccionFactura != '0' ?_value_DireccionFactura: id_direccion_factura  ,
+        id_direccion_factura: _value_DireccionFactura != '0'
+            ? _value_DireccionFactura
+            : id_direccion_factura,
         usuario: _user,
         id_tiempo_entrega: "0",
         flag_enviado: "NO");
+
     flag_pedido = await OperationDB.insertPedido(nuevo_pedido, true);
     await OperationDB.editarPedido(_value_automatico);
 
@@ -6496,7 +6688,8 @@ class _HomePageState extends State<HomePage> {
           precio_kit: "0",
           tasa_dcto_cliente: "0",
           total_dcto_cliente: "0");
-      flag_pedido_det = await OperationDB.insertPedidoDet(nuevo_pedido_det,true);
+      flag_pedido_det =
+          await OperationDB.insertPedidoDet(nuevo_pedido_det, true);
     }
 
     if (flag_pedido && flag_pedido_det) {
@@ -6506,13 +6699,13 @@ class _HomePageState extends State<HomePage> {
       final val = await validateConexion.checkInternetConnection();
       setState(() {
         _isConnected = val!;
-        print("valida la conexion antes de enviar el pedido a la api $_isConnected");
       });
 
       Navigator.pop(context);
-      _isConnected ? await createPedidoAPI() : modalExitosa();
+      modalExitosa();
+      _isConnected ? await SendataSincronizacion.createPedidoAPI() : null;
     } else {
-      _showBarMsg('Error en la creacion del pedido', false);
+      _showBarMsg('Error en la creación del pedido', false);
     }
   }
 
@@ -6576,124 +6769,67 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future createPedidoAPI() async {
-    _submitDialog(context);
-    final response = await http.post(
-      Uri.parse('${Constant.URL}/synchronization_pedido'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: convert.jsonEncode(<String, dynamic>{
-        'pedidos': [
-          {
-            'nit': _nit,
-            'id_tercero': '$id_tercero',
-            "id_empresa": '$id_empresa',
-            "id_sucursal": "01",
-            "id_tipo_doc": idPedidoUser,
-            "numero": '$_value_automatico',
-            "id_sucursal_tercero": id_sucursal_tercero,
-            "id_vendedor": id_vendedor,
-            "id_suc_vendedor": '$id_suc_vendedor',
-            "fecha": '$_selectedDate',
-            "vencimiento": '$_selectedDate',
-            "fecha_entrega": '$_selectedDate',
-            "fecha_trm": '$_selectedDate',
-            "id_forma_pago": '$_value_itemsFormaPago',
-            "id_precio_item": '$listaPrecioTercero',
-            "id_direccion": _value_DireccionMercancia != '0' ?_value_DireccionMercancia: id_direccion ,
-            "id_moneda": "COLP",
-            "trm": "1",
-            "subtotal": '$totalSubTotal',
-            "total_costo":
-                double.parse(totalPedido) + double.parse(totalDescuento),
-            "total_iva": "0",
-            "total_dcto": '$totalDescuento',
-            "total": '$totalPedido',
-            "total_item": "0",
-            "orden_compra": myControllerOrdenCompra.text,
-            "estado": "PENDIENTE",
-            "flag_autorizado": "SI",
-            "comentario": "PRUEBA",
-            "observacion": myControllerObservacion.text,
-            //"letras": _letras,
-            "id_direccion_factura": _value_DireccionFactura != '0' ?_value_DireccionFactura: id_direccion_factura ,
-            "usuario": _user,
-            "id_tiempo_entrega": "0",
-            "flag_enviado": "SI",
-            "app_movil": true,
-            "pedido_det": [
-              for (var i = 0; i < _cartProductos.length; i++) ...[
-                {
-                  'nit': _nit,
-                  'id_tercero': '$id_tercero',
-                  "id_empresa": '$id_empresa',
-                  "id_sucursal": "01",
-                  "id_tipo_doc": idPedidoUser,
-                  "numero": '$_value_automatico',
-                  "consecutivo": i + 1,
-                  "id_item": _cartProductos[i]['id_item'],
-                  "descripcion_item": _cartProductos[i]['descripcion'],
-                  "id_bodega": "01",
-                  "cantidad": _cartProductos[i]['cantidad'],
-                  "precio": _cartProductos[i]['precio'],
-                  "precio_lista": "0",
-                  "tasa_iva": "19",
-                  "total_iva": "0",
-                  "tasa_dcto_fijo": "0",
-                  "total_dcto_fijo": "0",
-                  "total_dcto": _cartProductos[i]['total_dcto'].toString(),
-                  "costo": "0",
-                  "subtotal": double.parse(
-                          _cartProductos[i]['precio'].toString()) *
-                      double.parse(_cartProductos[i]['cantidad'].toString()),
-                  "total":
-                      (double.parse(_cartProductos[i]['precio'].toString()) *
-                              double.parse(
-                                  _cartProductos[i]['cantidad'].toString())) -
-                          double.parse(_cartProductos[i]['dcto'].toString()),
-                  "total_item": "0",
-                  "id_unidad": "Und",
-                  "cantidad_kit": "0",
-                  "cantidad_de_kit": "0",
-                  "recno": "0",
-                  "id_precio_item": _cartProductos[i]['id_precio_item'],
-                  "factor": "1",
-                  "id_impuesto_iva": "IVA19",
-                  "total_dcto_adicional": "0",
-                  "tasa_dcto_adicional": "0",
-                  "id_kit": "",
-                  "precio_kit": "0",
-                  "tasa_dcto_cliente": "0",
-                  "total_dcto_cliente": "0"
-                }
+  ///////////////////////////////////RECIBOS DE CAJA////////////////////
+
+  void modalExitosaRecibo() async {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10.0))),
+          child: Container(
+            height: 283.0,
+            width: 283.0,
+            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+            child: Column(
+              children: [
+                SizedBox(height: 20.0),
+                Image(
+                  height: 90.0,
+                  image: AssetImage('assets/images/icon-check.png'),
+                ),
+                SizedBox(height: 20.0),
+                Text(
+                  'Creación de Recibo exitoso',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Color(0xff06538D),
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 30.0),
+                Container(
+                  width: 90,
+                  height: 41.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5.0),
+                      color: Color(0xff0894FD)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Center(
+                        child: Text(
+                          'Aceptar',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, 'home');
+                      },
+                    ),
+                  ),
+                ),
               ],
-            ]
-          }
-        ]
-      }),
+            ),
+          )),
     );
-
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    Navigator.pop(context);
-    if (response.statusCode == 201 && success) {
-      await OperationDB.updatePedidoFlag(_value_automatico, _nit);
-      //actualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI
-      print("actualizar EL REGISTRO LOCAL COMO FLAG ENVIADO SI");
-    } else {
-
-      print("error en la creacion del pedido online $msg");
-      //_showBarMsg('Error en la creacion del pedido $msg', false);
-    }
-    removeCarrito();
-    modalExitosa();
   }
 
-  ///////////////////////////////////RECIBOS DE CAJA////////////////////
-  ///
   bool _pay = false;
   bool _confirm = false;
   bool seeDescuento = false;
@@ -6758,43 +6894,37 @@ class _HomePageState extends State<HomePage> {
     return monto;
   }
 
-  Future<void> searchDocumentPend(data) async {
-    final response = await http.get(
-        Uri.parse("${Constant.URL}/cartera_recibo/$id_tercero/$id_sucursal_tercero"));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
-      _dataDocumentPend = jsonResponse['data'];
+  void searchDocumentPend(data) async {
+    final recibos =
+        await OperationDB.getCarteraRecibo(id_tercero, id_sucursal_tercero);
 
+    if (recibos != false) {
+      _dataDocumentPend = recibos;
+      getTipoPago();
+      getItemBanco();
       getConsecutivo(false);
       setState(() {
         _clientShow = false;
+        _clientShowNoFound = false;
         _productosShow = false;
         _formRecipeShow = true;
       });
     } else {
-      _showBarMsg('$msg', false);
+      _showBarMsg('No tiene documentos', false);
     }
   }
 
   //descuentos poara el recibo  //cambiar a bd
   Future<void> searchConcepto() async {
-    print("buscar lso descuentos");
-    final response = await http.get(Uri.parse("${Constant.URL}/concepto_all"));
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 200 && success) {
+    final conceptos = await OperationDB.getConcepto(_nit);
+    if (conceptos != false) {
       setState(() {
-        _dataDescuento = jsonResponse['data'];
+        _dataDescuento = conceptos;
         _formNewClientShow = false;
         _formNewClientShowDescuento = true;
       });
     } else {
-      _showBarMsg('Error no se obtuvo el concepto  $msg', false);
+      _showBarMsg('Error no se obtuvo el concepto', false);
     }
   }
 
@@ -6877,7 +7007,7 @@ class _HomePageState extends State<HomePage> {
                 width: _size.width * 0.5 - 42,
                 child: Text(
                   '\$ ' +
-                      expresionRegular(double.parse(data['debito'].toString())),
+                      expresionRegular(double.parse(data['DEBITO'].toString())),
                   style: TextStyle(
                     color: Color(0xff707070),
                     fontSize: 13.0,
@@ -6920,7 +7050,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               width: _size.width * 0.5 - 42,
               child: Text(
-                '${data['dias']}',
+                '${data['DIAS']}',
                 style: TextStyle(
                   color: Color(0xff707070),
                   fontSize: 13.0,
@@ -7027,7 +7157,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               width: _size.width * 0.5 - 42,
               child: Text(
-                '${data['dias']}',
+                '${data['DIAS']}',
                 style: TextStyle(
                   color: Color(0xff707070),
                   fontSize: 13.0,
@@ -7110,6 +7240,7 @@ class _HomePageState extends State<HomePage> {
               child: TextField(
                 readOnly: false,
                 controller: myControllerValorPagoRecibo,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 style: TextStyle(
                   color: Color(0xff707070),
                   fontSize: 13.0,
@@ -7138,6 +7269,7 @@ class _HomePageState extends State<HomePage> {
                     color: Color(0xffCB1B1B),
                     callback: () {
                       setState(() {
+                        myControllerValorPagoRecibo.clear();
                         _pay = false;
                         _isPagar = 99999;
                       });
@@ -7151,12 +7283,9 @@ class _HomePageState extends State<HomePage> {
                     text: 'Confirmar',
                     color: Color(0xff0894FD),
                     callback: () {
-                      setState(() {
-                        _pay = false;
-                        _confirm = true;
-                        numeroAletra(myControllerValorPagoRecibo.text);
-                        documentoPagar();
-                      });
+                      //  setState(() {
+                      documentoPagar();
+                      //  });
                     })),
           ],
         ),
@@ -7165,6 +7294,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget confirm(BuildContext context, data, i) {
+    final restante = double.parse(data['DEBITO'].toString()) -
+        double.parse(filterAbono(i).toString());
     final _size = MediaQuery.of(context).size;
     return Column(
       children: [
@@ -7211,8 +7342,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               width: _size.width * 0.5 - 42,
               child: Text(
-                '\$ ' +
-                    expresionRegular(double.parse(restanteRecibo.toString())),
+                '\$ ' + expresionRegular(double.parse(restante.toString())),
                 style: TextStyle(
                   color: Color(0xff707070),
                   fontSize: 13.0,
@@ -7239,7 +7369,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               width: _size.width * 0.5 - 42,
               child: Text(
-                '${data['dias']}',
+                '${data['DIAS']}',
                 style: TextStyle(
                   color: Color(0xff707070),
                   fontSize: 13.0,
@@ -7313,10 +7443,8 @@ class _HomePageState extends State<HomePage> {
                     text: 'Reestablecer',
                     color: Color(0xffCB1B1B),
                     callback: () {
-                      setState(() {
-                        _confirm = false;
-                        _pay = true;
-                        documentoPagarDelete();
+                      setState(() {                     
+                        documentoPagarDelete(data);
                       });
                     })),
             SizedBox(
@@ -7334,9 +7462,8 @@ class _HomePageState extends State<HomePage> {
 
   //Widget
   Widget _ItemDescuento(data, i) {
-    final _size = MediaQuery.of(context).size;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
       decoration: BoxDecoration(
           color: Color(0xffE8E8E8), borderRadius: BorderRadius.circular(6.0)),
       child: Column(
@@ -7364,43 +7491,69 @@ class _HomePageState extends State<HomePage> {
   Widget _listDescuento(BuildContext context, data, i) {
     final _size = MediaQuery.of(context).size;
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 10.0,
+          height: 5.0,
         ),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '${data['descripcion']}',
-              style: TextStyle(
-                fontSize: 14.0,
-                fontWeight: FontWeight.w700,
-                color: Colors.blue,
+            Container(
+              width: _size.width * 0.7,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: _size.width * 0.6,
+                    child: Text(
+                      '${data['descripcion']}',
+                      style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            SizedBox(
-              height: 10.0,
             ),
           ],
         ),
+        SizedBox(
+          height: 5.0,
+        ),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(
-                width: _size.width * 0.5 - 62,
-                child: BtnSmall(
-                    text: 'Agregar',
-                    color: Color(0xff0894FD),
-                    callback: () {
+            Container(),
+            Container(
+              width: 120.0,
+              height: 40.0,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.0), color: Colors.blue),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Center(
+                      child: Text(
+                        'Agregar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400),
+                      ),
+                    ),
+                    onTap: () {
                       setState(() {
                         seeDescuento = true;
                         _isPagarDescuento = i;
                       });
-                    })),
-            SizedBox(
-              width: 40.0,
+                    }),
+              ),
             ),
           ],
-        ),
+        ),      
       ],
     );
   }
@@ -7424,8 +7577,7 @@ class _HomePageState extends State<HomePage> {
             ),
             IconButton(
                 onPressed: () {
-                  print("eliminar producto del carrito");
-                  _showDialogDescuento(context, i);
+                  _showDialogDescuento(context, data);
                 },
                 icon: Icon(
                   Icons.do_disturb_on,
@@ -7458,6 +7610,8 @@ class _HomePageState extends State<HomePage> {
                     child: TextField(
                       readOnly: false,
                       controller: myControllerDescuentorec,
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
                       style: TextStyle(
                         color: Color(0xff707070),
                         fontSize: 13.0,
@@ -7504,6 +7658,8 @@ class _HomePageState extends State<HomePage> {
                     child: TextField(
                       readOnly: false,
                       controller: myControllerDescuentorec,
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
                       style: TextStyle(
                         color: Color(0xff707070),
                         fontSize: 13.0,
@@ -7526,7 +7682,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showDialogDescuento(BuildContext context, int index) {
+  void _showDialogDescuento(BuildContext context, data) {
     final _size = MediaQuery.of(context).size;
     showDialog<String>(
       context: context,
@@ -7613,15 +7769,16 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           onTap: () {
-                            print("Aceptar $index");
-                            _dataDescuentoAgregados.removeAt(index);
-                            print("Aceptar $_dataDescuentoAgregados");
+                            _dataDescuentoAgregados.removeWhere(
+                                (_dataDescuentoAgregados) =>
+                                    _dataDescuentoAgregados['id_concepto'] ==
+                                    data['id_concepto']);
+                            Navigator.pop(context);
                             setState(() {
                               seeDescuento = false;
                               _isPagarDescuento = 99999;
                               totalReciboPagado =
                                   valorTotalRecibo(_documentosPagados);
-                              //   numeroAletra(totalRecibo.toString());
                             });
                           },
                         ),
@@ -7637,49 +7794,53 @@ class _HomePageState extends State<HomePage> {
 
   //agregar carrito de recibo
   documentoPagar() {
-    var restanteReciboUnico =
-        double.parse(_dataDocumentPend[_isPagar]['debito'].toString()) -
-            double.parse(myControllerValorPagoRecibo.text);
+    final abonoReciboUnico =
+        double.parse(myControllerValorPagoRecibo.text.trim());
 
-    var abonoReciboUnico = double.parse(myControllerValorPagoRecibo.text);
+    final restanteReciboUnico =
+        double.parse(_dataDocumentPend[_isPagar]['DEBITO'].toString()) -
+            abonoReciboUnico;
 
-    print("restare del $restanteReciboUnico  $abonoReciboUnico $_isPagar");
+    if (restanteReciboUnico >= 0) {
+      _documentosPagados.add({
+        "id": _isPagar,
+        "tipo_doc": _dataDocumentPend[_isPagar]['tipo_doc'],
+        "numero": _dataDocumentPend[_isPagar]['numero'],
+        "debito": _dataDocumentPend[_isPagar]['DEBITO'],
+        "credito": _dataDocumentPend[_isPagar]['credito'],
+        "cuota": _dataDocumentPend[_isPagar]['cuota'],
+        "dias": _dataDocumentPend[_isPagar]['DIAS'],
+        "fecha": _dataDocumentPend[_isPagar]['fecha'],
+        "vencimiento": _dataDocumentPend[_isPagar]['vencimiento'],
+        "id_sucursal": _dataDocumentPend[_isPagar]['id_sucursal'],
+        "id_empresa": _dataDocumentPend[_isPagar]['id_empresa'],
+        "monto_pagar": double.parse(abonoReciboUnico.toString()),
+        "restante": restanteReciboUnico,
+        "letras": _letras,
+      });
 
-    _documentosPagados.add({
-      "id": _isPagar,
-      "tipo_doc": _dataDocumentPend[_isPagar]['tipo_doc'],
-      "numero": _dataDocumentPend[_isPagar]['numero'],
-      "debito": _dataDocumentPend[_isPagar]['debito'],
-      "credito": _dataDocumentPend[_isPagar]['credito'],
-      "cuota": _dataDocumentPend[_isPagar]['cuota'],
-      "dias": _dataDocumentPend[_isPagar]['dias'],
-      "vencimiento": _dataDocumentPend[_isPagar]['vencimiento'],
-      "id_sucursal": _dataDocumentPend[_isPagar]['id_sucursal'],
-      "id_empresa": _dataDocumentPend[_isPagar]['id_empresa'],
-      "monto_pagar": double.parse(abonoReciboUnico.toString()),
-      "restante": restanteReciboUnico,
-      "letras": _letras,
-    });
-
-    print("------recibos q se van a pagar----- $_documentosPagados");
-    myControllerValorPagoRecibo.clear();
-    setState(() {
-      restanteRecibo = restanteReciboUnico.toStringAsFixed(2);
-      abonoRecibo = abonoReciboUnico.toStringAsFixed(2);
-      totalReciboPagado = valorTotalRecibo(_documentosPagados);
-    });
+      myControllerValorPagoRecibo.clear();
+      setState(() {
+        _pay = false;
+        _confirm = true;
+        restanteRecibo = restanteReciboUnico.toStringAsFixed(2);
+        abonoRecibo = abonoReciboUnico.toStringAsFixed(2);
+        totalReciboPagado = valorTotalRecibo(_documentosPagados);
+      });
+    } else {
+      _showBarMsg('EL MONTO DEBE SER MENOR O IGUAL', false);
+    }
   }
 
   //agregar carrito de recibo
   agregarDescuento() {
-    var montoDescuento = double.parse(myControllerDescuentorec.text);
-
+    var montoDescuento = double.parse(myControllerDescuentorec.text.trim());
     _dataDescuentoAgregados.add({
       "id": _isPagarDescuento,
       "id_concepto": _dataDescuento[_isPagarDescuento]['id_concepto'],
       "monto_descontar": double.parse(montoDescuento.toString())
     });
-    print("----------- $_dataDescuentoAgregados");
+
     myControllerDescuentorec.clear();
     setState(() {
       totalReciboPagado = valorTotalRecibo(_documentosPagados);
@@ -7687,26 +7848,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   //eliminar recibo del carrito de recibo
-  documentoPagarDelete() {
-    print("is pagar $_isPagar $_documentosPagados");
-    _documentosPagados.removeAt(_isPagar);
-
+  documentoPagarDelete(data) {
+    _documentosPagados.removeWhere(
+        (_documentosPagados) => _documentosPagados['numero'] == data['numero']);
     setState(() {
+      _confirm = false;
+      _pay = true;
       totalReciboPagado = valorTotalRecibo(_documentosPagados);
     });
   }
 
   String valorTotalRecibo(List<dynamic> _documentosPagados) {
     double total = 0.0;
-
     double descuento = 0.0;
     for (int i = 0; i < _documentosPagados.length; i++) {
       total = total + _documentosPagados[i]['monto_pagar'];
-      print(total);
     }
     for (int i = 0; i < _dataDescuentoAgregados.length; i++) {
       descuento = descuento + _dataDescuentoAgregados[i]['monto_descontar'];
-      print(descuento);
     }
     numeroAletra(totalRecibo);
     setState(() {
@@ -7714,7 +7873,6 @@ class _HomePageState extends State<HomePage> {
       totalReciboDescuento = descuento.toStringAsFixed(2);
     });
     total = total - descuento;
-    print(total.toStringAsFixed(2));
     return total.toStringAsFixed(2);
   }
 
@@ -7727,355 +7885,258 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future createRecibo() async {
-    print("createRecibo createRecibo   $_selectedDate");
-    final response = await http.post(
-      Uri.parse('${Constant.URL}/synchronization_cuentaportercero'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: convert.jsonEncode(<String, dynamic>{
-        "cuentas_por_terceros": [
-          for (var i = 0; i < _documentosPagados.length; i++) ...[
-            {
-              "nit": _nit,
-              "id_empresa": id_empresa,
-              "id_sucursal": "1",
-              "tipo_doc": idReciboUser,
-              "numero": _value_automatico,
-              "cuota": _documentosPagados[i]['cuota'].toString(),
-              "dias": _documentosPagados[i]['dias'].toString(),
-              "id_tercero": id_tercero,
-              "id_vendedor": id_vendedor,
-              "id_sucursal_tercero": id_sucursal_tercero,
-              "fecha":
-                  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-              "vencimiento":
-                  '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-              "credito": _documentosPagados[i]['monto_pagar'].toString(),
-              "dctomax": "0",
-              "debito": "0",
-              "id_destino": "0",
-              "id_proyecto": "0",
-              "id_empresa_cruce":
-                  _documentosPagados[i]['id_empresa'].toString(),
-              "id_sucursal_cruce":
-                  _documentosPagados[i]['id_sucursal'].toString(),
-              "tipo_doc_cruce": _documentosPagados[i]['tipo_doc'].toString(),
-              "numero_cruce": _documentosPagados[i]['numero'].toString(),
-              "cuota_cruce": _documentosPagados[i]['cuota'].toString(),
-            },
-          ]
-        ],
-      }),
-    );
+    _submitDialog(context);
+    if (id_sucursal_tercero == '' || id_suc_vendedor == '') {
+      var data1 = await OperationDB.getidSuc(id_tercero, _nit);
+      if (data1 != false) {
+        setState(() {
+          id_sucursal_tercero = data1[0]['id_sucursal_tercero'].toString();
+          id_suc_vendedor = data1[0]['id_suc_vendedor'].toString();
+        });
+      }
+    }
 
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    var msg = jsonResponse['msg'];
-    if (response.statusCode == 201 && success) {
-      print("createRecibo");
-         final val = await validateConexion.checkInternetConnection();
-    setState(() {
-     _isConnected = val!;
-    });
-    _isConnected ? createReciboCarteraApi(): null;
+    await numeroAletra(totalPedido.toString());
+
+    var dia = (_selectedDate.day).toString();
+    var mes = (_selectedDate.month).toString();
+    final ano = _selectedDate.year;
+
+    dia = dia.length == 1 ? '0$dia' : dia;
+    mes = mes.length == 1 ? '0$mes' : mes;
+
+    final fecha_otra = '$dia/$mes/$ano';
+    var flag_recibo = false;
+    for (var i = 0; i < _documentosPagados.length; i++) {
+      final cuentaTercero = CuentaTercero(
+          nit: _nit,
+          id_empresa: '$id_empresa',
+          id_sucursal: "01",
+          tipo_doc: idReciboUser,
+          numero: int.parse(_value_automatico),
+          cuota: _documentosPagados[i]['cuota'],
+          dias: _documentosPagados[i]['dias'],
+          id_tercero: id_tercero,
+          id_vendedor: id_vendedor,
+          id_sucursal_tercero: int.parse(id_sucursal_tercero),
+          fecha: fecha_otra,
+          vencimiento: fecha_otra,
+          credito: _documentosPagados[i]['monto_pagar'].toString(),
+          dctomax: "0",
+          debito: "0",
+          id_destino: "",
+          id_proyecto: "",
+          id_empresa_cruce: _documentosPagados[i]['id_empresa'].toString(),
+          id_sucursal_cruce: _documentosPagados[i]['id_sucursal'].toString(),
+          tipo_doc_cruce: _documentosPagados[i]['tipo_doc'].toString(),
+          numero_cruce: _documentosPagados[i]['numero'].toString(),
+          cuota_cruce: _documentosPagados[i]['cuota'].toString(),
+          flag_enviado: 'NO');
+      flag_recibo = await OperationDB.insertCuentaTercero(cuentaTercero);
+    }
+
+    if (flag_recibo) {
+      await createReciboCartera();
     } else {
-      _showBarMsg(
-          'Error en la creacion del recibo cuentas_por_tercero  $msg', false);
+      _showBarMsg('Error en la creacion del Recibo', false);
     }
   }
 
-  Future createReciboCarteraApi() async {
-  
-    print("createReciboCarteracreateReciboCarteracreateReciboCartera");
+  Future createReciboCartera() async {
     late int cuota_cruce_cpd = 0;
-    late int cuota = 1;
+    late int cuota = 0;
     late int conse = 0;
-    numeroAletra(totalReciboPagado);
 
-    final response = await http.post(
-      Uri.parse('${Constant.URL}/synchronization_carteraproveedores'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: convert.jsonEncode(<String, dynamic>{
-        'cartera_proveedores': [
-          {
-            "nit": _nit,
-            "id_empresa": id_empresa,
-            "id_sucursal": "1",
-            "id_tipo_doc": idReciboUser,
-            "numero": _value_automatico,
-            "fecha":
-                '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-            "total": totalReciboPagado,
-            "vencimiento":
-                '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-            "letras": _letras,
-            "id_moneda": "COLP",
-            "id_tercero": id_tercero,
-            "id_sucursal_tercero": id_sucursal_tercero,
-            "id_recaudador": "0",
-            "fecha_trm":
-                '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-            "trm": "1",
-            "observaciones": myControllerObservacion.text,
-            "usuario": _user,
-            "flag_enviado": " ",
-            "cartera_proveedores_det": [
-              {
-                "consecutivo": conse = conse + 1,
-                "cuota": cuota = cuota + 1,
-                "id_tercero": id_tercero,
-                "id_sucursal_tercero": id_sucursal_tercero,
-                "id_empresa_cruce":
-                    _documentosPagados[0]['id_empresa'].toString(),
-                "id_sucursal_cruce":
-                    _documentosPagados[0]['id_sucursal'].toString(),
-                "id_tipo_doc_cruce": idReciboUser,
-                "numero_cruce": _value_automatico,
-                "fecha":
-                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                "vencimiento":
-                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                "debito": totalReciboPagado,
-                "credito": "0",
-                "descripcion": _value_itemsTipoPago == '01'
-                    ? 'Pago en Efectivo por el valor de $totalReciboPagado '
-                    : ' ',
-                "id_vendedor": id_vendedor,
-                "id_forma_pago": _value_itemsTipoPago,
-                "documento_forma_pago": "",
-                "distribucion": "FP",
-                "trm": "1",
-                "id_recaudador": "6220948",
-                "id_suc_recaudador": "1",
-                "fecha_trm":
-                    '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                "total_factura": "0",
-                "id_concepto": "",
-                "id_moneda": "COLP",
-                "id_destino": "",
-                "id_proyecto": "",
-                "cuota_cruce": cuota_cruce_cpd = cuota_cruce_cpd + 1,
-                "id_banco": _value_itemsBanco
-              },
-              for (var i = 0; i < _documentosPagados.length; i++) ...[
-                {
-                  "consecutivo": conse = conse + 1,
-                  "cuota": cuota =
-                      int.parse(_documentosPagados[i]['cuota'].toString()),
-                  "id_tercero": id_tercero,
-                  "id_sucursal_tercero": id_sucursal_tercero,
-                  "id_empresa_cruce":
-                      _documentosPagados[i]['id_empresa'].toString(),
-                  "id_sucursal_cruce":
-                      _documentosPagados[i]['id_sucursal'].toString(),
-                  "id_tipo_doc_cruce": _documentosPagados[i]['tipo_doc'],
-                  "numero_cruce": _documentosPagados[i]['numero'],
-                  "fecha":
-                      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                  "vencimiento": _documentosPagados[i]['vencimiento'],
-                  "debito": '0',
-                  "credito": _documentosPagados[i]['monto_pagar'],
-                  "descripcion": ' Abonó el documento',
-                  "id_vendedor": id_vendedor,
-                  "id_forma_pago": "",
-                  "documento_forma_pago": "",
-                  "distribucion": "DC",
-                  "trm": "1",
-                  "id_recaudador": "6220948",
-                  "id_suc_recaudador": "1",
-                  "fecha_trm":
-                      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                  "total_factura": "0",
-                  "id_concepto": "",
-                  "id_moneda": "COLP",
-                  "id_destino": "",
-                  "id_proyecto": "",
-                  "cuota_cruce": cuota_cruce_cpd =
-                      int.parse(_documentosPagados[i]['cuota'].toString()),
-                  "id_banco": _value_itemsBanco
-                },
-                for (var i = 0; i < _dataDescuentoAgregados.length; i++) ...[
-                  {
-                    "consecutivo": conse = conse + 1,
-                    "cuota": 3,
-                    "id_tercero": id_tercero,
-                    "id_sucursal_tercero": id_sucursal_tercero,
-                    "id_empresa_cruce":
-                        _documentosPagados[i]['id_empresa'].toString(),
-                    "id_sucursal_cruce": "1",
-                    "id_tipo_doc_cruce": idReciboUser,
-                    "numero_cruce": _value_automatico,
-                    "fecha":
-                        '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                    "vencimiento": _documentosPagados[i]['vencimiento'],
-                    "debito": _dataDescuentoAgregados[i]['monto_descontar'],
-                    "credito": "0",
-                    "descripcion":
-                        'Pago de descuento ${_dataDescuentoAgregados[i]['monto_descontar']} ',
-                    "id_vendedor": id_vendedor,
-                    "id_forma_pago": '',
-                    "documento_forma_pago": "",
-                    "distribucion": "CN",
-                    "trm": "1",
-                    "id_recaudador": "6220948",
-                    "id_suc_recaudador": "1",
-                    "fecha_trm":
-                        '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
-                    "total_factura": "0",
-                    "id_concepto": _dataDescuentoAgregados[i]['id_concepto'],
-                    "id_moneda": "COLP",
-                    "id_destino": "",
-                    "id_proyecto": "",
-                    "cuota_cruce": cuota_cruce_cpd = cuota_cruce_cpd + 1,
-                    "id_banco": _value_itemsBanco
-                  }
-                ]
-              ]
-            ]
-          }
-        ]
-      }),
-    );
+    var flagCartera = false;
+    await numeroAletra(totalReciboPagado);
+    var dia = (_selectedDate.day).toString();
+    var mes = (_selectedDate.month).toString();
+    final ano = _selectedDate.year;
 
-    var jsonResponse =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
-    var success = jsonResponse['success'];
-    if (response.statusCode == 201 && success) {
-      _body = {
-        'nit': _nit,
-        'id_tipo_doc': idReciboUser,
-        'consecutivo': _value_automatico,
-      };
-      final response = await http
-          .post(Uri.parse("${Constant.URL}/consecutivo_recibo_app"), body: (_body));
+    dia = dia.length == 1 ? '0$dia' : dia;
+    mes = mes.length == 1 ? '0$mes' : mes;
+
+    final fechaFinal = '$ano-$mes-$dia';
+    final cartera = CarteraProveedores(
+        nit: _nit,
+        id_empresa: id_empresa,
+        id_sucursal: "1",
+        id_tipo_doc: idReciboUser,
+        numero: int.parse(_value_automatico),
+        total: totalReciboPagado,
+        fecha: fechaFinal,
+        vencimiento: fechaFinal,
+        id_moneda: "COLP",
+        letras: _letras,
+        id_tercero: id_tercero,
+        id_sucursal_tercero: int.parse(id_sucursal_tercero),
+        id_recaudador: "0",
+        fecha_trm:
+            '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}',
+        trm: "1",
+        observaciones: myControllerObservacion.text.trim(),
+        usuario: _user,
+        flag_enviado: 'NO');
+    flagCartera = await OperationDB.insertCarteraProveedores(cartera);
+    //detalle
+    if (flagCartera) {
+      final carteraDetDocIni = CarteraProveedoresDet(
+          id_empresa: id_empresa,
+          id_sucursal: "1",
+          id_tipo_doc: idReciboUser,
+          numero: int.parse(_value_automatico),
+          consecutivo: conse = conse + 1,
+          id_empresa_cruce: _documentosPagados[0]['id_empresa'].toString(),
+          id_sucursal_cruce: _documentosPagados[0]['id_sucursal'].toString(),
+          id_tipo_doc_cruce: idReciboUser,
+          numero_cruce: int.parse(_value_automatico),
+          debito: totalReciboPagado,
+          credito: "0",
+          id_vendedor: id_vendedor,
+          id_forma_pago: _value_itemsTipoPago,
+          documento_forma_pago: "",
+          cuota: cuota = cuota + 1,
+          distribucion: "FP",
+          descripcion: _value_itemsTipoPago == '01'
+              ? 'Pago en Efectivo por el valor de $totalReciboPagado '
+              : '',
+          id_suc_recaudador: 1,
+          total_factura: "0",
+          id_concepto: "",
+          id_moneda: "COLP",
+          id_destino: "",
+          id_proyecto: "",
+          cuota_cruce: cuota_cruce_cpd = cuota_cruce_cpd + 1,
+          id_banco: _value_itemsBanco,
+          fecha: _documentosPagados[0]['fecha'].toString(),
+          vencimiento: _documentosPagados[0]['vencimiento'].toString(),
+          id_tercero: id_tercero,
+          id_sucursal_tercero: int.parse(id_sucursal_tercero),
+          id_recaudador: "",
+          fecha_trm: fechaFinal,
+          trm: "1",
+          nit: _nit);
+      await OperationDB.insertCarteraProveedoresDet(carteraDetDocIni);
+
+      for (var i = 0; i < _documentosPagados.length; i++) {
+        //documentos pagados
+        final carteraDetDoc = CarteraProveedoresDet(
+            id_empresa: id_empresa,
+            id_sucursal: "1",
+            id_tipo_doc: idReciboUser,
+            numero: int.parse(_value_automatico),
+            consecutivo: conse = conse + 1,
+            id_empresa_cruce: _documentosPagados[i]['id_empresa'].toString(),
+            id_sucursal_cruce: _documentosPagados[i]['id_sucursal'].toString(),
+            id_tipo_doc_cruce: _documentosPagados[i]['tipo_doc'],
+            numero_cruce: _documentosPagados[i]['numero'],
+            debito: "0",
+            credito: _documentosPagados[i]['monto_pagar'].toString(),
+            id_vendedor: id_vendedor,
+            id_forma_pago: _value_itemsTipoPago,
+            documento_forma_pago: "",
+            cuota: cuota = _documentosPagados[i]['cuota'],
+            distribucion: "DC",
+            descripcion: ' Abonó el documento',
+            id_suc_recaudador: 1,
+            total_factura: "0",
+            id_concepto: "",
+            id_moneda: "COLP",
+            id_destino: "",
+            id_proyecto: "",
+            cuota_cruce: cuota_cruce_cpd =
+                int.parse(_documentosPagados[i]['cuota'].toString()),
+            id_banco: _value_itemsBanco,
+            fecha: _documentosPagados[i]['fecha'].toString(),
+            vencimiento: _documentosPagados[i]['vencimiento'].toString(),
+            id_tercero: id_tercero,
+            id_sucursal_tercero: int.parse(id_sucursal_tercero),
+            id_recaudador: "",
+            fecha_trm: fechaFinal,
+            trm: "1",
+            nit: _nit);
+        await OperationDB.insertCarteraProveedoresDet(carteraDetDoc);
+      }
+
+      for (var i = 0; i < _dataDescuentoAgregados.length; i++) {
+        final carteraDetDesc = CarteraProveedoresDet(
+            id_empresa: id_empresa,
+            id_sucursal: "1",
+            id_tipo_doc: idReciboUser,
+            numero: int.parse(_value_automatico),
+            consecutivo: conse = conse + 1,
+            id_empresa_cruce: _documentosPagados[0]['id_empresa'].toString(),
+            id_sucursal_cruce: _documentosPagados[0]['id_empresa'].toString(),
+            id_tipo_doc_cruce: idReciboUser,
+            numero_cruce: int.parse(_value_automatico),
+            debito: _dataDescuentoAgregados[i]['monto_descontar'].toString(),
+            credito: "0",
+            id_vendedor: id_vendedor,
+            id_forma_pago: _value_itemsTipoPago,
+            documento_forma_pago: "",
+            cuota: cuota,
+            distribucion: "CN",
+            descripcion:
+                'Pago de descuento ${_dataDescuentoAgregados[i]['monto_descontar']} ',
+            id_suc_recaudador: 1,
+            total_factura: "0",
+            id_concepto: _dataDescuentoAgregados[i]['id_concepto'],
+            id_moneda: "COLP",
+            id_destino: "",
+            id_proyecto: "",
+            cuota_cruce: cuota_cruce_cpd = cuota_cruce_cpd + 1,
+            id_banco: _value_itemsBanco,          
+            fecha: _documentosPagados[0]['fecha'].toString(),
+            vencimiento: _documentosPagados[0]['vencimiento'].toString(),
+            id_tercero: id_tercero,
+            id_sucursal_tercero: int.parse(id_sucursal_tercero),
+            id_recaudador: "",
+            fecha_trm: fechaFinal,
+            trm: "1",
+            nit: _nit);
+        await OperationDB.insertCarteraProveedoresDet(carteraDetDesc);
+      }
+
+      await OperationDB.updateConsecutivo(
+          int.parse(_value_automatico), _nit, idReciboUser, id_empresa);
+
+      final val = await validateConexion.checkInternetConnection();
+      setState(() {
+        _isConnected = val!;
+      });
+
+      Navigator.pop(context);
+      modalExitosaRecibo();
+      removeCarritoRecibo();
+      _isConnected ? await SendataSincronizacion.createReciboApi() : null;
+    }
+  }
+
+  Future<void> numeroAletra(String numero) async {
+    _submitDialog(context);
+    final val = await validateConexion.checkInternetConnection();
+    setState(() {
+      _isConnected = val!;
+    });
+
+    if (_isConnected) {
+      final response =
+          await http.get(Uri.parse("${Constant.URL}/letras/$numero"));
       var jsonResponse =
           convert.jsonDecode(response.body) as Map<String, dynamic>;
       var success = jsonResponse['success'];
-
       if (response.statusCode == 200 && success) {
-        showDialog<String>(
-          context: context,
-          builder: (BuildContext context) => Dialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10.0))),
-              child: Container(
-                height: 283.0,
-                width: 283.0,
-                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                child: Column(
-                  children: [
-                    SizedBox(height: 20.0),
-                    Image(
-                      height: 90.0,
-                      image: AssetImage('assets/images/icon-check.png'),
-                    ),
-                    SizedBox(height: 20.0),
-                    Text(
-                      'Creación de recibo exitoso',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Color(0xff06538D),
-                          fontSize: 22.0,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 30.0),
-                    Container(
-                      width: 90,
-                      height: 41.0,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.0),
-                          color: Color(0xff0894FD)),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(5.0),
-                          child: Center(
-                            child: Text(
-                              'Aceptar',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                          onTap: () {                           
-                            setState(() {
-                              _clientShow = true;
-                              _productosShowCat = false;
-                              _productosShow = false;
-                              _formNewClientShowDescuento = false;
-                              _formNewClientShow = false;
-                            });
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )),
-        );
+        var data = jsonResponse['data'];
+        setState(() {
+          _letras = data;
+        });
+      } else {
+        // _letras = await LetraN.convertirLetras(numero);
       }
     } else {
-      _showBarMsg('Error en la creacion del recibo', false);
+      // _letras = await LetraN.convertirLetras(numero);
     }
-  }
 
-  /////api
-  Future<void> numeroAletra(String numero) async {
-
-    _submitDialog(context);
-    final val = await validateConexion.checkInternetConnection();
-      setState(() {
-      _isConnected = val!;
-        print("LA CONEXION $_isConnected");
-      });
-
-      if (_isConnected){
-          final response = await http.get(Uri.parse("${Constant.URL}/letras/$numero"));
-          var jsonResponse =
-          convert.jsonDecode(response.body) as Map<String, dynamic>;
-          var success = jsonResponse['success'];
-          if (response.statusCode == 200 && success) {
-            var data = jsonResponse['data'];
-              setState(() {
-                _letras = data ;
-              });
-           } else{
-             // _letras = await LetraN.convertirLetras(numero);
-            }
-        }else{
-       // _letras = await LetraN.convertirLetras(numero);
-       }
-
-    print("la letra convertida en locasl es  $_letras");
- 
-    Navigator.pop(context);
-  }
-
-  Future<void> numeroAletraOld(String numero) async {
-
-    _submitDialog(context);
-    final response = await http.get(
-      Uri.parse(
-          'https://numeros-a-letras1.p.rapidapi.com//api/NAL/?num=$numero'),
-      // Send authorization headers to the backend.
-      headers: <String, String>{
-        'X-RapidAPI-Key': "3e8840a8ebmsh4150b6af5da1551p196300jsn0ea9a90219af",
-        'X-RapidAPI-Host': "numeros-a-letras1.p.rapidapi.com"
-      },
-    );
-    if (response.statusCode == 200) {
-      var jsonResponse =
-      convert.jsonDecode(response.body) as Map<String, dynamic>;
-      setState(() {
-        _letras = jsonResponse['letras'];
-      });
-    }
     Navigator.pop(context);
   }
 
@@ -8092,4 +8153,7 @@ class _HomePageState extends State<HomePage> {
             ),
     );
   }
+
+//visual
+
 }

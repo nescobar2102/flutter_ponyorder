@@ -29,6 +29,9 @@ class _VisitedsPageState extends State<VisitedsPage> {
   bool _isSelected = true;
   bool _isSelected2 = false;
 
+  final myControllerBuscarProd = TextEditingController();
+  final myControllerBuscarCatego= TextEditingController();
+
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
 
@@ -64,9 +67,16 @@ class _VisitedsPageState extends State<VisitedsPage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       id_vendedor = (prefs.getString('id_vendedor') ?? '');
-      print("el usuario es $_user $_nit $id_vendedor");
-      if (_nit != '') {
+      
+      if (_nit != '' &&  id_vendedor!='') {
         searchVisitados();
+      }else{
+        showTopSnackBar(
+          context,
+          CustomSnackBar.error(
+            message: "No se obtuvo información del vendedor,sincronice los datos",
+          ),
+        );
       }
     });
   }
@@ -206,9 +216,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                               Colors.blue,
                                                           title: const Text(
                                                               "Más reciente al más antiguo"),
-                                                          onChanged: (val) {
-                                                            print(
-                                                                "Radio1 $val");
+                                                          onChanged: (val) {                                                            
                                                             setState(() {
                                                               selectedRadio =
                                                                   val as int;
@@ -216,8 +224,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                                   true;
                                                               _isSelected2 =
                                                                   !_isSelected;
-                                                              print(
-                                                                  "Radio111 $val $selectedRadio");
+                                                             
                                                             });
                                                           },
                                                           selected: _isSelected,
@@ -232,18 +239,14 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                               selectedRadio,
                                                           activeColor:
                                                               Colors.blue,
-                                                          onChanged: (val) {
-                                                            print(
-                                                                "Radio2 $val");
+                                                          onChanged: (val) {                                                          
                                                             setState(() {
                                                               selectedRadio =
                                                                   val as int;
                                                               _isSelected2 =
                                                                   true;
                                                               _isSelected =
-                                                                  !_isSelected2;
-                                                              print(
-                                                                  "Radio2222 $val $selectedRadio");
+                                                                  !_isSelected2;                                                               
                                                             });
                                                           },
                                                           selected:
@@ -572,7 +575,10 @@ class _VisitedsPageState extends State<VisitedsPage> {
                 InputCallback(
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
-                    callback: () => {}),
+                    callback: () => {
+                       // _searchProducto();
+                      },
+                controller:myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -805,7 +811,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.attach_money_sharp,
+                    Icons.paid,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
@@ -855,12 +861,12 @@ class _VisitedsPageState extends State<VisitedsPage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.remove_red_eye,
+                    Icons.backup,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
                   title: Text(
-                    'Sincronizacion',
+                    'Sincronización',
                     style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
                   ),
                   onTap: () => Navigator.pushNamed(context, 'data'),

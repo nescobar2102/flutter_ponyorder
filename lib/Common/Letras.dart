@@ -5,27 +5,25 @@ class LetraN {
 
 
   static Future<String> convertirLetras(num) async {
-    print("---se recibe e numero $num");
+ 
     try {
       var txtEspanol = numeroALetras(num);
-      print("---se devulve en letras  e numero $txtEspanol");
+    
       return Future.value(txtEspanol);
     } catch (e) {
-      print(e);
+  
     }
     return '';
   }
 
  static numeroALetras(n){
-  //  var num = (n*100)+'';
-
-  //  var centavos = num%100;
+  
     var numero = n;
 
     var respuesta = '';
 
     if (double.parse(numero) > 999) {
-      print("es mayor que 999");
+   
       if (numero.length > 6) {
 
         var residuo  =int.parse(numero)%1000000;

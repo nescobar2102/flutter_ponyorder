@@ -31,8 +31,8 @@ class _UnitsPageState extends State<UnitsPage> {
   String _user = '';
   String _nit = '';
 
- 
-  late String _searchProducto = '@';
+  
+  
   late int _countProductos = 0;
   List<dynamic> _datProductos = []; 
   final myControllerSearch = TextEditingController();
@@ -83,6 +83,7 @@ class _UnitsPageState extends State<UnitsPage> {
   final myControllerObservacion = TextEditingController();
   final myControllerCantidad = TextEditingController(text: "1");
   final myControllerOrdenCompra = TextEditingController();
+  final myControllerCantidadCart = TextEditingController();
  
   late DateTime _selectedDate = DateTime.now();
 
@@ -103,19 +104,16 @@ class _UnitsPageState extends State<UnitsPage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? ''); 
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
-      id_vendedor = (prefs.getString('id_vendedor') ?? '');
-
-      print("el usuario es $_user $_nit $id_vendedor");
+      id_vendedor = (prefs.getString('id_vendedor') ?? ''); 
       if (_nit != '') {
         searchClasificacionProductos('2','',false);
       }
-        ObtieneCarrito(false);
+        ObtieneCarrito();
     });
   }
 
   late List<Map<String, dynamic>> itemsListPrecio = [];
   Future  getListPrecio() async {
-    print("-*-*-*-*-*-getListPrecio-*-*-*-");
     final data = await OperationDB.getListPrecio(_nit);
     if (data != false) {
       setState(() {
@@ -154,7 +152,9 @@ class _UnitsPageState extends State<UnitsPage> {
         });
   }
   Future<void> searchClasificacionProductos( String nivel,String id_padre, bool pedido) async {
-    _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text :'@';
+    _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text.trim().trim() :'@';
+
+
       var data= await  OperationDB.getClasificacionProductos(_nit,nivel,id_padre,pedido,_search);
       if (data != false) {  
        _datClasificacionProductos = data;
@@ -166,7 +166,8 @@ class _UnitsPageState extends State<UnitsPage> {
               if(!pedido){
                 idClasificacion =
                 '${_datClasificacionProductos[0]['id_padre']}';
-                print("-----------ebntra show cate searchProductos");
+
+
                 searchProductos();
                 _formShowCategories = false;
                 _clientShow = true;
@@ -175,7 +176,8 @@ class _UnitsPageState extends State<UnitsPage> {
                     : Container();
 
               } else {
-                print("-----------ebntra show cate");
+
+
                  _clientShow = false;
                  _formShowCategories = true;
                 _formShowCategories
@@ -191,12 +193,11 @@ class _UnitsPageState extends State<UnitsPage> {
   }
 
   Future<void> searchProductos() async {
-      _searchProducto = myControllerSearch.text; 
-    final search_ = (_searchProducto.isNotEmpty && _searchProducto != '')
-        ? _searchProducto
+    final _search = myControllerSearch.text.isNotEmpty
+        ? myControllerSearch.text.trim()
         : '@';
-      
-    final data = await OperationDB.getItemsAll(_nit, idClasificacion, search_);
+
+    final data = await OperationDB.getItemsAll(_nit, idClasificacion, _search);
     if (data != false) {
       _datProductos = data;
       _countProductos = _datProductos.length;
@@ -221,7 +222,10 @@ class _UnitsPageState extends State<UnitsPage> {
   }
 
   Future<void> searchProductosPedido() async {
-    var data = await OperationDB.getItems(_nit, idClasificacion,_searchProducto,'');
+    final _search = myControllerBuscarProd.text.isNotEmpty
+        ? myControllerBuscarProd.text.trim()
+        : '@';
+    var data = await OperationDB.getItems(_nit, idClasificacion,_search,listaPrecioTercero);
     if (data != false) {
       setState(() {
         _datProductos = data;
@@ -307,13 +311,8 @@ class _UnitsPageState extends State<UnitsPage> {
               ),
             ),
           ),
-          actions: [
-            Badge(
-              badgeContent: Text((_cartProductos.length).toString(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              child: GestureDetector(
+            actions: [
+              GestureDetector(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15.0),
                     child: Icon(
@@ -327,9 +326,7 @@ class _UnitsPageState extends State<UnitsPage> {
                         ? Navigator.pop(context)
                         : _drawerscaffoldkey.currentState!.openEndDrawer()
                   }),
-              position: const BadgePosition(start: -18, bottom: 30),
-            ),
-          ],
+          ],          
           title: Text( 
             'Unidades',
             style: TextStyle(
@@ -497,9 +494,10 @@ class _UnitsPageState extends State<UnitsPage> {
                     iconCallback: Icons.search,
                     callback: () => {
                           setState(() {
-                            print(" *-*-*-*  buscar productos*-*-*-*  ");
+                            searchProductosPedido();
                           })
-                        }),
+                        },
+                    controller: myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -736,6 +734,56 @@ class _UnitsPageState extends State<UnitsPage> {
       scrollDirection: Axis.vertical,
       primary: false,
       shrinkWrap: true,
+      padding: const EdgeInsets.all(10),
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      crossAxisCount: 2,
+      children: <Widget>[
+        for (var i = 0; i < _countClasificacion; i++) ...[
+          InkWell(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image:
+                  //  AssetImage('assets/images/${data[i]['descripcion']}.png'),
+                  AssetImage('assets/images/producto-sin-imagen.png'),
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(20.0),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text('${data[i]['descripcion']}',
+                        style: TextStyle(color: Colors.blue,
+                            fontSize: 14),),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            onTap: () {
+              setState(() {
+                idClasificacion = '${data[i]['id_clasificacion']}';
+                _id_padre = idClasificacion;
+                selectProductoNivel();
+              });
+            },
+          ),
+        ],
+      ],
+    );
+  }
+  Widget _ItemProductosOld(data) {
+    return GridView.count(
+      scrollDirection: Axis.vertical,
+      primary: false,
+      shrinkWrap: true,
       padding: const EdgeInsets.all(20),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
@@ -866,8 +914,7 @@ class _UnitsPageState extends State<UnitsPage> {
                         _itemSelect = data['id_item'],
                         searchPrecioProductos('${data['id_item']}'),
                       }
-                  }),
-                  onSaved: (val) => print(val),
+                  }),                
                 ),
                 SizedBox(height: 10.0),
                 Row(
@@ -958,8 +1005,9 @@ class _UnitsPageState extends State<UnitsPage> {
                       height: 40.0,
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8.0),
-                          color: (_itemSelect == data['id_item'] && _precio > 0  )
+                          color: (_itemSelect == data['id_item'] && _precio > 0  )  && !validExistCarrito(data['id_item'])
                               || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
+                                  && !validExistCarrito(data['id_item'])
                               ? Colors.blue
                               : Colors.grey[300]),
                       child: Material(
@@ -977,11 +1025,10 @@ class _UnitsPageState extends State<UnitsPage> {
                           ),
                           onTap: (_itemSelect == data['id_item'] && _precio > 0  ) || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
                               ? () {
-                            var findById = (_cartProductos) => _cartProductos['id_item'] == data['id_item'];
-                            var result = _cartProductos.where(findById);
-                            if (result.isNotEmpty) {
-                              _showBarMsg('Este producto ya existe en el carrito', false);
-                            }else {
+
+                              if (validExistCarrito(data['id_item'])) {
+                                _showBarMsg('Este producto ya existe en el carrito', false);
+                              }else {
 
                               if(_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 ) {
                                 _precio = double.parse(data['precio'].toString());
@@ -1010,33 +1057,24 @@ class _UnitsPageState extends State<UnitsPage> {
 
 
   _addProductoPedido(String descripcion, String idItem) {
-    var findById = (_cartProductos) => _cartProductos['id_item'] == idItem;
-    var result = _cartProductos.where(findById);
-    var cantidad = int.parse(myControllerCantidad.text);
-    print("se filtra el listado de carrito $result la cantidad $cantidad");
-
-    if (result.isEmpty) {
-      final cantidad = int.parse(myControllerCantidad.text);
-
+      final cantidad = int.parse(myControllerCantidad.text.trim());
       final total = double.parse(cantidad.toString()) * _precio;
-      print("No existe se agrega al carrito el producto $result");
+
       _cartProductos.add({
         "descripcion": descripcion,
         "id_item": idItem,
         "precio": _precio,
         "cantidad": cantidad,
-        "total_dcto": double.parse(myControllerDescuentos.text),
-        "dcto": double.parse(myControllerDescuentos.text),
+        "total_dcto": double.parse(myControllerDescuentos.text.trim()),
+        "dcto": double.parse(myControllerDescuentos.text.trim()),
         "id_precio_item": _value_itemsListPrecio != ''
             ? _value_itemsListPrecio
             : listaPrecioTercero,
         "total": total
       });
 
-
       setState(() {
         totalPedido = valorTotal();
-        //  numeroAletra(totalPedido.toString());
         myControllerCantidad.clear();
         myControllerDescuentos.clear();
         myControllerDescuentos.text = '0';
@@ -1046,19 +1084,16 @@ class _UnitsPageState extends State<UnitsPage> {
       });
       Navigator.of(context).pop();
       _showBarMsg('Has agregado estos productos a tu carrito', true);
-    } else {
-      _showBarMsg('Este producto existe en el carrito', false);
-    }
-  }
-  Future<void> ObtieneCarrito(bool update) async {
 
+  }
+
+  Future<void> ObtieneCarrito() async {
     final data =
         await OperationDB.getCarrito(_nit, id_tercero, _value_automatico);
     if (data != false) {
       _cartProductos =
           (data as List).map((dynamic e) => e as Map<String, dynamic>).toList();
 
-      print("tiene articulos en el data datadatadatadatadata $data  $_cartProductos");
       nombre_tercero = _cartProductos[0]['nombre_sucursal'];
       _value_automatico = _cartProductos[0]['numero'].toString();
       id_empresa = _cartProductos[0]['id_empresa'];
@@ -1070,16 +1105,11 @@ class _UnitsPageState extends State<UnitsPage> {
       listaPrecioTercero = _cartProductos[0]['id_precio_item'];
       id_direccion = _cartProductos[0]['id_direccion'];
       id_direccion_factura = _cartProductos[0]['id_direccion_factura'];
-      print("---------  listaPrecioTercero----$listaPrecioTercero");
-    } else {
-      print("---------no se tiene nada en el carrito---- ");
-    }
-    totalPedido = await valorTotal();
-    //await numeroAletra(totalPedido.toString());
-    if (update){
-      await OperationDB.updateCarritoG(_value_automatico, totalDescuento,totalPedido,_letras);
 
     }
+    setState(()   {
+      totalPedido =  valorTotal();
+    });
 
   }
 
@@ -1104,7 +1134,7 @@ class _UnitsPageState extends State<UnitsPage> {
         total_costo: totalCosto.toString(),
         total_dcto: '$totalDescuento',
         total: '$totalPedido',
-        orden_compra: myControllerOrdenCompra.text,
+        orden_compra: myControllerOrdenCompra.text.trim(),
         observacion: 'CARRITO',
         letras: _letras,
         id_direccion_factura: id_direccion_factura,
@@ -1130,7 +1160,6 @@ class _UnitsPageState extends State<UnitsPage> {
   valorTotal() {
     double total = 0.0;
     double total_descuento = 0.0;
-    print("el valor todal toald $_cartProductos");
     for (int i = 0; i < _cartProductos.length; i++) {
       double descuento = 0.0;
       double totalProducto = 0.0;
@@ -1143,7 +1172,7 @@ class _UnitsPageState extends State<UnitsPage> {
     }
     totalDescuento = total_descuento.toStringAsFixed(2);
     totalPedido = total.toStringAsFixed(2);
-    print(total.toStringAsFixed(2));
+
     return total.toStringAsFixed(2);
   }
 
@@ -1155,10 +1184,18 @@ class _UnitsPageState extends State<UnitsPage> {
     totalDescuento = '0.00';
     totalPedido = valorTotal();
     _letras = '';
-   //await numeroAletra('');
     Navigator.pushNamed(context, 'units');
   }
 
+  bool validExistCarrito(String idItem) {
+    bool flag = false;
+    findById(_cartProductos) => _cartProductos['id_item'] == idItem;
+    var result = _cartProductos.where(findById);
+    if (result.isNotEmpty) {
+      flag = true;
+    }
+    return flag;
+  }
    
 
   modalSinPedido() {
@@ -1351,11 +1388,9 @@ class _UnitsPageState extends State<UnitsPage> {
     _submitDialog(context);
     final val = await validateConexion.checkInternetConnection();
     setState(() {
-      _isConnected = val!;
-      print("valida la conexion $_isConnected");
+      _isConnected = val!;      
     });
-    print(
-        "se manda a editar el pedido $_value_automatico -- idPedidoUser $idPedidoUser");
+
     late int conse = 0;
     final total_costo =
         double.parse(totalPedido) + double.parse(totalDescuento);
@@ -1372,7 +1407,7 @@ class _UnitsPageState extends State<UnitsPage> {
     final fecha_final = '$ano-$mes-$dia';
 
     orden_compra =
-    orden_compra != '' ? orden_compra : myControllerOrdenCompra.text;
+    orden_compra != '' ? orden_compra : myControllerOrdenCompra.text.trim();
     final nuevo_pedido = Pedido(
         nit: _nit,
         id_tercero: '$id_tercero',
@@ -1402,14 +1437,12 @@ class _UnitsPageState extends State<UnitsPage> {
         estado: "PENDIENTE",
         flag_autorizado: "SI",
         comentario: "PRUEBA",
-        observacion: myControllerObservacion.text,
+        observacion: myControllerObservacion.text.trim(),
         letras: _letras,
         id_direccion_factura: '$id_direccion_factura',
         usuario: _user,
         id_tiempo_entrega: "0",
         flag_enviado: "NO");
-
-    print("la data que se emvia a editar del pedido $nuevo_pedido");
 
     flag_pedido = await OperationDB.insertPedido(nuevo_pedido,true);
     await OperationDB.editarPedido(_value_automatico);
@@ -1456,7 +1489,7 @@ class _UnitsPageState extends State<UnitsPage> {
           precio_kit: "0",
           tasa_dcto_cliente: "0",
           total_dcto_cliente: "0");
-      print("la data que se emvia a editar del pedido detalle $nuevo_pedido_det");
+
       flag_pedido_det = await OperationDB.insertPedidoDet(nuevo_pedido_det,true);
     }
     if (flag_pedido && flag_pedido_det) {
@@ -1507,7 +1540,7 @@ class _UnitsPageState extends State<UnitsPage> {
             "estado": "PENDIENTE",
             "flag_autorizado": "SI",
             "comentario": "PRUEBA",
-            "observacion": myControllerObservacion.text,
+            "observacion": myControllerObservacion.text.trim(),
             "id_direccion": id_direccion,
             "usuario": _user,
             "id_tiempo_entrega": "0",
@@ -1582,7 +1615,6 @@ class _UnitsPageState extends State<UnitsPage> {
     modalExitosa();
   }
 
-
   void modalExitosa() async {
     showDialog<String>(
       context: context,
@@ -1630,8 +1662,7 @@ class _UnitsPageState extends State<UnitsPage> {
                         ),
                       ),
                       onTap: () {
-
-                         OperationDB.deleteCarrito();                 
+                        OperationDB.deleteCarrito();
                         Navigator.pushNamed(context, 'units');
                       },
                     ),
@@ -1642,7 +1673,6 @@ class _UnitsPageState extends State<UnitsPage> {
           )),
     );
   }
-
   
   //productos
   Widget _formCategories(BuildContext context, data) {
@@ -1674,7 +1704,8 @@ class _UnitsPageState extends State<UnitsPage> {
         InputCallback(
             hintText: 'Buscar Categoria',
             iconCallback: Icons.search,
-            callback: () => {searchClasificacionProductos('2','',true)}),
+            callback: () => {searchClasificacionProductos('1','',true)},
+            controller: myControllerBuscarCatego),
         SizedBox(
           height: 20.0,
         ),
@@ -1739,7 +1770,6 @@ class _UnitsPageState extends State<UnitsPage> {
                       ),
                       onTap: () {
                         setState(() {
-                         // removeCarrito(); 
                               searchClasificacionProductos('2','',false);
                           _formShowCategories = false; 
                           _productosShowCat = false;
@@ -1810,18 +1840,23 @@ class _UnitsPageState extends State<UnitsPage> {
                 color: Color.fromARGB(255, 194, 198, 200)),
             width: _size.width,
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  nombre,
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xff707070),
+            child:
+            Padding(
+              padding: const EdgeInsets.all(7.0),
+              child:Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    descripcion,
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xff707070),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           SizedBox(height: 5.0),
@@ -1969,7 +2004,7 @@ class _UnitsPageState extends State<UnitsPage> {
                     '${_datProductos[i]['id_item']}',
                     '${_datProductos[i]['descripcion']}',
                     '${_datProductos[i]['saldo_inventario']} - ${_datProductos[i]['id_unidad_compra']} '),
-                SizedBox(height: 10.0),
+                SizedBox(height: 5.0),
               ],
             ],
           ),
@@ -2005,23 +2040,19 @@ class _UnitsPageState extends State<UnitsPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 7.0, horizontal: 7.0),
-            child: Row(
-              children: [
-                Text(
-                  '$nombre',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            child: Text(
+              '$descripcion',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w700,
+                color: Colors.blue,
+              ),
             ),
           ),
           Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -2108,6 +2139,8 @@ class _UnitsPageState extends State<UnitsPage> {
                                   onTap: () {
                                     setState(() {
                                       if (_cantidadProducto > 1) {
+                                        _cantidadProducto = int.parse(
+                                            myControllerCantidad.text.trim());
                                         _cantidadProducto--;
                                         myControllerCantidad.text =
                                             _cantidadProducto.toString();
@@ -2117,7 +2150,7 @@ class _UnitsPageState extends State<UnitsPage> {
                                     });
                                   },
                                   child: Container(
-                                    width: 25.0,
+                                    width: 30.0, 
                                     height: 30.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
@@ -2125,7 +2158,7 @@ class _UnitsPageState extends State<UnitsPage> {
                                             topLeft: Radius.circular(15.0),
                                             bottomLeft: Radius.circular(15.0))),
                                     child:
-                                        Icon(Icons.remove, color: Colors.white),
+                                    Icon(Icons.remove, color: Colors.white),
                                   )),
                               Container(
                                 decoration: BoxDecoration(
@@ -2133,38 +2166,40 @@ class _UnitsPageState extends State<UnitsPage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: _size.width * 0.5 - 160,
+                                width: _size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
+                                      textAlign: TextAlign.center,
                                       controller: myControllerCantidad,
                                       keyboardType: TextInputType.number,
                                       decoration: InputDecoration(
-                                          disabledBorder: UnderlineInputBorder(
-                                              borderSide: BorderSide(
-                                                  width: 0.8,
-                                                  color: Color(0xff707070))),
-                                          hintText: '')),
+                                        disabledBorder: UnderlineInputBorder(
+                                            borderSide: BorderSide(
+                                                width: 0.8,
+                                                color: Color(0xff707070))),
+                                      )),
                                 ),
                               ),
                               InkWell(
                                   onTap: () {
                                     setState(() {
+                                      _cantidadProducto =
+                                          int.parse(myControllerCantidad.text.trim());
                                       _cantidadProducto++;
                                       myControllerCantidad.text =
                                           _cantidadProducto.toString();
-                                      print("cantidad suma $_cantidadProducto");
                                     });
                                   },
                                   child: Container(
-                                    width: 25.0,
+                                    width: 30.0,
                                     height: 30.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
                                         borderRadius: BorderRadius.only(
                                             topRight: Radius.circular(15.0),
                                             bottomRight:
-                                                Radius.circular(15.0))),
+                                            Radius.circular(15.0))),
                                     child: Icon(
                                       Icons.add,
                                       color: Colors.white,
@@ -2178,10 +2213,11 @@ class _UnitsPageState extends State<UnitsPage> {
                 TextField(
                     controller: myControllerDescuentos,
                     keyboardType: TextInputType.number,
+
                     decoration: InputDecoration(
                       disabledBorder: UnderlineInputBorder(
                           borderSide:
-                              BorderSide(width: 0.8, color: Color(0xff707070))),
+                          BorderSide(width: 0.8, color: Color(0xff707070))),
                       labelText: 'Descuento',
                       hintText: 'Ingrese descuento $_descuento',
                     )),
@@ -2223,11 +2259,13 @@ class _UnitsPageState extends State<UnitsPage> {
                               Text("Continuar")
                             ],
                           ),
-                       
+                          style: ButtonStyle(
+                            //backgroundColor: Colors.blue,
+                          ),
                           onPressed: () {
-                              setState(() { 
-                                _addProductoPedido(descripcion, idItem);
-                              });
+                            if(!validExistCarrito(idItem)) {
+                              _addProductoPedido(descripcion, idItem);
+                            }
                           }),
                     )
                   ],
@@ -2301,7 +2339,7 @@ class _UnitsPageState extends State<UnitsPage> {
                 InputCallbackf(context,
                     'Buscar producto',
                     Icons.search,
-                    _searchProducto,
+                    searchProductosPedido,
                     myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
@@ -2733,17 +2771,13 @@ class _UnitsPageState extends State<UnitsPage> {
                             children: <Widget>[
                               InkWell(
                                   onTap: () {
-                                    print("resta en carrito");
                                     setState(() {
                                       if (cantidad > 1) {
-                                        cantidad = cantidad--;
                                         OperationDB.updateCantidad(
                                             _cartProductos[index]['id_item'],
                                             _value_automatico,
                                             false);
-                                        ObtieneCarrito(true);
-
-                                        print("nueva cantidad resta $cantidad");
+                                        ObtieneCarrito();
                                       }
                                     });
                                   },
@@ -2767,26 +2801,53 @@ class _UnitsPageState extends State<UnitsPage> {
                                 width: _size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
-                                  child: Text(
+                                  child:
+                                    TextField(                                  
+                                      textAlign: TextAlign.center, 
+                                      controller: myControllerCantidadCart,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      
+                                     onSubmitted: (String str){
+                                     
+                                         if (str.isNotEmpty) {
+                                      OperationDB.updateCantidadFinal(
+                                              _cartProductos[index]['id_item'],
+                                              _value_automatico,
+                                            int.parse(
+                                              myControllerCantidadCart.text.trim()));
+                                            myControllerCantidadCart.clear(); 
+                                          ObtieneCarrito();
+                                        }
+                                    },
+                                   
+                                      decoration: InputDecoration(
+                                        hintText:  cantidad.toString(),
+                                         hintStyle: TextStyle( color: Color(0xff707070),
+                                                  fontSize: 15.0,
+                                                  fontWeight: FontWeight.w700),
+                                        disabledBorder: UnderlineInputBorder(
+                                            borderSide: BorderSide(
+                                                width: 0.8,
+                                                color: Color(0xff707070))),
+                                      )),/*  Text(
                                     cantidad.toString(),
                                     style: TextStyle(
                                         color: Color(0xff707070),
                                         fontSize: 15.0,
                                         fontWeight: FontWeight.w700),
-                                  ),
+                                  ), */
                                 ),
                               ),
                               InkWell(
                                   onTap: () {
                                     setState(() {
                                       if (cantidad >= 0) {
-                                        cantidad = cantidad++;
                                         OperationDB.updateCantidad(
                                             _cartProductos[index]['id_item'],
                                             _value_automatico,
                                             true);
-                                        ObtieneCarrito(true);
-                                        print("nueva cantidad suma $cantidad");
+                                        ObtieneCarrito();
                                       }
                                     });
                                   },
@@ -2909,7 +2970,7 @@ class _UnitsPageState extends State<UnitsPage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.attach_money_sharp,
+                    Icons.paid,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
@@ -2959,12 +3020,12 @@ class _UnitsPageState extends State<UnitsPage> {
                 child: ListTile(
                   minLeadingWidth: 20,
                   leading: const Icon(
-                    Icons.remove_red_eye,
+                    Icons.backup,
                     color: Color(0xff767676),
                     size: 28.0,
                   ),
                   title: Text(
-                    'Sincronizacion',
+                    'Sincronización',
                     style: TextStyle(fontSize: 20.0, color: Color(0xff767676)),
                   ),
                   onTap: () => Navigator.pushNamed(context, 'data'),
@@ -3007,8 +3068,7 @@ class _UnitsPageState extends State<UnitsPage> {
     _submitDialog(context);
     final val = await validateConexion.checkInternetConnection();
     setState(() {
-      _isConnected = val!;
-      print("LA CONEXION $_isConnected");
+      _isConnected = val!;      
     });
 
     if (_isConnected){
@@ -3028,31 +3088,6 @@ class _UnitsPageState extends State<UnitsPage> {
       // _letras = await LetraN.convertirLetras(numero);
     }
 
-    print("la letra convertida en locasl es  $_letras");
-
-    Navigator.pop(context);
-  }
-
-  /////api
-  Future<void> numeroAletraold(String numero) async {
-    _submitDialog(context);
-    final response = await http.get(
-      Uri.parse(
-          'https://numeros-a-letras1.p.rapidapi.com//api/NAL/?num=$numero'),
-      // Send authorization headers to the backend.
-      headers: <String, String>{
-        'X-RapidAPI-Key': "3e8840a8ebmsh4150b6af5da1551p196300jsn0ea9a90219af",
-        'X-RapidAPI-Host': "numeros-a-letras1.p.rapidapi.com"
-      },
-    );
-    if (response.statusCode == 200) {
-      var jsonResponse =
-          convert.jsonDecode(response.body) as Map<String, dynamic>;
-      setState(() {
-        _letras = jsonResponse['letras'];
-      });
-      print("asdasd $_letras");
-    }
     Navigator.pop(context);
   }
 
