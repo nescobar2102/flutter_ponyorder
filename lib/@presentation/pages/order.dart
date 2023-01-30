@@ -413,9 +413,7 @@ class _OrderPageState extends State<OrderPage> {
     if (data != false) {
       _datClasificacionProductosNivel = data;
       _countClasificacionNivel = data.length;
-      setState(() {
-       /* idClasificacion =
-            '${_datClasificacionProductosNivel[0]['id_clasificacion']}';*/
+      setState(() {     
         idClasificacion =
         '${_datClasificacionProductosNivel[0]['id_padre']}';
         searchProductosPedido();
@@ -493,30 +491,23 @@ class _OrderPageState extends State<OrderPage> {
                 ),
               ),
             ),
-          ),
-       actions: [
-              Badge(
-                badgeContent: Text((_cartProductos.length).toString(),
-                  style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
+          ),          
+            actions: [
+              GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 15.0),
+                    child: Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Color(0xff0090ce),
+                      size: 30,
+                    ),
                   ),
-                  child: GestureDetector(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 15.0),
-                        child: Icon(
-                          Icons.shopping_cart_outlined,
-                          color: Color(0xff0090ce),
-                          size: 30,
-                        ),
-                      ),
-                      onTap: () => {
-                        _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                            ? Navigator.pop(context)
-                            : _drawerscaffoldkey.currentState!.openEndDrawer()
-                      }),
-                position: const BadgePosition(start: -18, bottom: 30),
-              ),
-          ],
+                  onTap: () => {
+                    _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                        ? Navigator.pop(context)
+                        : _drawerscaffoldkey.currentState!.openEndDrawer()
+                  }),
+          ],      
           title: Text(
             'Pedidos',
             style: TextStyle(
@@ -535,10 +526,7 @@ class _OrderPageState extends State<OrderPage> {
         ),
         body: Scaffold(
           key: _drawerscaffoldkey,
-          drawer: _menu(context),
-         /* endDrawer: _cartProductos.length > 0
-              ? _shoppingCart(context, _cartProductos, _cartProductos.length)
-              : null,*/
+          drawer: _menu(context),       
           endDrawer: _shoppingCart(context, _cartProductos, _cartProductos.length),
           body: CustomScrollView(
             slivers: [
