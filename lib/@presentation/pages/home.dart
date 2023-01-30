@@ -1034,30 +1034,22 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          actions: [
-            Badge(
-              badgeContent: Text(
-                (_cartProductos.length).toString(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              child: GestureDetector(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Color(0xff0090ce),
-                      size: 30,
-                    ),
-                  ),
-                  onTap: () => {
+            actions: [
+             GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 15.0),
+                        child: Icon(
+                          Icons.shopping_cart_outlined,
+                          color: Color(0xff0090ce),
+                          size: 30,
+                        ),
+                      ),
+                      onTap: () => {
                         _drawerscaffoldkey.currentState!.isEndDrawerOpen
                             ? Navigator.pop(context)
                             : _drawerscaffoldkey.currentState!.openEndDrawer()
-                      }),
-              position: const BadgePosition(start: -18, bottom: 30),
-            ),
-          ],
+                      }), 
+          ],          
           title: Text(
             'Clientes',
             style: TextStyle(
@@ -7451,9 +7443,7 @@ class _HomePageState extends State<HomePage> {
                     text: 'Reestablecer',
                     color: Color(0xffCB1B1B),
                     callback: () {
-                      setState(() {
-                        /*    _confirm = false;
-                        _pay = true;*/
+                      setState(() {                     
                         documentoPagarDelete(data);
                       });
                     })),
@@ -7563,28 +7553,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
-        ),
-        /*  Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-               // width: _size.width * 0.5 - 62,
-              width: 120.0,
-              height: 40.0,
-                child: BtnSmall(
-                    text: 'Agregar',
-                    color: Color(0xff0894FD),
-                    callback: () {
-                      setState(() {
-                        seeDescuento = true;
-                        _isPagarDescuento = i;
-                      });
-                    })),
-            SizedBox(
-              width: 50.0,
-            ),
-          ],
-        ),*/
+        ),      
       ],
     );
   }
@@ -8116,9 +8085,7 @@ class _HomePageState extends State<HomePage> {
             id_destino: "",
             id_proyecto: "",
             cuota_cruce: cuota_cruce_cpd = cuota_cruce_cpd + 1,
-            id_banco: _value_itemsBanco,
-            /*fecha:fechaFinal,
-            vencimiento: fechaFinal,*/
+            id_banco: _value_itemsBanco,          
             fecha: _documentosPagados[0]['fecha'].toString(),
             vencimiento: _documentosPagados[0]['vencimiento'].toString(),
             id_tercero: id_tercero,
