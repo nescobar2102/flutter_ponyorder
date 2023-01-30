@@ -311,13 +311,8 @@ class _UnitsPageState extends State<UnitsPage> {
               ),
             ),
           ),
-          actions: [
-            Badge(
-              badgeContent: Text((_cartProductos.length).toString(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              child: GestureDetector(
+            actions: [
+              GestureDetector(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15.0),
                     child: Icon(
@@ -331,9 +326,7 @@ class _UnitsPageState extends State<UnitsPage> {
                         ? Navigator.pop(context)
                         : _drawerscaffoldkey.currentState!.openEndDrawer()
                   }),
-              position: const BadgePosition(start: -18, bottom: 30),
-            ),
-          ],
+          ],          
           title: Text( 
             'Unidades',
             style: TextStyle(
