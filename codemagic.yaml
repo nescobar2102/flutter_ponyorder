@@ -7,9 +7,9 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.example.pony_order
+        bundle_identifier: co.ibla.ponyorder
       vars:
-        APP_ID: 1603656658 # <-- Put your APP ID here
+        APP_ID: 1669764428 # <-- Put your APP ID here
       flutter: stable
       xcode: latest
       cocoapods: default
