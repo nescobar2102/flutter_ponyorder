@@ -38,7 +38,6 @@ dependencies:
   syncfusion_flutter_charts: ^19.4.56
   sqflite: ^2.0.2+1 
   shared_preferences: ^2.0.15
-  connectivity: ^3.0.6
   select_form_field: "^2.2.0"
   http: ^0.13.4
   top_snackbar_flutter: ^2.1.1
@@ -48,7 +47,7 @@ dependencies:
   path_provider: ^2.0.11
   badges: ^2.0.3
   email_validator: '^2.1.16'
-  connectivity_plus: ^1.0.6
+  
 
 
 dev_dependencies:
