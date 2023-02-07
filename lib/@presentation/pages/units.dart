@@ -1,6 +1,6 @@
 import 'package:pony_order/@presentation/components/inputCallback.dart';
 import 'package:flutter/material.dart';
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badges;
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart'; 
@@ -311,8 +311,13 @@ class _UnitsPageState extends State<UnitsPage> {
               ),
             ),
           ),
-            actions: [
-              GestureDetector(
+          actions: [
+            badges.Badge(
+              badgeContent: Text((_cartProductos.length).toString(),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              child: GestureDetector(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15.0),
                     child: Icon(
@@ -326,7 +331,10 @@ class _UnitsPageState extends State<UnitsPage> {
                         ? Navigator.pop(context)
                         : _drawerscaffoldkey.currentState!.openEndDrawer()
                   }),
-          ],          
+              position: badges.BadgePosition.topEnd(top: -5, end: 45),
+
+            ),
+          ],
           title: Text( 
             'Unidades',
             style: TextStyle(

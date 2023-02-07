@@ -1,6 +1,6 @@
 import 'package:pony_order/@presentation/components/inputCallback.dart';
 import 'package:flutter/material.dart';
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badges;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
@@ -491,8 +491,32 @@ class _OrderPageState extends State<OrderPage> {
                 ),
               ),
             ),
-          ),          
-            actions: [
+          ),
+          actions: [
+            badges.Badge(
+              badgeContent: Text((_cartProductos.length).toString(),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              child: GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 15.0),
+                    child: Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Color(0xff0090ce),
+                      size: 30,
+                    ),
+                  ),
+                  onTap: () => {
+                    _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                        ? Navigator.pop(context)
+                        : _drawerscaffoldkey.currentState!.openEndDrawer()
+                  }),
+              position: badges.BadgePosition.topEnd(top: -5, end: 45),
+
+            ),
+          ],
+         /*   actions: [
               GestureDetector(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15.0),
@@ -507,7 +531,7 @@ class _OrderPageState extends State<OrderPage> {
                         ? Navigator.pop(context)
                         : _drawerscaffoldkey.currentState!.openEndDrawer()
                   }),
-          ],      
+          ],    */
           title: Text(
             'Pedidos',
             style: TextStyle(

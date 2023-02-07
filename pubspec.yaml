@@ -38,20 +38,27 @@ dependencies:
   syncfusion_flutter_charts: ^19.4.56
   sqflite: ^2.0.2+1 
   shared_preferences: ^2.0.15
-  connectivity: ^3.0.6
   select_form_field: "^2.2.0"
   http: ^0.13.4
   top_snackbar_flutter: ^2.1.1
   intl: ^0.17.0
   syncfusion_flutter_datepicker: ^19.4.56
   dashed_circular_progress_bar: ^0.0.4
-  path_provider: ^2.0.11
-  badges: ^2.0.3
+  badges: ^3.0.2
   email_validator: '^2.1.16'
-  connectivity_plus: ^1.0.6
+
 
 
 dev_dependencies:
+  flutter_launcher_icons: "^0.11.0"
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/playstore-icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+
+
   flutter_test:
     sdk: flutter
 
@@ -79,6 +86,7 @@ flutter:
     - assets/images/carrito1.png
     - assets/images/carrito_vacio.png
     - assets/images/producto-sin-imagen.png
+    - assets/playstore-icon.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

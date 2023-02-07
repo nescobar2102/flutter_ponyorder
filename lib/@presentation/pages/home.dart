@@ -1,6 +1,6 @@
 import 'package:pony_order/@presentation/components/btnForm.dart';
 import 'package:pony_order/@presentation/components/btnSmall.dart';
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badges;
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:select_form_field/select_form_field.dart';
@@ -1034,22 +1034,30 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-            actions: [
-             GestureDetector(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 15.0),
-                        child: Icon(
-                          Icons.shopping_cart_outlined,
-                          color: Color(0xff0090ce),
-                          size: 30,
-                        ),
-                      ),
-                      onTap: () => {
-                        _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                            ? Navigator.pop(context)
-                            : _drawerscaffoldkey.currentState!.openEndDrawer()
-                      }), 
-          ],          
+          actions: [
+            badges.Badge(
+              badgeContent: Text((_cartProductos.length).toString(),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              child: GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 15.0),
+                    child: Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Color(0xff0090ce),
+                      size: 30,
+                    ),
+                  ),
+                  onTap: () => {
+                    _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                        ? Navigator.pop(context)
+                        : _drawerscaffoldkey.currentState!.openEndDrawer()
+                  }),
+              position: badges.BadgePosition.topEnd(top: -5, end: 45),
+
+            ),
+          ],
           title: Text(
             'Clientes',
             style: TextStyle(

@@ -893,12 +893,10 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
       await db.execute(tableKitDet);
       await db.execute(tableCarteraProveedores);
       await db.execute(tableCarteraProveedoresDet);
-      //   await db.execute(viewCartera);
       await db.execute(tableCarrito);
       await db.execute(tableCarritoDet);
       await db.execute(viewCarteraNew);
 
-      print("crearon tablas");
     }, version: 1);
   }
 
@@ -976,7 +974,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
           '  OR  ( CAST(TERCERO.ID_TERCERO AS VARCHAR(20)) LIKE UPPER("%$search%"))) ';
     }
     sql += ' ORDER BY TERCERO.NOMBRE ASC LIMIT 20 ';
-    print("sql $sql");
 
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
@@ -995,7 +992,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         " id_precio_item, id_lista_precio,id_suc_vendedor from tercero INNER JOIN  tercero_cliente"
         " ON tercero.id_tercero=tercero_cliente.id_tercero"
         " where usuario='$user' and tercero.nit='$nit'   AND vendedor ='SI' limit 1 ";
-    print("sql vendedor $sql");
+
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
       return res;
@@ -1805,7 +1802,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 
   /// Simple query with sqflite helper
   static Future deleteItem() async {
-    print("borra los item");
     Database database = await _openDB();
     final res = await database.rawQuery("DELETE FROM item ");
     if (res.isNotEmpty) {
