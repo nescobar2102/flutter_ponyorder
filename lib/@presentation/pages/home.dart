@@ -1,6 +1,6 @@
 import 'package:pony_order/@presentation/components/btnForm.dart';
 import 'package:pony_order/@presentation/components/btnSmall.dart';
-import 'package:badges/badges.dart' as badges;
+ 
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:select_form_field/select_form_field.dart';
@@ -1035,12 +1035,13 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           actions: [
-            badges.Badge(
+           /*  badges.Badge(
               badgeContent: Text((_cartProductos.length).toString(),
                 style: const TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              child: GestureDetector(
+              ), */
+            _getCarritoLleno(),
+               GestureDetector(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15.0),
                     child: Icon(
@@ -1049,13 +1050,13 @@ class _HomePageState extends State<HomePage> {
                       size: 30,
                     ),
                   ),
+
                   onTap: () => {
                     _drawerscaffoldkey.currentState!.isEndDrawerOpen
                         ? Navigator.pop(context)
                         : _drawerscaffoldkey.currentState!.openEndDrawer()
-                  }),
-              position: badges.BadgePosition.topEnd(top: -5, end: 45),
-
+                  }
+ 
             ),
           ],
           title: Text(
@@ -1196,6 +1197,36 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Widget _getCarritoLleno() {
+    if (_cartProductos.length > 0) {
+      return    Container(
+        padding:  const EdgeInsets.all(1.0),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xffCB1B1B),
+            border: Border.all(
+              color:Color(0xffCB1B1B),
+              width: 10,
+            ),
+          ),
+          width: 30,
+          height: 30,
+         alignment: Alignment.center,
+          child: Text(
+            _cartProductos.length.toString(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight:FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        );
+
+    } else {
+      return Container();
+    }
   }
 
   void callbackHistory(data) {
