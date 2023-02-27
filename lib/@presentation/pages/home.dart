@@ -1035,11 +1035,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           actions: [
-           /*  badges.Badge(
-              badgeContent: Text((_cartProductos.length).toString(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ), */
             _getCarritoLleno(),
                GestureDetector(
                   child: Padding(

@@ -474,6 +474,7 @@ class _LoginPageState extends State<LoginPages> {
     });
     Navigator.pop(context);
     _showMSG('Sincronización exitosa');
+
   }
 
   Future searchTercero() async {
