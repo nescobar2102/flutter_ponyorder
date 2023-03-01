@@ -340,31 +340,7 @@ class _UnitsPageState extends State<UnitsPage> {
               ),
             ),
           ),
-          actions: [
-            /*badges.Badge(
-              badgeContent: Text((_cartProductos.length).toString(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ),*/
-            _getCarritoLleno(),
-            GestureDetector(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Color(0xff0090ce),
-                      size: 30,
-                    ),
-                  ),
-                  onTap: () => {
-                    _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                        ? Navigator.pop(context)
-                        : _drawerscaffoldkey.currentState!.openEndDrawer()
-                  }),
-              //position: badges.BadgePosition.topEnd(top: -5, end: 45),
 
-           // ),
-          ],
           title: Text( 
             'Unidades',
             style: TextStyle(
@@ -2033,8 +2009,8 @@ class _UnitsPageState extends State<UnitsPage> {
                 fontStyle: FontStyle.italic)),
         SizedBox(height: 10.0),
         SizedBox(
-          height: 535.0,
-          child: ListView(
+          height:_size.height - 300,
+            child: ListView(
             children: [
               for (var i = 0; i < _countProductos; i++) ...[
                 itemUnits(

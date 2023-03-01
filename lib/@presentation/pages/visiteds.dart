@@ -108,22 +108,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
               ),
             ),
           ),
-          /*  actions: [
-            GestureDetector(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 15.0),
-                  child: Icon(
-                    Icons.shopping_cart_outlined,
-                    color: Color(0xff0090ce),
-                    size: 30,
-                  ),
-                ),
-                onTap: () => {
-                      _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                          ? Navigator.pop(context)
-                          : _drawerscaffoldkey.currentState!.openEndDrawer()
-                    })
-          ],*/
+
           title: Text(
             'Visitados',
             style: TextStyle(
@@ -186,7 +171,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                             Radius.circular(
                                                                 10.0))),
                                                 child: Container(
-                                                  height: 310.0,
+                                                  height:_size.height - 400,
                                                   width: _size.width * 0.8,
                                                   padding: EdgeInsets.symmetric(
                                                       horizontal: 20.0,

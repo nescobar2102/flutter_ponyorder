@@ -1354,14 +1354,11 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Widget _ItemCategoryOrderEdit(index, idItem, descripcion, cantidad) {
-    final nombre = descripcion.length > 35
-        ? descripcion.substring(0, 33) + '...'
-        : descripcion;
     final _size = MediaQuery.of(context).size;
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
     return Container(
       width: maxWidth,
-      height: 360.0,
+      height: 365.0,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
@@ -1449,7 +1446,7 @@ class _OrderPageState extends State<OrderPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: _size.width * 0.5 - 65,
+                      width: _size.width * 0.5 - 150,
                       child: Text(
                         'Cantidad',
                         style: TextStyle(
@@ -1494,7 +1491,7 @@ class _OrderPageState extends State<OrderPage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: _size.width * 0.5 - 150,
+                                width: _size.width> 600 ?_size.width * 0.5 - 350 : _size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
@@ -1970,7 +1967,7 @@ class _OrderPageState extends State<OrderPage> {
                   height: 15.0,
                 ),
                 SizedBox(
-                  height: 300.0,
+                  height:_size.height - 560,
                      child: ListView.builder(
                       itemCount: _cartProductos.length,
                       itemBuilder: (context, i) =>   _ItemCategoryOrderCart(_cartProductos[i], i),
@@ -2343,7 +2340,7 @@ class _OrderPageState extends State<OrderPage> {
                       ),
                     ),
                     Container(
-                        width: _size.width * 0.5 - 75,
+                        width: _size.width * 0.5 - 40,
                         child: Container(
                           width: _size.width,
                           height: 30.0,
@@ -2378,7 +2375,7 @@ class _OrderPageState extends State<OrderPage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: _size.width * 0.5 - 150,
+                                width:_size.width> 600 ? _size.width* 0.5 - 350 :_size.width * 0.5 - 150,
                                 height: 30.0,
                                 child: Center(
                                   child:
@@ -2709,8 +2706,8 @@ class _OrderPageState extends State<OrderPage> {
         ),
         SizedBox(height: 10.0),
         SizedBox(
-          height: 330.0,
-          child: ListView(
+          height: _size.height -500,
+            child: ListView(
             children: [
               for (var i = 0; i < total_d; i++) ...[
                 if (_cartProductos.isNotEmpty) ...[
@@ -3037,8 +3034,8 @@ class _OrderPageState extends State<OrderPage> {
           height: 20.0,
         ),
         SizedBox(
-          height: 420.0,
-          child: ListView(
+          height: _size.height - 400,
+            child: ListView(
             children: [
               _ItemProductos(data),
             ],
@@ -3333,7 +3330,7 @@ class _OrderPageState extends State<OrderPage> {
                         height: 5.0,
                       ),
                 SizedBox(
-                  height: 310.0,
+                  height: _size.height  -480,
                   child: ListView(
                     children: [
                       for (var i = 0; i < _countProductos; i++) ...[
