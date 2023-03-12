@@ -204,8 +204,7 @@ class _HomePageState extends State<HomePage> {
     if (_nit != '') {
       if (id_vendedor == '') {
         searchVendedor(_nit.trim(), _user.trim());
-      }
-      // await SendataSincronizacion.initSincronizacion();
+      }      
 
     }
   }
@@ -390,8 +389,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       setState(() {
         _itemsBarrio = [];
-      });
-      //  _showBarMsg('Error', false);
+      });      
     }
   }
 
@@ -634,8 +632,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isConnected = val!;
       });
-      _showBarMsg('Creación exitosa del cliente', true);
-      // _isConnected ?  await _saveClient_api() :
+      _showBarMsg('Creación exitosa del cliente', true);       
       _isConnected ? await SendataSincronizacion.sendTercero(false) : null;
       Navigator.pushNamed(context, 'home');
     } else {
@@ -690,14 +687,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   late List<Map<String, dynamic>> _direccionClient = [];
-  late List<Map<String, dynamic>> _direccionClienMercancia = [];
+  late List<Map<String, dynamic>> _direccionClienMercancia = []; 
   Future<void> searchClientDireccion() async {
     final allDireccionMercancia =
         await OperationDB.getDireccion(_nit, id_tercero, 'Mercancia');
     if (allDireccionMercancia != false) {
       _direccionClienMercancia = (allDireccionMercancia as List)
           .map((dynamic e) => e as Map<String, dynamic>)
-          .toList();
+          .toList();      
     } else {
       _showBarMsg('El cliente no registra dirección', false);
     }
@@ -709,7 +706,7 @@ class _HomePageState extends State<HomePage> {
         _direccionClient = (allDireccion as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-
+        
         _clientShow = false;
         _clientShowNoFound = false;
         _formOrderShow = true;
@@ -930,8 +927,7 @@ class _HomePageState extends State<HomePage> {
             //which date will display when user open the picker
             firstDate: DateTime(1950),
             //what will be the previous supported year in picker
-            lastDate: DateTime
-                .now()) //what will be the up to supported date in picker
+            lastDate: DateTime(2030)) //what will be the up to supported date in picker
         .then((pickedDate) {
       //then usually do the future job
       if (pickedDate == null) {
@@ -4146,8 +4142,16 @@ class _HomePageState extends State<HomePage> {
 
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Dir. envío factura',
+          initialValue: _direccionClient.length == 1 ? _direccionClient[0]['value'] : null,
           items: _direccionClient,
           onChanged: (val) => setState(() => _value_DireccionFactura = val),
+           onSaved: (val) {
+             setState(() {
+            _value_DireccionFactura =  _direccionClient.length == 1 ? _direccionClient[0]['value'] : val;
+          //  _value_DireccionMercancia = val ?? 'Es requerido' ;
+         
+           });
+          },
         ),
         SelectFormField(
           style: TextStyle(
@@ -4157,11 +4161,15 @@ class _HomePageState extends State<HomePage> {
           type: SelectFormFieldType.dropdown, // or can be dialog
 
           labelText: 'Dir. envío mercancia',
+          initialValue: _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : null,
           items: _direccionClienMercancia,
           onChanged: (val) => setState(() => _value_DireccionMercancia = val),
-          validator: (val) {
-            setState(() => _value_DireccionMercancia = val ?? 'Es requerido');
-            return null;
+          onSaved: (val) {
+             setState(() {
+            _value_DireccionMercancia =  _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : val;
+          //  _value_DireccionMercancia = val ?? 'Es requerido' ;
+           
+           });
           },
         ),
         _itemForm(context, 'Orden de compra', '', myControllerOrdenCompra,
@@ -4204,6 +4212,7 @@ class _HomePageState extends State<HomePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    
                     Text(
                       'Ver la última factura del cliente',
                       style: TextStyle(
@@ -4442,8 +4451,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
-                          _value_DireccionMercancia = '0';
-                          _value_DireccionFactura = '0';
+                       /*    _value_DireccionMercancia = '0';
+                          _value_DireccionFactura = '0'; */
                           _clientShow = false;
                           _formOrderShow = false;
                           _search = '@';
@@ -4476,6 +4485,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       onTap: () {
+                          setState(() {
+                        _value_DireccionMercancia =  _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : _value_DireccionMercancia;
+                        _value_DireccionFactura =  _direccionClient.length == 1 ? _direccionClient[0]['value'] : _value_DireccionFactura;
+                    
+                      });
                         (_value_DireccionMercancia.toString() != '0' &&
                                 _value_DireccionFactura.toString() != '0')
                             ? searchClasificacionProductos()
@@ -5541,7 +5555,7 @@ class _HomePageState extends State<HomePage> {
                   type: SelectFormFieldType.dropdown, // or can be dialog
                   labelText: 'Lista de precios',
                   items: itemsListPrecio,
-                  initialValue: listaPrecioTercero,
+                  initialValue: itemsListPrecio[0]['value'],
                   onChanged: (val) => setState(() => {
                         _value_itemsListPrecio = val,
                         if (_value_itemsListPrecio != '0')
@@ -5711,7 +5725,7 @@ class _HomePageState extends State<HomePage> {
 
     return Container(
       width: maxWidth,
-      height: 365.0,
+      height: 355.0,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
@@ -5800,7 +5814,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: _size.width * 0.5 - 150,
+                      width: _size.width * 0.5 - 140,
                       child: Text(
                         'Cantidad',
                         style: TextStyle(
@@ -5845,7 +5859,7 @@ class _HomePageState extends State<HomePage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                               width: _size.width> 600 ?_size.width * 0.5 - 350 : _size.width * 0.5 - 150,
+                               width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 130,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
@@ -6149,7 +6163,7 @@ class _HomePageState extends State<HomePage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: width_px > 600 ? width_px * 0.5 - 350 : width_px* 0.5 - 150,
+                                width: width_px > 600 ? width_px * 0.5 - 330 : width_px* 0.5 - 120,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
