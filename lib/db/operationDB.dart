@@ -2525,8 +2525,8 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     var numero = carrito.numero;
 
     Database database = await _openDB();
-    final res = await database.rawQuery("SELECT * FROM carrito ");
-    if (res.isEmpty) {
+    final res = await database.rawQuery("SELECT * FROM carrito  ");
+    if (res.isEmpty || res.length== 0) {
       await database.insert('carrito', carrito.toMap());
     } else {
       await database.update('carrito', carrito.toMap(),
@@ -2538,7 +2538,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 
     final resdet = await database.rawQuery(
         "SELECT * FROM carrito_detalle WHERE  numero = $numero AND nit = '$nit' AND id_item = '$idItem'");
-    if (resdet.isEmpty) {
+    if (resdet.isEmpty || resdet.length== 0) {
       await database.insert('carrito_detalle', carritodet.toMap());
     } else {
       await database.update('carrito_detalle', carritodet.toMap(),

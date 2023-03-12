@@ -1118,10 +1118,18 @@ class _OrderPageState extends State<OrderPage> {
         },
         child: TextField(
           controller: controller,
+             textInputAction: TextInputAction.done,
           onChanged: (text) {
             if(text.isEmpty){
               callback();
             }
+          },
+           onSubmitted: (String str) {
+            setState(() {
+              if (controller.text.isNotEmpty) {
+                  callback();
+              }
+            });
           },
           decoration: InputDecoration(
             hintText: hintText,
@@ -1194,7 +1202,7 @@ class _OrderPageState extends State<OrderPage> {
                   type: SelectFormFieldType.dropdown, // or can be dialog
                   labelText: 'Lista de precios',
                   items: itemsListPrecio,
-                  initialValue: listaPrecioTercero,
+                  initialValue:itemsListPrecio.length > 0 ?  itemsListPrecio[0]['value'] : null,
                   onChanged: (val) => setState(() => {
                     _value_itemsListPrecio = val,
                     if (_value_itemsListPrecio !='0')
@@ -1357,7 +1365,7 @@ class _OrderPageState extends State<OrderPage> {
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
     return Container(
       width: maxWidth,
-      height: 365.0,
+      height: 355.0,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
@@ -1445,7 +1453,7 @@ class _OrderPageState extends State<OrderPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: _size.width * 0.5 - 150,
+                      width: _size.width * 0.5 - 140,
                       child: Text(
                         'Cantidad',
                         style: TextStyle(
@@ -1455,7 +1463,7 @@ class _OrderPageState extends State<OrderPage> {
                       ),
                     ),
                     Container(
-                        width: _size.width * 0.5 - 75,
+                        width: _size.width * 0.5 - 65,
                         child: Container(
                           width: _size.width,
                           height: 30.0,
@@ -1490,7 +1498,7 @@ class _OrderPageState extends State<OrderPage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: _size.width> 600 ?_size.width * 0.5 - 350 : _size.width * 0.5 - 150,
+                               width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 130,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
@@ -2373,8 +2381,8 @@ class _OrderPageState extends State<OrderPage> {
                                   border: Border.all(
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
-                                ),
-                                width:_size.width> 600 ? _size.width* 0.5 - 350 :_size.width * 0.5 - 150,
+                                ), 
+                                width:_size.width> 600 ? _size.width* 0.5 - 330 :_size.width * 0.5 - 120,
                                 height: 30.0,
                                 child: Center(
                                   child:

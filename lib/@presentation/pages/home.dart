@@ -1106,7 +1106,7 @@ class _HomePageState extends State<HomePage> {
                                       decoration: InputDecoration(
                                         hintText: !_productosShow
                                             ? 'Buscar cliente (identificación ó nombre)'
-                                            : 'Buscar Categoriaaaa',
+                                            : 'Buscar Categoria',
                                         fillColor: Colors.white,
                                         filled: true,
                                         contentPadding: EdgeInsets.only(
@@ -1339,10 +1339,18 @@ class _HomePageState extends State<HomePage> {
         },
         child: TextField(
           controller: controller,
+          textInputAction: TextInputAction.done,
           onChanged: (text) {
             if (text.isEmpty) {
               callback();
             }
+          },
+          onSubmitted: (String str) {
+            setState(() {
+              if (controller.text.isNotEmpty) {
+                  callback();
+              }
+            });
           },
           decoration: InputDecoration(
             hintText: hintText,
@@ -2449,6 +2457,7 @@ class _HomePageState extends State<HomePage> {
           _checkedRecibo && !_noDatos
               ? _totalHistoryRecibo(context)
               : Container(),
+              
         ],
       ),
     );
@@ -2539,7 +2548,7 @@ class _HomePageState extends State<HomePage> {
                   'Total de cartera',
                   style: TextStyle(
                       color: Color(0xff06538D),
-                      fontSize: 17.0,
+                      fontSize: 16.0,
                       fontWeight: FontWeight.w500),
                 ),
                 Text(
@@ -2750,7 +2759,7 @@ class _HomePageState extends State<HomePage> {
                   'Total de Pedido',
                   style: TextStyle(
                       color: Color(0xff06538D),
-                      fontSize: 17.0,
+                      fontSize: 16.0,
                       fontWeight: FontWeight.w500),
                 ),
                 Text(
@@ -3111,7 +3120,7 @@ class _HomePageState extends State<HomePage> {
                   'Total de recibo',
                   style: TextStyle(
                       color: Color(0xff06538D),
-                      fontSize: 17.0,
+                      fontSize: 16.0,
                       fontWeight: FontWeight.w500),
                 ),
                 Text(
@@ -5555,7 +5564,7 @@ class _HomePageState extends State<HomePage> {
                   type: SelectFormFieldType.dropdown, // or can be dialog
                   labelText: 'Lista de precios',
                   items: itemsListPrecio,
-                  initialValue: itemsListPrecio[0]['value'],
+                  initialValue:itemsListPrecio.length > 0 ?  itemsListPrecio[0]['value'] : null,
                   onChanged: (val) => setState(() => {
                         _value_itemsListPrecio = val,
                         if (_value_itemsListPrecio != '0')
@@ -5983,8 +5992,7 @@ class _HomePageState extends State<HomePage> {
     total = data['total'];
     final descripcion = data['descripcion'];
     final _size = MediaQuery.of(context).size;
-    double width_px = _size.width;
-    print("----ancho $width_px ");
+    double width_px = _size.width; 
     return Container(
       width: width_px,
       decoration: BoxDecoration(
