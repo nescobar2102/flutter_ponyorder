@@ -1542,7 +1542,7 @@ class _HomePageState extends State<HomePage> {
     return SafeArea(
       child: Container(
         width: _size.width,
-        height: _size.height - AppBar().preferredSize.height,
+        height: _size.height - 90,
         decoration: const BoxDecoration(
           color: Colors.white,
         ),
@@ -4195,7 +4195,7 @@ class _HomePageState extends State<HomePage> {
     final _size = MediaQuery.of(context).size;
     return
       SizedBox(
-      height: _size.height - 160,
+      height: _size.height - 180,
       child: ListView(
       scrollDirection: Axis.vertical,             
       children: [
@@ -5736,7 +5736,7 @@ class _HomePageState extends State<HomePage> {
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
     return Container(
       width: maxWidth,
-      height: 355.0,
+      height: 360.0,
       decoration: BoxDecoration(
           border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
           borderRadius: BorderRadius.circular(5.0)),
@@ -5833,7 +5833,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: _size.width * 0.5 - 130,
+                      width: _size.width * 0.5 - 125,
                       child: Text(
                         'Cantidad',
                         style: TextStyle(
@@ -6589,7 +6589,7 @@ class _HomePageState extends State<HomePage> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0))),
           child: Container(
-            height: 210.0,
+            height: 230.0,
             width: 300.0,
             padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             child: Column(
