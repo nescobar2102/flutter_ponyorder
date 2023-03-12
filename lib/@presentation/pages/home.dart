@@ -1162,7 +1162,7 @@ class _HomePageState extends State<HomePage> {
                               : Container(),
                           _formShow ? _form(context) : Container(),
                           _formOrderShow
-                              ? _formOrder(context, null)
+                              ? _formOrder(context, null) 
                               : Container(),
                           _formRecipeShow ? _formRecipe(context) : Container(),
                           _formHistoryShow
@@ -1177,6 +1177,9 @@ class _HomePageState extends State<HomePage> {
                           _productosShowCat
                               ? _shoppingCat(context, idClasificacion)
                               : Container(),
+                      _formOrderShow
+                              ? _formOrderButton(context) 
+                              : Container(), 
                         ],
                       ),
                     ),
@@ -4105,11 +4108,96 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+  Widget _formOrderButton(BuildContext context) {
+  final _size = MediaQuery.of(context).size;
+  return
+      SizedBox(     
+      child: 
+        Row(
+          children: [
+            Container(
+                width: _size.width * 0.5 - 25,
+                child: Container(
+                  width: _size.width,
+                  height: 41.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5.0),
+                      color: Color(0xffCB1B1B)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Center(
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                       /*    _value_DireccionMercancia = '0';
+                          _value_DireccionFactura = '0'; */
+                          _clientShow = false;
+                          _formOrderShow = false;
+                          _search = '@';
+                          searchClient();
+                        });
+                      },
+                    ),
+                  ),
+                )),
+            SizedBox(width: 10.0),
+            Container(
+                width: _size.width * 0.5 - 25,
+                child: Container(
+                  width: _size.width,
+                  height: 41.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5.0),
+                      color: Color(0xff0894FD)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Center(
+                        child: Text(
+                          'Continuar',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      onTap: () {
+                          setState(() {
+                        _value_DireccionMercancia =  _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : _value_DireccionMercancia;
+                        _value_DireccionFactura =  _direccionClient.length == 1 ? _direccionClient[0]['value'] : _value_DireccionFactura;
+                    
+                      });
+                        (_value_DireccionMercancia.toString() != '0' &&
+                                _value_DireccionFactura.toString() != '0')
+                            ? searchClasificacionProductos()
+                            : _showBarMsg('Seleccione las direcciones', false);
+                      },
+                    ),
+                  ),
+                ))
+          ],
+        )
+      );
+  }
   Widget _formOrder(BuildContext context, data_tercero_pedido) {
     //crear nuevo pedido
     final _size = MediaQuery.of(context).size;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return
+      SizedBox(
+      height: _size.height  - 160,
+      child: ListView(
+      scrollDirection: Axis.vertical,             
       children: [
         Text(
           'Completa los campos para crear un nuevo pedido',
@@ -4154,13 +4242,7 @@ class _HomePageState extends State<HomePage> {
           initialValue: _direccionClient.length == 1 ? _direccionClient[0]['value'] : null,
           items: _direccionClient,
           onChanged: (val) => setState(() => _value_DireccionFactura = val),
-           onSaved: (val) {
-             setState(() {
-            _value_DireccionFactura =  _direccionClient.length == 1 ? _direccionClient[0]['value'] : val;
-          //  _value_DireccionMercancia = val ?? 'Es requerido' ;
-         
-           });
-          },
+          
         ),
         SelectFormField(
           style: TextStyle(
@@ -4173,13 +4255,7 @@ class _HomePageState extends State<HomePage> {
           initialValue: _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : null,
           items: _direccionClienMercancia,
           onChanged: (val) => setState(() => _value_DireccionMercancia = val),
-          onSaved: (val) {
-             setState(() {
-            _value_DireccionMercancia =  _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : val;
-          //  _value_DireccionMercancia = val ?? 'Es requerido' ;
-           
-           });
-          },
+          
         ),
         _itemForm(context, 'Orden de compra', '', myControllerOrdenCompra,
             false, 'text', false, callback),
@@ -4218,25 +4294,9 @@ class _HomePageState extends State<HomePage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    
-                    Text(
-                      'Ver la última factura del cliente',
-                      style: TextStyle(
-                          fontSize: 16.0,
-                          color: Color(0xff0f538d),
-                          fontWeight: FontWeight.w600),
-                    ),
-                    GestureDetector(
-                      child: Icon(
-                        Icons.keyboard_arrow_down,
-                        color: Color(0xff06538D),
-                        size: 18.0,
-                      ),
-                      onTap: () {
-                        _datFactura.length > 0
+              GestureDetector(
+                     onTap: () {
+                       _datFactura.length > 0
                             ? showDialog<String>(
                                 context: context,
                                 builder: (BuildContext context) => Dialog(
@@ -4424,94 +4484,37 @@ class _HomePageState extends State<HomePage> {
                                     )),
                               )
                             : _showBarMsg(
-                                'Este cliente no tiene facturas', false);
-                      },
-                    )
+                           'Este cliente no tiene facturas', false);
+                     },
+               child:  Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [                    
+                     Text(
+                      'Ver la última factura del cliente',
+                      style: TextStyle(
+                          fontSize: 16.0,
+                          color: Color(0xff0f538d),
+                          fontWeight: FontWeight.w600),
+                    ),                   
+                   Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Color(0xff06538D),
+                        size: 18.0,
+                      ),   
+                  
                   ],
-                ),
+                    ),
+                 ),
               ],
-            ),
-            SizedBox(height: 10.0),
+            ),          
           ],
-        ),
-        SizedBox(height: 10.0),
-        Row(
-          children: [
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xffCB1B1B)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Cancelar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        setState(() {
-                       /*    _value_DireccionMercancia = '0';
-                          _value_DireccionFactura = '0'; */
-                          _clientShow = false;
-                          _formOrderShow = false;
-                          _search = '@';
-                          searchClient();
-                        });
-                      },
-                    ),
-                  ),
-                )),
-            SizedBox(width: 10.0),
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xff0894FD)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Continuar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                          setState(() {
-                        _value_DireccionMercancia =  _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : _value_DireccionMercancia;
-                        _value_DireccionFactura =  _direccionClient.length == 1 ? _direccionClient[0]['value'] : _value_DireccionFactura;
-                    
-                      });
-                        (_value_DireccionMercancia.toString() != '0' &&
-                                _value_DireccionFactura.toString() != '0')
-                            ? searchClasificacionProductos()
-                            : _showBarMsg('Seleccione las direcciones', false);
-                      },
-                    ),
-                  ),
-                ))
-          ],
-        ),
+        ), 
         SizedBox(height: 10.0)
-      ],
-    );
+       ],
+        ),
+      );
+     
+       
   }
 
   Widget _form(BuildContext context) {
