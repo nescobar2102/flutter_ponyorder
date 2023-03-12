@@ -5805,7 +5805,7 @@ class _HomePageState extends State<HomePage> {
                             width: 5.0,
                           ),
                           SizedBox(
-                            width: _size.width * 0.5 - 60,
+                         width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
                             child: Text(
                               'Unidades disponibles',
                               style: TextStyle(
@@ -5817,8 +5817,8 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
-                    Container(
-                      width: _size.width * 0.5 - 90,
+                    Container( 
+                     width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
                       child: Text(
                           expresionRegular(double.parse(cantidad.toString())),
                           style: TextStyle(

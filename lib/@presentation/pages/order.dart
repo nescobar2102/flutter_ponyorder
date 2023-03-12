@@ -1359,7 +1359,7 @@ class _OrderPageState extends State<OrderPage> {
               ],
             ));
   }
-
+ 
   Widget _ItemCategoryOrderEdit(index, idItem, descripcion, cantidad) {
     final _size = MediaQuery.of(context).size;
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
@@ -1434,7 +1434,7 @@ class _OrderPageState extends State<OrderPage> {
                             width: 5.0,
                           ),
                           SizedBox(
-                            width: _size.width * 0.5 - 60,
+                         width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
                             child: Text(
                               'Unidades disponibles',
                               style: TextStyle(
@@ -1446,8 +1446,8 @@ class _OrderPageState extends State<OrderPage> {
                         ],
                       ),
                     ),
-                    Container(
-                      width: _size.width * 0.5 - 90,
+                    Container( 
+                     width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
                       child: Text(
                           expresionRegular(double.parse(cantidad.toString())),
                           style: TextStyle(
@@ -1551,255 +1551,7 @@ class _OrderPageState extends State<OrderPage> {
                         )),
                   ],
                 ),
-                   TextField(
-                    controller: myControllerDescuentos,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      disabledBorder: UnderlineInputBorder(
-                          borderSide:
-                          BorderSide(width: 0.8, color: Color(0xff707070))),
-                      labelText: 'Descuento',
-                      hintText: 'Ingrese descuento $_descuento',
-                    )),          
-                
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: OutlinedButton(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Align(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
-                                ),
-                              ),
-                              Text("Cancelar")
-                            ],
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          }),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: ElevatedButton(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Align(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
-                                ),
-                              ),
-                              Text("Continuar")
-                            ],
-                          ),
-                          style: ButtonStyle( 
-                              ),
-                          onPressed: () {
-                            if (!validExistCarrito(idItem)) {
-                              _addProductoPedido(descripcion, idItem);
-                            }
-                          }),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-  Widget _ItemCategoryOrderEditOld(index, idItem, descripcion, cantidad) {
-    final _size = MediaQuery.of(context).size;
-    double maxWidth = MediaQuery.of(context).size.width * 0.8;
-    return Container(
-      width: maxWidth,
-      height: 355.0,
-      decoration: BoxDecoration(
-          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
-          borderRadius: BorderRadius.circular(5.0)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
-            child: Text(
-              '$descripcion',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w700,
-                color: Colors.blue,
-              ),
-            ),
-          ),
-          Padding(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.label_important,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          Text(
-                            'Precio Unidad \n \$ ' + expresionRegular(_precio),
-                            style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_box,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 60,
-                            child: Text(
-                              'Unidades disponibles        ' +
-                                  expresionRegular(
-                                      double.parse(cantidad.toString())),
-                              style: TextStyle(
-                                  color: Color(0xff707070),
-                                  fontSize: 15.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 140,
-                      child: Text(
-                        'Cantidad',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Container(
-                        width: _size.width * 0.5 - 65,
-                        child: Container(
-                          width: _size.width,
-                          height: 30.0,
-                          child: Row(
-                            children: <Widget>[
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      if (_cantidadProducto > 1) {
-                                        _cantidadProducto = int.parse(
-                                            myControllerCantidad.text);
-                                        _cantidadProducto--;
-                                        myControllerCantidad.text =
-                                            _cantidadProducto.toString();
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 30.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(15.0),
-                                            bottomLeft: Radius.circular(15.0))),
-                                    child:
-                                    Icon(Icons.remove, color: Colors.white),
-                                  )),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      width: 1.0, color: Color(0xffC7C7C7)),
-                                  color: Colors.white,
-                                ),
-                               width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 130,
-                                height: 30.0,
-                                child: Center(
-                                  child: TextField(
-                                      textAlign: TextAlign.center,
-                                      controller: myControllerCantidad,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        disabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                                width: 0.8,
-                                                color: Color(0xff707070))),
-                                      )),
-                                ),
-                              ),
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _cantidadProducto =
-                                          int.parse(myControllerCantidad.text);
-                                      _cantidadProducto++;
-                                      myControllerCantidad.text =
-                                          _cantidadProducto.toString();
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 30.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(15.0),
-                                            bottomRight:
-                                            Radius.circular(15.0))),
-                                    child: Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                    ),
-                                  ))
-                            ],
-                          ),
-                        )),
-                  ],
-                ),
-                TextField(
+                    TextField(
                     controller: myControllerDescuentos,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
@@ -1809,6 +1561,7 @@ class _OrderPageState extends State<OrderPage> {
                       labelText: 'Descuento',
                       hintText: 'Ingrese descuento $_descuento',
                     )),
+                 
                 SizedBox(height: 10.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1848,264 +1601,12 @@ class _OrderPageState extends State<OrderPage> {
                             ],
                           ),
                           style: ButtonStyle(
-                            //backgroundColor: Colors.blue,
-                          ),
-
-                              onPressed: () {
-                                if(!validExistCarrito(idItem)) {
-                                  _addProductoPedido(descripcion, idItem);
-                                }
-                              }),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _ItemCategoryOrderEditold(index, idItem, descripcion, cantidad) {
-    final nombre = descripcion.length > 35
-        ? descripcion.substring(0, 33) + '...'
-        : descripcion;
-    final _size = MediaQuery.of(context).size;
-    double maxWidth = MediaQuery.of(context).size.width * 0.8;
-    return Container(
-      width: maxWidth,
-      height: 360.0,
-      decoration: BoxDecoration(
-          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
-          borderRadius: BorderRadius.circular(5.0)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
-            child: Row(
-              children: [
-                Text(
-                  '$descripcion',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.label_important,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          Text(
-                            'Precio Unidad \n \$ ' + expresionRegular(_precio),
-                            style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_box,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 60,
-                            child: Text(
-                              'Unidades disponibles        ' +
-                                  expresionRegular(
-                                      double.parse(cantidad.toString())),
-                              style: TextStyle(
-                                  color: Color(0xff707070),
-                                  fontSize: 15.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 65,
-                      child: Text(
-                        'Cantidad',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Container(
-                        width: _size.width * 0.5 - 75,
-                        child: Container(
-                          width: _size.width,
-                          height: 30.0,
-                          child: Row(
-                            children: <Widget>[
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      if (_cantidadProducto > 1) {
-                                        _cantidadProducto = int.parse(myControllerCantidad.text);
-                                        _cantidadProducto--;
-                                        myControllerCantidad.text =
-                                            _cantidadProducto.toString();
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 30.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(15.0),
-                                            bottomLeft: Radius.circular(15.0))),
-                                    child:
-                                        Icon(Icons.remove, color: Colors.white),
-                                  )),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      width: 1.0, color: Color(0xffC7C7C7)),
-                                  color: Colors.white,
-                                ),
-                                width: _size.width * 0.5 - 150,
-                                height: 30.0,
-                                child: Center(
-                                  child: TextField(
-                                      textAlign: TextAlign.center,
-                                      controller: myControllerCantidad,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                          disabledBorder: UnderlineInputBorder(
-                                              borderSide: BorderSide(
-                                                  width: 0.8,
-                                                  color: Color(0xff707070))),
-                                         )),
-                                ),
+                              //backgroundColor: Colors.blue,
                               ),
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _cantidadProducto = int.parse(myControllerCantidad.text);
-                                      _cantidadProducto++;
-                                      myControllerCantidad.text =
-                                          _cantidadProducto.toString();
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 30.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(15.0),
-                                            bottomRight:
-                                                Radius.circular(15.0))),
-                                    child: Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                    ),
-                                  ))
-                            ],
-                          ),
-                        )),
-                  ],
-                ),
-                TextField(
-                    controller: myControllerDescuentos,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      disabledBorder: UnderlineInputBorder(
-                          borderSide:
-                              BorderSide(width: 0.8, color: Color(0xff707070))),
-                      labelText: 'Descuento',
-                      hintText: 'Ingrese descuento $_descuento',
-                    )),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: OutlinedButton(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Align(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
-                                ),
-                              ),
-                              Text("Cancelar")
-                            ],
-                          ),
                           onPressed: () {
-                            Navigator.of(context).pop();
-                          }),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: ElevatedButton(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Align(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
-                                ),
-                              ),
-                              Text("Continuar")
-                            ],
-                          ),
-                          onPressed: () {
-                            setState(() {
+                            if (!validExistCarrito(idItem)) {
                               _addProductoPedido(descripcion, idItem);
-                            });
+                            }
                           }),
                     )
                   ],
@@ -2116,8 +1617,7 @@ class _OrderPageState extends State<OrderPage> {
         ],
       ),
     );
-  }
-
+  }  
   Widget _shoppingCart(BuildContext context, data, cant) {
     final _size = MediaQuery.of(context).size;
     final nombre = nombre_tercero.toUpperCase();
