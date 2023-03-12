@@ -1649,7 +1649,7 @@ class _HomePageState extends State<HomePage> {
                       child: ListView.builder(
                         itemCount: _cartProductos.length,
                         itemBuilder: (context, i) =>
-                            _ItemCategoryOrderCart(_cartProductos[i], i),
+                         _ItemCategoryOrderCart(_cartProductos[i], i)  
                       ),
                     ),
                     SizedBox(height: 15.0),
@@ -4195,7 +4195,7 @@ class _HomePageState extends State<HomePage> {
     final _size = MediaQuery.of(context).size;
     return
       SizedBox(
-      height: _size.height  - 160,
+      height: _size.height - 160,
       child: ListView(
       scrollDirection: Axis.vertical,             
       children: [
@@ -5734,7 +5734,6 @@ class _HomePageState extends State<HomePage> {
   Widget _ItemCategoryOrderEdit(index, idItem, descripcion, cantidad) {
     final _size = MediaQuery.of(context).size;
     double maxWidth = MediaQuery.of(context).size.width * 0.8;
-
     return Container(
       width: maxWidth,
       height: 355.0,
@@ -5751,7 +5750,7 @@ class _HomePageState extends State<HomePage> {
             child: Text(
               '$descripcion',
               style: TextStyle(
-                fontSize: 16.0,
+                fontSize: 15.0,
                 fontWeight: FontWeight.w700,
                 color: Colors.blue,
               ),
@@ -5791,6 +5790,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: 10.0),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
                       width: _size.width * 0.5 - 40,
@@ -5807,9 +5807,7 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(
                             width: _size.width * 0.5 - 60,
                             child: Text(
-                              'Unidades disponibles        ' +
-                                  expresionRegular(
-                                      double.parse(cantidad.toString())),
+                              'Unidades disponibles',
                               style: TextStyle(
                                   color: Color(0xff707070),
                                   fontSize: 15.0,
@@ -5819,6 +5817,15 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
+                    Container(
+                      width: _size.width * 0.5 - 90,
+                      child: Text(
+                          expresionRegular(double.parse(cantidad.toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
                   ],
                 ),
                 SizedBox(height: 10.0),
@@ -5826,7 +5833,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: _size.width * 0.5 - 140,
+                      width: _size.width * 0.5 - 130,
                       child: Text(
                         'Cantidad',
                         style: TextStyle(
@@ -5839,7 +5846,7 @@ class _HomePageState extends State<HomePage> {
                           width: _size.width * 0.5 - 65,
                         child: Container(
                           width: _size.width,
-                          height: 30.0,
+                          height: 35.0,
                           child: Row(
                             children: <Widget>[
                               InkWell(
@@ -5856,7 +5863,7 @@ class _HomePageState extends State<HomePage> {
                                   },
                                   child: Container(
                                     width: 30.0,
-                                    height: 30.0,
+                                    height: 35.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
                                         borderRadius: BorderRadius.only(
@@ -5871,8 +5878,8 @@ class _HomePageState extends State<HomePage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                               width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 130,
-                                height: 30.0,
+                               width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 126,
+                                height: 35.0,
                                 child: Center(
                                   child: TextField(
                                       textAlign: TextAlign.center,
@@ -5898,7 +5905,7 @@ class _HomePageState extends State<HomePage> {
                                   },
                                   child: Container(
                                     width: 30.0,
-                                    height: 30.0,
+                                    height: 35.0,
                                     decoration: BoxDecoration(
                                         color: Colors.blue,
                                         borderRadius: BorderRadius.only(
