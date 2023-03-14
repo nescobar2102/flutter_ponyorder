@@ -534,7 +534,7 @@ class _HomePageState extends State<HomePage> {
           'No se obtuvo información del vendedor,sincronice los datos', false);
     }
   }
-
+  List<dynamic> _dataCarteraNew = [];
   Future<void> saldoCartera(bool pedido) async {
     var data =
         await OperationDB.getSaldoCartera(id_tercero, id_sucursal_tercero);
@@ -543,6 +543,20 @@ class _HomePageState extends State<HomePage> {
         _saldoCartera =
             data[0]['DEBITO'] != null ? data[0]['DEBITO'].toString() : '0';
       });
+
+      //documentos de la cartera
+      final recibos =
+        await OperationDB.getCarteraRecibo(id_tercero, id_sucursal_tercero);
+        if (recibos != false) {
+          setState(() {
+          _dataCarteraNew = recibos;
+          });
+        }else{
+          setState(() {
+          _dataCarteraNew = [];
+          });
+        }
+
       var data1 = await OperationDB.getFormPago(id_tercero, _nit);
       if (data1 != false) {
         setState(() {
@@ -4500,9 +4514,8 @@ class _HomePageState extends State<HomePage> {
                         Icons.keyboard_arrow_down,
                         color: Color(0xff06538D),
                         size: 18.0,
-                      ),   
-                  
-                  ],
+                      ),
+                    ],
                     ),
                  ),
               ],
@@ -4513,9 +4526,186 @@ class _HomePageState extends State<HomePage> {
        ],
         ),
       );
-     
-       
+
   }
+
+  void _seeTotalCartera(context,_size){
+    _dataCarteraNew.length > 0
+        ?  showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                  Radius.circular(10.0))),
+          child: Container(
+            height: 450.0,
+            width: 340.4,
+            padding: EdgeInsets.symmetric(
+                horizontal: 20.0, vertical: 15.0),
+            child: Column(
+              children: [
+                SizedBox(height: 10.0),
+                Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10.0),
+                    SizedBox(
+                      height: _size.height -520,
+                      child: ListView(
+                        scrollDirection: Axis.vertical,
+                        children: [
+                          for (var i = 0; i < _dataCarteraNew.length; i++) ...[
+                            _ItemDocumentClientCartera(_dataCarteraNew[i], i),
+                            SizedBox(height: 5.0),
+                          ]
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 10.0),
+                  ],
+                ),
+
+                SizedBox(
+                  height: 30.0,
+                ),
+                Row(
+                  mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: _size.width * 0.58,
+                      height: 40.0,
+                      decoration: BoxDecoration(
+                          borderRadius:
+                          BorderRadius.circular(
+                              5.0),
+                          color: Color(0xff0894FD)),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius:
+                          BorderRadius.circular(
+                              5.0),
+                          child: Center(
+                            child: Text(
+                              'Aceptar',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight:
+                                  FontWeight
+                                      .w700),
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          )),
+    ):_showBarMsg(
+        'Este cliente no tiene cartera', false);
+  }
+
+  Widget _ItemDocumentClientCartera(data, i) {
+    final _size = MediaQuery.of(context).size;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      decoration: BoxDecoration(
+          color: Color(0xffE8E8E8), borderRadius: BorderRadius.circular(6.0)),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  'Tipo:',
+                  style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  '${data['tipo_doc']}',
+                  style: TextStyle(
+                    color: Color(0xff707070),
+                    fontSize: 13.0,
+                  ),
+                ),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 10.0,
+          ),
+          Row(
+            children: [
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  'Número:',
+                  style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  '${data['numero']}',
+                  style: TextStyle(
+                    color: Color(0xff707070),
+                    fontSize: 13.0,
+                  ),
+                ),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 10.0,
+          ),
+          Row(
+            children: [
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  'Saldo:',
+                  style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  '\$ ' +
+                      expresionRegular(double.parse(data['DEBITO'].toString())),
+                  style: TextStyle(
+                    color: Color(0xff707070),
+                    fontSize: 13.0,
+                  ),
+                ),
+              )
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _form(BuildContext context) {
     //nuevo cliente
@@ -5168,6 +5358,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 contentPadding: EdgeInsets.only(bottom: 0, top: 15),
                 suffixIcon: GestureDetector(
+              onTap: () {
+                _seeTotalCartera(context,_size);
+              },
                   child: Icon(
                     Icons.keyboard_arrow_down,
                     size: 24.0,
@@ -6559,8 +6752,6 @@ class _HomePageState extends State<HomePage> {
         totalDescuento = '0.00';
         totalPedido = valorTotal();
         _letras = '';
-        //  numeroAletra('');
-
         Navigator.pop(context);
       },
     );
@@ -6969,6 +7160,7 @@ class _HomePageState extends State<HomePage> {
 
     if (recibos != false) {
       _dataDocumentPend = recibos;
+
       getTipoPago();
       getItemBanco();
       getConsecutivo(false);
