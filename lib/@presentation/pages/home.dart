@@ -4700,6 +4700,33 @@ class _HomePageState extends State<HomePage> {
               )
             ],
           ),
+          SizedBox(
+            height: 10.0,
+          ),
+          Row(
+            children: [
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  'Vencimiento:',
+                  style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(
+                width: _size.width * 0.5 - 80,
+                child: Text(
+                  '${data['vencimiento']}',
+                  style: TextStyle(
+                    color: Color(0xff707070),
+                    fontSize: 13.0,
+                  ),
+                ),
+              )
+            ],
+          ),
         ],
       ),
     );
