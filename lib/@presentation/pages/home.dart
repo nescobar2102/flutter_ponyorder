@@ -1932,6 +1932,7 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(5.0),
                       onTap: () => {
                         setState(() {
+                          myControllerBuscarProd.clear();
                           _productosShowCat = false;
                           _productosShow = true;
                         }),
@@ -2573,7 +2574,7 @@ class _HomePageState extends State<HomePage> {
                       expresionRegular(double.parse(_saldoCartera.toString())),
                   style: TextStyle(
                       color: Color(0xff06538D),
-                      fontSize: 17.0,
+                      fontSize: 16.0,
                       fontWeight: FontWeight.w500),
                 )
               ],
@@ -4538,7 +4539,7 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.all(
                   Radius.circular(10.0))),
           child: Container(
-            height: 450.0,
+            height: 500.0,
             width: 340.4,
             padding: EdgeInsets.symmetric(
                 horizontal: 20.0, vertical: 15.0),
@@ -7228,7 +7229,7 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               SizedBox(
-                width: _size.width * 0.5 - 42,
+                width: _size.width * 0.5 - 50,
                 child: Text(
                   'Tipo:',
                   style: TextStyle(

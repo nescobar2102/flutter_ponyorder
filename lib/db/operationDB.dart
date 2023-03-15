@@ -2301,10 +2301,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     var sql =
         " SELECT * from item i INNER JOIN precio_item_det pd  ON pd.id_item = i.id_item "
         "  WHERE i.nit= '$nit' and id_clasificacion='$idClasificacion'  ";
-
-   /*  if (listaPrecioTercero != '') {
-      sql += " and id_precio_item='$listaPrecioTercero' ";
-    } */
     if (search != '@') {
       sql += ' AND descripcion LIKE  "%$search%" ';
     }
