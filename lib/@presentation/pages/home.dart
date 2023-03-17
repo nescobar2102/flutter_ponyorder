@@ -23,7 +23,7 @@ import '../../models/pedido.dart';
 import '../../models/recibo_caja.dart';
 
 import './sendData.dart';
-
+import 'package:auto_size_text/auto_size_text.dart';
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -1277,7 +1277,8 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Se encontraron $_count resultados',
+        AutoSizeText('Se encontraron $_count resultados',
+         maxLines: 1,
             style: TextStyle(
                 color: Color(0xff0f538d),
                 fontSize: 15,
@@ -1426,8 +1427,9 @@ class _HomePageState extends State<HomePage> {
         SizedBox(
           height: 15.0,
         ),
-        Text(
+        AutoSizeText(
           '$nombre',
+          maxLines: 1,
           style: TextStyle(
               fontSize: 20.0,
               fontWeight: FontWeight.bold,
@@ -1590,7 +1592,9 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     SizedBox(height: 12.0),
-                    Text('$nombre',
+                    AutoSizeText(
+                       maxLines: 1,
+                       '$nombre',
                         style: TextStyle(
                             color: Colors.blue,
                             fontSize: 18.0,
@@ -1598,7 +1602,8 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       height: 12.0,
                     ),
-                    Text(
+                    AutoSizeText(
+                       maxLines: 1,
                       'Búsqueda de productos en el carrito',
                       style: TextStyle(
                           color: Color(0xff0f538d),
@@ -1612,7 +1617,7 @@ class _HomePageState extends State<HomePage> {
                         callback, myControllerBuscarProd),
                     SizedBox(height: 15.0),
                     Container(
-                      width: 160.0,
+                      width: 185.0,
                       height: 45.0,
                       decoration: BoxDecoration(
                           color: Color(0xff06538D),
@@ -1642,13 +1647,15 @@ class _HomePageState extends State<HomePage> {
                                   color: Colors.white,
                                 ),
                                 SizedBox(width: 5.0),
-                                Text(
-                                  'Categorias',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18.0,
-                                      fontWeight: FontWeight.w700),
-                                )
+                                AutoSizeText(
+                              maxLines: 1,
+                              minFontSize: 10,
+                              'Categorias',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.w700),
+                            ),
                               ],
                             ),
                           ),
@@ -1905,7 +1912,9 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 SizedBox(height: 12.0),
-                Text('$nombre',
+                AutoSizeText(
+                  '$nombre',
+                    maxLines: 1,
                     style: TextStyle(
                         color: Colors.blue,
                         fontSize: 18.0,
@@ -1917,10 +1926,10 @@ class _HomePageState extends State<HomePage> {
                   height: 10.0,
                 ),
                 InputCallback(context, 'Buscar producto', Icons.search,
-                    searchProductosPedido, myControllerBuscarProd),
+                    searchProductosPedido, myControllerBuscarProd),  
                 SizedBox(height: 15.0),
                 Container(
-                  width: 160.0,
+                  width: 183.0,
                   height: 45.0,
                   decoration: BoxDecoration(
                       color: Color(0xff06538D),
@@ -1947,7 +1956,9 @@ class _HomePageState extends State<HomePage> {
                               color: Colors.white,
                             ),
                             SizedBox(width: 5.0),
-                            Text(
+                            AutoSizeText(
+                              maxLines: 1,
+                              minFontSize: 10,
                               'Categorias',
                               style: TextStyle(
                                   color: Colors.white,
@@ -2287,7 +2298,8 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AutoSizeText(
+             maxLines: 1,
             'Visualice el historial del cliente',
             style: TextStyle(
                 fontSize: 18.0,
@@ -2297,7 +2309,8 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             height: 15.0,
           ),
-          Text(
+          AutoSizeText(
+             maxLines: 1,
             '$nombre_tercero',
             style: TextStyle(
                 fontSize: 20.0,
@@ -4154,8 +4167,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () {
                         setState(() {
-                       /*    _value_DireccionMercancia = '0';
-                          _value_DireccionFactura = '0'; */
                           _clientShow = false;
                           _formOrderShow = false;
                           _search = '@';
@@ -4210,7 +4221,7 @@ class _HomePageState extends State<HomePage> {
     final _size = MediaQuery.of(context).size;
     return
       SizedBox(
-      height: _size.height - 180,
+      height: _size.height - 190,
       child: ListView(
       scrollDirection: Axis.vertical,             
       children: [
@@ -4504,10 +4515,11 @@ class _HomePageState extends State<HomePage> {
                child:  Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [                    
-                     Text(
+                     AutoSizeText(
+                      maxLines: 1, 
                       'Ver la última factura del cliente',
                       style: TextStyle(
-                          fontSize: 16.0,
+                          fontSize: 15.0,
                           color: Color(0xff0f538d),
                           fontWeight: FontWeight.w600),
                     ),                   
@@ -5418,7 +5430,8 @@ class _HomePageState extends State<HomePage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            child: Text(
+            child: AutoSizeText(
+               maxLines: 1,
               '$nombre',
               style: TextStyle(
                 fontSize: 16.0,
@@ -5459,7 +5472,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('${data['direccion']}',
+                      child: AutoSizeText('${data['direccion']}',
+                       maxLines: 2,
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5519,8 +5533,9 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(
                             width: 5.0,
                           ),
-                          Text(
-                            'Límite crediticio',
+                          AutoSizeText(
+                             maxLines: 2, 
+                            'Límite credito',
                             style: TextStyle(
                                 color: Color(0xff707070),
                                 fontSize: 15.0,
@@ -5677,7 +5692,9 @@ class _HomePageState extends State<HomePage> {
                         child: InkWell(
                             borderRadius: BorderRadius.circular(8.0),
                             child: Center(
-                              child: Text(
+                              child: AutoSizeText
+                              (
+                                maxLines: 1,
                                 'Historial',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -5732,8 +5749,10 @@ class _HomePageState extends State<HomePage> {
                     padding: EdgeInsets.all(2),
                     child: Align(
                       alignment: Alignment.center,
-                      child: Text(
+                      child: AutoSizeText(
                         '${data[i]['descripcion']}',
+                        maxLines: 1,
+                        minFontSize: 10,
                         style: TextStyle(color: Colors.blue, fontSize: 14),
                       ),
                     ),
@@ -5770,7 +5789,8 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding:
                 const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
-            child: Text(
+            child: AutoSizeText(
+               maxLines: 2,
               '${data['descripcion']}',
               style: TextStyle(
                 fontSize: 16.0,
@@ -5814,11 +5834,12 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(
                             width: 5.0,
                           ),
-                          Text(
+                          AutoSizeText(
+                            maxLines: 1,
                             'Precio unidad',
                             style: TextStyle(
                                 color: Color(0xff707070),
-                                fontSize: 15.0,
+                                fontSize: 14.0,
                                 fontWeight: FontWeight.w700),
                           ),
                         ],
@@ -5834,7 +5855,7 @@ class _HomePageState extends State<HomePage> {
                                       double.parse(data['precio'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
-                              fontSize: 15.0,
+                              fontSize: 14.0,
                               fontWeight: FontWeight.w600)),
                     ),
                   ],
@@ -5861,7 +5882,7 @@ class _HomePageState extends State<HomePage> {
                               'Unidades disponibles',
                               style: TextStyle(
                                   color: Color(0xff707070),
-                                  fontSize: 15.0,
+                                  fontSize: 14.0,
                                   fontWeight: FontWeight.w700),
                             ),
                           ),
@@ -5874,7 +5895,7 @@ class _HomePageState extends State<HomePage> {
                           expresionRegular(double.parse(saldo.toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
-                              fontSize: 15.0,
+                              fontSize: 14.0,
                               fontWeight: FontWeight.w600)),
                     )
                   ],
@@ -5968,7 +5989,8 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding:
                 const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
-            child: Text(
+            child: AutoSizeText(
+               maxLines: 2,
               '$descripcion',
               style: TextStyle(
                 fontSize: 15.0,
@@ -5983,7 +6005,9 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
+                
+                  Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
                       width: _size.width * 0.5 - 40,
@@ -5997,19 +6021,32 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(
                             width: 5.0,
                           ),
-                          Text(
-                            'Precio Unidad \n \$ ' + expresionRegular(_precio),
-                            style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700),
+                          SizedBox(
+                         width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
+                            child: AutoSizeText(
+                               maxLines: 1,
+                              'Precio Unidad',
+                              style: TextStyle(
+                                  color: Color(0xff707070),
+                                  fontSize: 15.0,
+                                  fontWeight: FontWeight.w700),
+                            ),
                           ),
                         ],
                       ),
                     ),
+                    Container( 
+                     width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
+                      child: AutoSizeText(
+                          maxLines: 1,
+                       ' \$ ' + expresionRegular(_precio),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
                   ],
                 ),
-                SizedBox(height: 10.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -6027,7 +6064,8 @@ class _HomePageState extends State<HomePage> {
                           ),
                           SizedBox(
                          width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
-                            child: Text(
+                            child: AutoSizeText(
+                               maxLines: 2,
                               'Unidades disponibles',
                               style: TextStyle(
                                   color: Color(0xff707070),
@@ -6040,7 +6078,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Container( 
                      width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
-                      child: Text(
+                      child: AutoSizeText(
+                          maxLines: 1,
                           expresionRegular(double.parse(cantidad.toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
@@ -6054,8 +6093,9 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: _size.width * 0.5 - 125,
-                      child: Text(
+                      width: _size.width * 0.5 - 120,
+                      child: AutoSizeText(
+                          maxLines: 1,
                         'Cantidad',
                         style: TextStyle(
                             color: Color(0xff707070),
@@ -6163,7 +6203,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(3.0),
                       child: OutlinedButton(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -6171,7 +6211,7 @@ class _HomePageState extends State<HomePage> {
                               Align(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
+                                      horizontal: 3.0),
                                 ),
                               ),
                               Text("Cancelar")
@@ -6182,7 +6222,7 @@ class _HomePageState extends State<HomePage> {
                           }),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(3.0),
                       child: ElevatedButton(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -6190,7 +6230,7 @@ class _HomePageState extends State<HomePage> {
                               Align(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
+                                      horizontal: 3.0),
                                 ),
                               ),
                               Text("Continuar")
@@ -6258,7 +6298,8 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+               AutoSizeText(
+               maxLines: 2,
                   '$descripcion',
                   style: TextStyle(
                     fontSize: 16.0,
@@ -6565,8 +6606,10 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20.0),
-                Text(
+                SizedBox(height: 15.0),
+                AutoSizeText(
+                  minFontSize: 14,
+                  maxLines: 2,
                   '¿Desea eliminar el siguiente item?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -6574,7 +6617,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500),
                 ),
-                SizedBox(height: 30.0),
+                SizedBox(height: 10.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -6814,7 +6857,8 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 SizedBox(height: 20.0),
-                Text(
+                AutoSizeText(
+                   maxLines: 1,
                   '¡Espera!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -6823,17 +6867,18 @@ class _HomePageState extends State<HomePage> {
                       fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 20.0),
-                Text(
-                  'Debes asignar productos para \n realizar el pedido',
+                AutoSizeText(
+                  maxLines: 2,
+                  'Debes asignar productos para realizar el pedido',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Color(0xff0894FD),
                       fontSize: 18.0,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 30.0),
+                SizedBox(height: 20.0),
                 Container(
-                  width: 110,
+                  width: 120,
                   height: 41.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5.0),
@@ -6843,7 +6888,7 @@ class _HomePageState extends State<HomePage> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(5.0),
                       child: Center(
-                        child: Text(
+                        child: AutoSizeText(
                           'Entendido',
                           style: TextStyle(
                               color: Colors.white,
@@ -7855,15 +7900,29 @@ class _HomePageState extends State<HomePage> {
           height: 10.0,
         ),
         Row(
-          children: [
-            Text(
-              '${data['descripcion']}',
-              style: TextStyle(
-                fontSize: 14.0,
-                fontWeight: FontWeight.w700,
-                color: Colors.blue,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: _size.width * 0.7,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: _size.width * 0.6,
+                      child: Text(
+                        '${data['descripcion']}',
+                        style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 14.0,
+                            fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ],
             ),
+            Row(
+            children: [
             IconButton(
                 onPressed: () {
                   _showDialogDescuento(context, data);
@@ -7979,7 +8038,7 @@ class _HomePageState extends State<HomePage> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0))),
           child: Container(
-            height: 210.0,
+            height: 230.0,
             width: _size.width * 0.8,
             padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             child: Column(
@@ -8001,7 +8060,9 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 SizedBox(height: 20.0),
-                Text(
+                AutoSizeText(
+                  minFontSize: 15,
+                    maxLines: 2,
                   '¿Desea eliminar el siguiente item?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -8009,7 +8070,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500),
                 ),
-                SizedBox(height: 30.0),
+                SizedBox(height: 10.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -8024,7 +8085,7 @@ class _HomePageState extends State<HomePage> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(5.0),
                           child: Center(
-                            child: Text(
+                            child: AutoSizeText(
                               'Cancelar',
                               style: TextStyle(
                                   color: Colors.white,
@@ -8049,7 +8110,7 @@ class _HomePageState extends State<HomePage> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(5.0),
                           child: Center(
-                            child: Text(
+                            child: AutoSizeText(
                               'Eliminar',
                               style: TextStyle(
                                   color: Colors.white,

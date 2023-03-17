@@ -46,6 +46,7 @@ dependencies:
   dashed_circular_progress_bar: ^0.0.4
   #badges: ^3.0.2
   email_validator: '^2.1.16'
+  auto_size_text: ^3.0.0
 
 
 dev_dependencies:
