@@ -24,6 +24,8 @@ import '../../models/recibo_caja.dart';
 
 import './sendData.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:dropdown_plus/dropdown_plus.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -3956,6 +3958,31 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  final List<Map<String, dynamic>> _roles = [
+    {"name": "Super Admin", "desc": "Having full access rights", "role": 1},
+    {
+      "name": "Admin",
+      "desc": "Having full access rights of a Organization",
+      "role": 2
+    },
+    {
+      "name": "Manager",
+      "desc": "Having Magenent access rights of a Organization",
+      "role": 3
+    },
+    {
+      "name": "Technician",
+      "desc": "Having Technician Support access rights",
+      "role": 4
+    },
+    {
+      "name": "Customer Support",
+      "desc": "Having Customer Support access rights",
+      "role": 5
+    },
+    {"name": "User", "desc": "Having End User access rights", "role": 6},
+  ];
+
   Widget _formRecipe(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Stack(
@@ -4009,7 +4036,7 @@ class _HomePageState extends State<HomePage> {
                   'number',
                   false,
                   callback),
-              SelectFormField(
+              /*SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
                     fontSize: 14.0,
@@ -4033,8 +4060,112 @@ class _HomePageState extends State<HomePage> {
                     isBanco = false;
                   }
                 }),
+              ),*/
+              SizedBox(height: 10),
+              DropdownFormField<Map<String, dynamic>>(
+                onEmptyActionPressed: () async {},
+                searchTextStyle:   TextStyle(
+                    color: Color(0xff06538D),
+                    fontSize: 15.0,
+                    fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.arrow_drop_down),
+                    hintStyle: TextStyle(
+                        color: Color(0xff707070),
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w700),
+                    labelText: "Forma de pago"),
+                onSaved: (dynamic str) {
+                  _value_itemsTipoPago = str['value'];
+                },
+                  onChanged: (dynamic str) {
+                  _value_itemsTipoPago = str['value'];
+
+                  if (_value_itemsTipoPago == '01') {
+                    isBanco = false;
+                    isCheque = false;
+                    myControllerNroCheque.clear();
+                  } else if (_value_itemsTipoPago != '01' &&
+                      _value_itemsTipoPago != '02') {
+                    isBanco = true;
+                    isCheque = false;
+                    myControllerNroCheque.clear();
+                  } else if (_value_itemsTipoPago == '02') {
+                    isCheque = true;
+                    isBanco = false;
+                  }
+                },
+                validator: (dynamic str) {},
+                displayItemFn: (dynamic item) => Text(
+                  (item ?? {})['label'] ?? '',
+                  style: TextStyle(fontSize: 16),
+                ),
+                findFn: (dynamic str) async => _itemsTipoPago,
+                selectedFn: (dynamic item1, dynamic item2) {
+                  if (item1 != null && item2 != null) {
+                    return item1['label'] == item2['label'];
+                  }
+                  return false;
+                },
+                filterFn: (dynamic item, str) =>
+                item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+                dropdownItemFn: (dynamic item, int position, bool focused,
+                    bool selected, Function() onTap) =>
+                    ListTile(
+                      title: Text(item['label']),
+                      tileColor:
+                      focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                      onTap: onTap,
+                    ),
               ),
-              SelectFormField(
+              SizedBox(height: 10),
+              DropdownFormField<Map<String, dynamic>>(
+                onEmptyActionPressed: () async {},
+            searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.arrow_drop_down),
+                    hintStyle: TextStyle(
+                        color: Color(0xff707070),
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w700),
+                    labelText: "Banco"),
+                onSaved: (dynamic str) {
+                  _value_itemsBanco = str['value'];
+                },
+                onChanged: (dynamic str) {
+                  _value_itemsBanco = str['value'];
+                },
+                validator: (dynamic str) {},
+                displayItemFn: (dynamic item) => Text(
+                  (item ?? {})['label'] ?? '',
+                  style: TextStyle(fontSize: 16),
+                ),
+                findFn: (dynamic str) async => _itemsBanco,
+                selectedFn: (dynamic item1, dynamic item2) {
+                  if (item1 != null && item2 != null) {
+                    return item1['label'] == item2['label'];
+                  }
+                  return false;
+                },
+                filterFn: (dynamic item, str) =>
+                item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+                dropdownItemFn: (dynamic item, int position, bool focused,
+                    bool selected, Function() onTap) =>
+                    ListTile(
+                      title: Text(item['label']),
+                      tileColor:
+                      focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                      onTap: onTap,
+                    ),
+              ),
+
+
+            /* SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
                     fontSize: 14.0,
@@ -4042,9 +4173,8 @@ class _HomePageState extends State<HomePage> {
                 type: SelectFormFieldType.dropdown, // or can be dialog
                 labelText: 'Banco',
                 items: _itemsBanco,
-                //initialValue: _value_itemsBanco,
                 onChanged: (val) => setState(() => _value_itemsBanco = val),
-              ),
+              ),*/
               _itemForm(context, 'N° cheque', '00000', myControllerNroCheque,
                   false, 'number', isCheque, callback),
               SizedBox(height: 30.0),
@@ -4760,7 +4890,7 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 20.0),
-        SelectFormField(
+       /* SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Tipo de documento',
           items: _itemsTypeDoc.toList(),
@@ -4781,6 +4911,60 @@ class _HomePageState extends State<HomePage> {
             setState(() => _value_itemsTypeDoc = val ?? '');
             return null;
           },
+        ),
+*/
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Tipo de documento'),
+          onSaved: (dynamic str) {
+            _value_itemsTypeDoc = str['value'];
+          },
+          onChanged: (dynamic str) => setState(() => {
+            _value_itemsTypeDoc = str['value'],
+            if (_value_itemsTypeDoc == '31')
+              {searchDigitoVerif(), isCheckedDV = false}
+            else
+              {
+                myControllerDv.clear(),
+                if (_value_itemsTypeDoc == '13')
+                  {isCheckedDV = true}
+                else
+                  {isCheckedDV = false}
+              }
+          }),
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsTypeDoc.toList(),
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
         ),
         _itemForm(context, 'N° de documento', '', myControllerNroDoc, false,
             'number', true, searchDigitoVerif),
@@ -4820,13 +5004,324 @@ class _HomePageState extends State<HomePage> {
             'phone', true, callback),
         _itemForm(context, 'Teléfono celular', '', myControllerTelefonoCelular,
             false, 'phone', true, callback),
-        SelectFormField(
+       /* SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Clasificación',
           items: _itemsClasification,
           onChanged: (val) => setState(() => _value_itemsClasification = val),
+        ),*/
+
+        SizedBox(height: 10),
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Clasificación'),
+          onSaved: (dynamic str) {
+            _value_itemsClasification = str['value'];
+          },
+          onChanged: (dynamic str) {
+            _value_itemsClasification = str['value'];
+          },
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsClasification,
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
         ),
-        SelectFormField(
+        SizedBox(height: 10),
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Medio contacto'),
+          onSaved: (dynamic str) {
+            _value_itemsMedioContacto = str['value'];
+          },
+          onChanged: (dynamic str) {
+            _value_itemsMedioContacto = str['value'];
+          },
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsMedioContacto,
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
+        ),
+        SizedBox(height: 10),
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Zona'),
+          onSaved: (dynamic str) {
+            _value_itemsZona = str['value'];
+          },
+          onChanged: (dynamic str) {
+            _value_itemsZona = str['value'];
+          },
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsZona,
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
+        ),
+        SizedBox(height: 10),
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Departamento'),
+          onSaved: (dynamic str) {
+            _value_itemsDepartamento = str['value'];
+          },
+          onChanged: (dynamic str) {
+            _value_itemsDepartamento = str['value'];
+            getItemCiudad(_value_itemsDepartamento);
+          },
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsDepartamento,
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
+        ),
+        SizedBox(height: 10),
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Zona'),
+          onSaved: (dynamic str) {
+            _value_itemsZona = str['value'];
+          },
+          onChanged: (dynamic str) {
+            _value_itemsZona = str['value'];
+          },
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsZona,
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
+        ),
+        SizedBox(height: 10),
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Ciudad'),
+          onSaved: (dynamic str) {
+            _value_itemsCiudad = str['value'];
+          },
+          onChanged: (dynamic str) {
+            _value_itemsCiudad = str['value'];
+            getItemBarrio(_value_itemsCiudad);
+          },
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsCiudad,
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
+        ),
+        SizedBox(height: 10),
+        DropdownFormField<Map<String, dynamic>>(
+          onEmptyActionPressed: () async {},
+          searchTextStyle:   TextStyle(
+              color: Color(0xff06538D),
+              fontSize: 14.0,
+              fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.arrow_drop_down),
+              hintStyle: TextStyle(
+                  color: Color(0xff707070),
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700),
+              labelText: 'Barrio'),
+          onSaved: (dynamic str) {
+            _value_itemsBarrio = str['value'];
+          },
+          onChanged: (dynamic str) {
+            _value_itemsBarrio = str['value'];
+          },
+          validator: (dynamic str) {},
+          displayItemFn: (dynamic item) => Text(
+            (item ?? {})['label'] ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
+          findFn: (dynamic str) async => _itemsBarrio,
+          selectedFn: (dynamic item1, dynamic item2) {
+            if (item1 != null && item2 != null) {
+              return item1['label'] == item2['label'];
+            }
+            return false;
+          },
+          filterFn: (dynamic item, str) =>
+          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+          dropdownItemFn: (dynamic item, int position, bool focused,
+              bool selected, Function() onTap) =>
+              ListTile(
+                title: Text(item['label']),
+                tileColor:
+                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
+                onTap: onTap,
+              ),
+        ),
+       /* SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Medio contacto',
           items: _itemsMedioContacto,
@@ -4835,8 +5330,8 @@ class _HomePageState extends State<HomePage> {
             setState(() => _value_itemsMedioContacto = val ?? '');
             return null;
           },
-        ),
-        SelectFormField(
+        ),*/
+        /*SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Zona',
           items: _itemsZona,
@@ -4845,8 +5340,8 @@ class _HomePageState extends State<HomePage> {
             setState(() => _value_itemsZona = val ?? '');
             return null;
           },
-        ),
-        SelectFormField(
+        ),*/
+      /*  SelectFormField(
             type: SelectFormFieldType.dropdown, // or can be dialog
             labelText: 'Departamento',
             items: _itemsDepartamento,
@@ -4855,15 +5350,15 @@ class _HomePageState extends State<HomePage> {
                     _value_itemsDepartamento = val,
                     getItemCiudad(_value_itemsDepartamento)
                   },
-                )),
-        SelectFormField(
+                )),*/
+       /* SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Ciudad',
           items: _itemsCiudad,
           onChanged: (val) => setState(() =>
               {_value_itemsCiudad = val, getItemBarrio(_value_itemsCiudad)}),
-        ),
-        SelectFormField(
+        ),*/
+       /* SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Barrio',
           items: _itemsBarrio,
@@ -4872,7 +5367,7 @@ class _HomePageState extends State<HomePage> {
             setState(() => _value_itemsBarrio = val ?? '');
             return null;
           },
-        ),
+        ),*/
         SizedBox(height: 30.0),
         Row(
           children: [
