@@ -5187,51 +5187,7 @@ class _HomePageState extends State<HomePage> {
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
                 onTap: onTap,
               ),
-        ),
-        SizedBox(height: 10),
-        DropdownFormField<Map<String, dynamic>>(
-          onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
-              color: Color(0xff06538D),
-              fontSize: 14.0,
-              fontWeight: FontWeight.w600),
-          decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              suffixIcon: Icon(Icons.arrow_drop_down),
-              hintStyle: TextStyle(
-                  color: Color(0xff707070),
-                  fontSize: 15.0,
-                  fontWeight: FontWeight.w700),
-              labelText: 'Zona'),
-          onSaved: (dynamic str) {
-            _value_itemsZona = str['value'];
-          },
-          onChanged: (dynamic str) {
-            _value_itemsZona = str['value'];
-          },
-          validator: (dynamic str) {},
-          displayItemFn: (dynamic item) => Text(
-            (item ?? {})['label'] ?? '',
-            style: TextStyle(fontSize: 16),
-          ),
-          findFn: (dynamic str) async => _itemsZona,
-          selectedFn: (dynamic item1, dynamic item2) {
-            if (item1 != null && item2 != null) {
-              return item1['label'] == item2['label'];
-            }
-            return false;
-          },
-          filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
-          dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
-              ListTile(
-                title: Text(item['label']),
-                tileColor:
-                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
-        ),
+        ), 
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
@@ -5320,54 +5276,7 @@ class _HomePageState extends State<HomePage> {
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
                 onTap: onTap,
               ),
-        ),
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Medio contacto',
-          items: _itemsMedioContacto,
-          onChanged: (val) => setState(() => _value_itemsMedioContacto = val),
-          validator: (val) {
-            setState(() => _value_itemsMedioContacto = val ?? '');
-            return null;
-          },
-        ),*/
-        /*SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Zona',
-          items: _itemsZona,
-          onChanged: (val) => setState(() => _value_itemsZona = val),
-          validator: (val) {
-            setState(() => _value_itemsZona = val ?? '');
-            return null;
-          },
-        ),*/
-      /*  SelectFormField(
-            type: SelectFormFieldType.dropdown, // or can be dialog
-            labelText: 'Departamento',
-            items: _itemsDepartamento,
-            onChanged: (val) => setState(
-                  () => {
-                    _value_itemsDepartamento = val,
-                    getItemCiudad(_value_itemsDepartamento)
-                  },
-                )),*/
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Ciudad',
-          items: _itemsCiudad,
-          onChanged: (val) => setState(() =>
-              {_value_itemsCiudad = val, getItemBarrio(_value_itemsCiudad)}),
-        ),*/
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Barrio',
-          items: _itemsBarrio,
-          onChanged: (val) => setState(() => _value_itemsBarrio = val),
-          validator: (val) {
-            setState(() => _value_itemsBarrio = val ?? '');
-            return null;
-          },
-        ),*/
+        ), 
         SizedBox(height: 30.0),
         Row(
           children: [
