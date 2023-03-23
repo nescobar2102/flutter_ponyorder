@@ -5222,8 +5222,7 @@ class _HomePageState extends State<HomePage> {
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
                 onTap: onTap,
               ),
-        ),
-
+        ), 
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
@@ -5312,54 +5311,7 @@ class _HomePageState extends State<HomePage> {
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
                 onTap: onTap,
               ),
-        ),
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Medio contacto',
-          items: _itemsMedioContacto,
-          onChanged: (val) => setState(() => _value_itemsMedioContacto = val),
-          validator: (val) {
-            setState(() => _value_itemsMedioContacto = val ?? '');
-            return null;
-          },
-        ),*/
-        /*SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Zona',
-          items: _itemsZona,
-          onChanged: (val) => setState(() => _value_itemsZona = val),
-          validator: (val) {
-            setState(() => _value_itemsZona = val ?? '');
-            return null;
-          },
-        ),*/
-      /*  SelectFormField(
-            type: SelectFormFieldType.dropdown, // or can be dialog
-            labelText: 'Departamento',
-            items: _itemsDepartamento,
-            onChanged: (val) => setState(
-                  () => {
-                    _value_itemsDepartamento = val,
-                    getItemCiudad(_value_itemsDepartamento)
-                  },
-                )),*/
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Ciudad',
-          items: _itemsCiudad,
-          onChanged: (val) => setState(() =>
-              {_value_itemsCiudad = val, getItemBarrio(_value_itemsCiudad)}),
-        ),*/
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Barrio',
-          items: _itemsBarrio,
-          onChanged: (val) => setState(() => _value_itemsBarrio = val),
-          validator: (val) {
-            setState(() => _value_itemsBarrio = val ?? '');
-            return null;
-          },
-        ),*/
+        ), 
         SizedBox(height: 30.0),
         Row(
           children: [
