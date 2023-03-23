@@ -130,11 +130,20 @@ class _SalePageState extends State<SalePage> {
     });
   }
   
+  
+  Future<bool> _onWillPop() async {       
+    if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
+          Navigator.pop(context);              
+            return false;
+      } 
+      return false;
+    }
+
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return WillPopScope(
-        onWillPop: () async => false,
+        onWillPop:_onWillPop,
         child: Scaffold(
           appBar: AppBar(
             toolbarHeight: 60,

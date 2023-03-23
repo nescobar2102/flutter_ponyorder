@@ -47,7 +47,7 @@ dependencies:
   #badges: ^3.0.2
   email_validator: '^2.1.16'
   auto_size_text: ^3.0.0
-
+  dropdown_plus: ^0.0.8
 
 dev_dependencies:
   flutter_launcher_icons: "^0.12.0"

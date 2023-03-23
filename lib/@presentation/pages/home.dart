@@ -156,8 +156,7 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsBanco = '';
   String _value_itemsTipoPago = '';
 
-  //nuevo pedido
-
+  //nuevo pedido 
   get callback => false;
 
   @override
@@ -908,11 +907,9 @@ class _HomePageState extends State<HomePage> {
 
   List<dynamic> _datCartera = [];
   //historial de cartera del cliente
-  Future<void> getHistorialCarteraClienteBasico() async {
-    print("entra getHistorialCarteraClienteBasico");
+  Future<void> getHistorialCarteraClienteBasico() async { 
     final data =
-        await OperationDB.getHistorialCarteraClienteBasico(id_tercero, _nit);
-    print("entra getHistorialCarteraClienteBasico 2222 $data");
+        await OperationDB.getHistorialCarteraClienteBasico(id_tercero, _nit); 
     if (data != false) {
       setState(() {
         _datCartera = data;
@@ -1019,11 +1016,51 @@ class _HomePageState extends State<HomePage> {
 
     return result;
   }
+/* 
+ void ExitModal() {
+    showDialog(
+        context: context,
+        builder: (_) => new AlertDialog(
+              title: const Text('Salir'),
+              content: const Text('¿Estás seguro de que quieres salir de la aplicación?'),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                     OperationDB.closeDB();
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                    preferences.clear();
+                    preferences.setInt("value", 0);
+                    Navigator.pushNamed(context, 'login');
+                  },
+                  child: const Text('Yes'),
+                ),
+                TextButton(
+                  onPressed: () { 
+                    Navigator.pop(context, false);
+                  },
+                  child: const Text(
+                    'No',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ));
+  }  */
+  Future<bool> _onWillPop() async {       
+  if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
+        Navigator.pop(context);              
+          return false;
+    } /* else { 
+          ExitModal();
+          } */
+        return false;
+      }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async => false,
+      onWillPop:_onWillPop,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 60,
@@ -1039,7 +1076,7 @@ class _HomePageState extends State<HomePage> {
                       : _drawerscaffoldkey.currentState!.openDrawer()
                 },
                 child: Icon(
-                  Icons.menu,
+                    Icons.menu,
                   color: Color(0xff0090ce),
                   size: 30,
                 ),
@@ -1274,7 +1311,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _client(BuildContext context, data) {
     double height = MediaQuery.of(context).size.height;
-    print("----alto $height ");
     //listado de clientes en el home
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -4978,8 +5014,7 @@ class _HomePageState extends State<HomePage> {
                   color: Color(0xff06538D)),
             ),
             value: this.isCheckedDV,
-            onChanged: (bool? value) {
-              print("*** $value");
+            onChanged: (bool? value) { 
               setState(() {
                 isCheckedDV = !isCheckedDV;
               });
@@ -5188,50 +5223,7 @@ class _HomePageState extends State<HomePage> {
                 onTap: onTap,
               ),
         ),
-        SizedBox(height: 10),
-        DropdownFormField<Map<String, dynamic>>(
-          onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
-              color: Color(0xff06538D),
-              fontSize: 14.0,
-              fontWeight: FontWeight.w600),
-          decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              suffixIcon: Icon(Icons.arrow_drop_down),
-              hintStyle: TextStyle(
-                  color: Color(0xff707070),
-                  fontSize: 15.0,
-                  fontWeight: FontWeight.w700),
-              labelText: 'Zona'),
-          onSaved: (dynamic str) {
-            _value_itemsZona = str['value'];
-          },
-          onChanged: (dynamic str) {
-            _value_itemsZona = str['value'];
-          },
-          validator: (dynamic str) {},
-          displayItemFn: (dynamic item) => Text(
-            (item ?? {})['label'] ?? '',
-            style: TextStyle(fontSize: 16),
-          ),
-          findFn: (dynamic str) async => _itemsZona,
-          selectedFn: (dynamic item1, dynamic item2) {
-            if (item1 != null && item2 != null) {
-              return item1['label'] == item2['label'];
-            }
-            return false;
-          },
-          filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
-          dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
-              ListTile(
-                title: Text(item['label']),
-                tileColor:
-                focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
-        ),
+
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},

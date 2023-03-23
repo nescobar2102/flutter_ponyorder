@@ -492,11 +492,19 @@ class _OrderPageState extends State<OrderPage> {
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
 
+  Future<bool> _onWillPop() async {       
+    if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
+          Navigator.pop(context);              
+            return false;
+      } 
+      return false;
+    }
+
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return WillPopScope(
-      onWillPop: () async => false,
+       onWillPop:_onWillPop,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 60,

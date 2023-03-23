@@ -313,11 +313,19 @@ class _UnitsPageState extends State<UnitsPage> {
     }
   }
 
+    Future<bool> _onWillPop() async {       
+    if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
+          Navigator.pop(context);              
+            return false;
+      } 
+      return false;
+    }
+
   //vistas
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async => false,
+      onWillPop:_onWillPop,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 60,
