@@ -1174,6 +1174,13 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         .rawQuery("SELECT * FROM tercero WHERE id_tercero = '$idTercero' ");
     if (res.isEmpty) {
       await database.insert('tercero', tercero.toMap());
+    }else{
+      await database.update(
+        'tercero',
+        tercero.toMap(),
+        where: "id_tercero = ?",
+        whereArgs: [idTercero],
+      );
     }
     return true;
   }
@@ -1186,6 +1193,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     final res = await database.rawQuery(
         "SELECT * FROM tercero_cliente WHERE id_tercero = '$idTercero' ");
     if (res.isEmpty) {
+
       await database.insert('tercero_cliente', tercerocliente.toMap());
     } else {
       await database.update(
