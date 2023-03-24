@@ -983,9 +983,9 @@ class _HomePageState extends State<HomePage> {
       result = myControllerDireccion.text.trim() != '' ? true : false;
     }
 
-    if (result) {
+ /*   if (result) {
       result = myControllerTelefono.text.trim() != '' ? true : false;
-    }
+    }*/
     if (result) {
       result = myControllerTelefonoCelular.text.trim() != '' ? true : false;
     }
@@ -5036,15 +5036,10 @@ class _HomePageState extends State<HomePage> {
         _itemForm(context, 'Email', '', myControllerEmail, false, 'email', true,
             validateEmail),
         _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,
-            'phone', true, callback),
+            'phone', false, callback),
         _itemForm(context, 'Teléfono celular', '', myControllerTelefonoCelular,
             false, 'phone', true, callback),
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Clasificación',
-          items: _itemsClasification,
-          onChanged: (val) => setState(() => _value_itemsClasification = val),
-        ),*/
+      
 
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
