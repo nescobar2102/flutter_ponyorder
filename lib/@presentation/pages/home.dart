@@ -983,9 +983,9 @@ class _HomePageState extends State<HomePage> {
       result = myControllerDireccion.text.trim() != '' ? true : false;
     }
 
-    if (result) {
+   /* if (result) {
       result = myControllerTelefono.text.trim() != '' ? true : false;
-    }
+    }*/
     if (result) {
       result = myControllerTelefonoCelular.text.trim() != '' ? true : false;
     }
@@ -1051,11 +1051,9 @@ class _HomePageState extends State<HomePage> {
   if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
         Navigator.pop(context);              
           return false;
-    } /* else { 
-          ExitModal();
-          } */
-        return false;
-      }
+    }
+      return false;
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -5036,15 +5034,9 @@ class _HomePageState extends State<HomePage> {
         _itemForm(context, 'Email', '', myControllerEmail, false, 'email', true,
             validateEmail),
         _itemForm(context, 'Teléfono fijo', '', myControllerTelefono, false,
-            'phone', true, callback),
+            'phone', false, callback),
         _itemForm(context, 'Teléfono celular', '', myControllerTelefonoCelular,
             false, 'phone', true, callback),
-       /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Clasificación',
-          items: _itemsClasification,
-          onChanged: (val) => setState(() => _value_itemsClasification = val),
-        ),*/
 
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
@@ -6174,9 +6166,8 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image:
-                      //  AssetImage('assets/images/${data[i]['descripcion']}.png'),
-                      AssetImage('assets/images/producto-sin-imagen.png'),
-                  fit: BoxFit.cover,
+                   NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
+                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.all(
                   Radius.circular(20.0),
