@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -284,17 +283,18 @@ class _LoginPageState extends State<LoginPage> {
             fillColor: Colors.white,
             filled: true,
             contentPadding: EdgeInsets.only(top: 30, bottom: 0),
-           focusedBorder: OutlineInputBorder(
+            border: OutlineInputBorder(),
+            focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5.0),
               borderSide: BorderSide(
                 color: Color(0xff0090ce),
                 width: 1.5,
               ),
             ),
-            enabledBorder: OutlineInputBorder(
+          /*  enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5.0),
               borderSide: BorderSide(color: Color(0xffc7c7c7), width: 1.2),
-            ),
+            ),*/
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 17.0, right: 12.0),
               child: Icon(
@@ -346,6 +346,7 @@ class _LoginPageState extends State<LoginPage> {
             fillColor: Colors.white,
             filled: true,
             contentPadding: EdgeInsets.only(top: 30, bottom: 0),
+            border: OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5.0),
               borderSide: BorderSide(
@@ -353,10 +354,10 @@ class _LoginPageState extends State<LoginPage> {
                 width: 1.5,
               ),
             ),
-            enabledBorder: OutlineInputBorder(
+           /* enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5.0),
               borderSide: BorderSide(color: Color(0xffc7c7c7), width: 1.2),
-            ),
+            ),*/
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 17.0, right: 12.0),
               child: Icon(
@@ -395,7 +396,8 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   children: [
                     Image(
-                        image: AssetImage('assets/images/Logo version 1.png')),
+                      //  image: AssetImage('assets/images/Logo version 1.png')),
+                    image: AssetImage('assets/images/Logo version 1.png')),
                     Text(
                       'Versión D-18-11-2022',
                       style: TextStyle(

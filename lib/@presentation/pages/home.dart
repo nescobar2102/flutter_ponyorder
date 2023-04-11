@@ -1,11 +1,12 @@
 import 'package:pony_order/@presentation/components/btnForm.dart';
 import 'package:pony_order/@presentation/components/btnSmall.dart';
- 
+
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:select_form_field/select_form_field.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
+import 'dart:io' as Io;
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
@@ -25,6 +26,7 @@ import '../../models/recibo_caja.dart';
 import './sendData.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dropdown_plus/dropdown_plus.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   @override
@@ -156,19 +158,13 @@ class _HomePageState extends State<HomePage> {
   String _value_itemsBanco = '';
   String _value_itemsTipoPago = '';
 
-  //nuevo pedido 
+  //nuevo pedido
   get callback => false;
 
   @override
   void initState() {
     super.initState();
     _loadDataUserLogin();
-  }
-
-  /// This implementation is just to simulate a load data behavior
-  /// from a data base sqlite or from a API
-  Future sleep1() {
-    return new Future.delayed(const Duration(seconds: 5), () => "4");
   }
 
   Future<Null> _submitDialog(BuildContext context) async {
@@ -193,6 +189,12 @@ class _HomePageState extends State<HomePage> {
     String result = f.format(numero);
     return result;
   }
+/* 
+   Future< > convertToImagen(base64) async {    
+     
+      Uint8List bytesImage = const Base64Decoder().convert(base64);
+      return bytesImage; 
+    } */
 
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -205,8 +207,7 @@ class _HomePageState extends State<HomePage> {
     if (_nit != '') {
       if (id_vendedor == '') {
         searchVendedor(_nit.trim(), _user.trim());
-      }      
-
+      }
     }
   }
 
@@ -390,7 +391,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       setState(() {
         _itemsBarrio = [];
-      });      
+      });
     }
   }
 
@@ -535,6 +536,7 @@ class _HomePageState extends State<HomePage> {
           'No se obtuvo información del vendedor,sincronice los datos', false);
     }
   }
+
   List<dynamic> _dataCarteraNew = [];
   Future<void> saldoCartera(bool pedido) async {
     var data =
@@ -547,16 +549,16 @@ class _HomePageState extends State<HomePage> {
 
       //documentos de la cartera
       final recibos =
-        await OperationDB.getCarteraRecibo(id_tercero, id_sucursal_tercero);
-        if (recibos != false) {
-          setState(() {
+          await OperationDB.getCarteraRecibo(id_tercero, id_sucursal_tercero);
+      if (recibos != false) {
+        setState(() {
           _dataCarteraNew = recibos;
-          });
-        }else{
-          setState(() {
+        });
+      } else {
+        setState(() {
           _dataCarteraNew = [];
-          });
-        }
+        });
+      }
 
       var data1 = await OperationDB.getFormPago(id_tercero, _nit);
       if (data1 != false) {
@@ -608,7 +610,7 @@ class _HomePageState extends State<HomePage> {
         id_depto: _value_itemsDepartamento,
         id_ciudad: _value_itemsCiudad,
         id_barrio: _value_itemsBarrio != '' ? _value_itemsBarrio : '0',
-        telefono: myControllerTelefono.text.trim(),
+        telefono: myControllerTelefono.text.trim() != '' ? myControllerTelefono.text.trim() : "''",
         telefono_celular: myControllerTelefonoCelular.text.trim(),
         id_actividad: _value_itemsClasification,
         fecha_creacion:
@@ -647,7 +649,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isConnected = val!;
       });
-      _showBarMsg('Creación exitosa del cliente', true);       
+      _showBarMsg('Creación exitosa del cliente', true);
       _isConnected ? await SendataSincronizacion.sendTercero(false) : null;
       Navigator.pushNamed(context, 'home');
     } else {
@@ -702,14 +704,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   late List<Map<String, dynamic>> _direccionClient = [];
-  late List<Map<String, dynamic>> _direccionClienMercancia = []; 
+  late List<Map<String, dynamic>> _direccionClienMercancia = [];
   Future<void> searchClientDireccion() async {
     final allDireccionMercancia =
         await OperationDB.getDireccion(_nit, id_tercero, 'Mercancia');
     if (allDireccionMercancia != false) {
       _direccionClienMercancia = (allDireccionMercancia as List)
           .map((dynamic e) => e as Map<String, dynamic>)
-          .toList();      
+          .toList();
     } else {
       _showBarMsg('El cliente no registra dirección', false);
     }
@@ -721,7 +723,7 @@ class _HomePageState extends State<HomePage> {
         _direccionClient = (allDireccion as List)
             .map((dynamic e) => e as Map<String, dynamic>)
             .toList();
-        
+
         _clientShow = false;
         _clientShowNoFound = false;
         _formOrderShow = true;
@@ -907,9 +909,9 @@ class _HomePageState extends State<HomePage> {
 
   List<dynamic> _datCartera = [];
   //historial de cartera del cliente
-  Future<void> getHistorialCarteraClienteBasico() async { 
+  Future<void> getHistorialCarteraClienteBasico() async {
     final data =
-        await OperationDB.getHistorialCarteraClienteBasico(id_tercero, _nit); 
+        await OperationDB.getHistorialCarteraClienteBasico(id_tercero, _nit);
     if (data != false) {
       setState(() {
         _datCartera = data;
@@ -940,7 +942,8 @@ class _HomePageState extends State<HomePage> {
             //which date will display when user open the picker
             firstDate: DateTime(1950),
             //what will be the previous supported year in picker
-            lastDate: DateTime(2030)) //what will be the up to supported date in picker
+            lastDate: DateTime(
+                2030)) //what will be the up to supported date in picker
         .then((pickedDate) {
       //then usually do the future job
       if (pickedDate == null) {
@@ -983,7 +986,7 @@ class _HomePageState extends State<HomePage> {
       result = myControllerDireccion.text.trim() != '' ? true : false;
     }
 
-   /* if (result) {
+    /* if (result) {
       result = myControllerTelefono.text.trim() != '' ? true : false;
     }*/
     if (result) {
@@ -1016,6 +1019,7 @@ class _HomePageState extends State<HomePage> {
 
     return result;
   }
+
 /* 
  void ExitModal() {
     showDialog(
@@ -1047,18 +1051,18 @@ class _HomePageState extends State<HomePage> {
               ],
             ));
   }  */
-  Future<bool> _onWillPop() async {       
-  if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
-        Navigator.pop(context);              
-          return false;
-    }
+  Future<bool> _onWillPop() async {
+    if (_drawerscaffoldkey.currentState!.isDrawerOpen && _nit != '') {
+      Navigator.pop(context);
       return false;
     }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop:_onWillPop,
+      onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 60,
@@ -1074,7 +1078,7 @@ class _HomePageState extends State<HomePage> {
                       : _drawerscaffoldkey.currentState!.openDrawer()
                 },
                 child: Icon(
-                    Icons.menu,
+                  Icons.menu,
                   color: Color(0xff0090ce),
                   size: 30,
                 ),
@@ -1083,23 +1087,20 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [
             _getCarritoLleno(),
-               GestureDetector(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Color(0xff0090ce),
-                      size: 30,
-                    ),
+            GestureDetector(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 15.0),
+                  child: Icon(
+                    Icons.shopping_cart_outlined,
+                    color: Color(0xff0090ce),
+                    size: 30,
                   ),
-
-                  onTap: () => {
-                    _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                        ? Navigator.pop(context)
-                        : _drawerscaffoldkey.currentState!.openEndDrawer()
-                  }
- 
-            ),
+                ),
+                onTap: () => {
+                      _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                          ? Navigator.pop(context)
+                          : _drawerscaffoldkey.currentState!.openEndDrawer()
+                    }),
           ],
           title: Text(
             'Clientes',
@@ -1213,7 +1214,7 @@ class _HomePageState extends State<HomePage> {
                               : Container(),
                           _formShow ? _form(context) : Container(),
                           _formOrderShow
-                              ? _formOrder(context, null) 
+                              ? _formOrder(context, null)
                               : Container(),
                           _formRecipeShow ? _formRecipe(context) : Container(),
                           _formHistoryShow
@@ -1228,9 +1229,9 @@ class _HomePageState extends State<HomePage> {
                           _productosShowCat
                               ? _shoppingCat(context, idClasificacion)
                               : Container(),
-                      _formOrderShow
-                              ? _formOrderButton(context) 
-                              : Container(), 
+                          _formOrderShow
+                              ? _formOrderButton(context)
+                              : Container(),
                         ],
                       ),
                     ),
@@ -1246,29 +1247,28 @@ class _HomePageState extends State<HomePage> {
 
   Widget _getCarritoLleno() {
     if (_cartProductos.length > 0) {
-      return    Container(
-        padding:  const EdgeInsets.all(1.0),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
+      return Container(
+        padding: const EdgeInsets.all(1.0),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xffCB1B1B),
+          border: Border.all(
             color: Color(0xffCB1B1B),
-            border: Border.all(
-              color:Color(0xffCB1B1B),
-              width: 10,
-            ),
+            width: 10,
           ),
-          width: 30,
-          height: 30,
-         alignment: Alignment.center,
-          child: Text(
-            _cartProductos.length.toString(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight:FontWeight.bold,
-              color: Colors.white,
-            ),
+        ),
+        width: 30,
+        height: 30,
+        alignment: Alignment.center,
+        child: Text(
+          _cartProductos.length.toString(),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-        );
-
+        ),
+      );
     } else {
       return Container();
     }
@@ -1314,7 +1314,7 @@ class _HomePageState extends State<HomePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AutoSizeText('Se encontraron $_count resultados',
-         maxLines: 1,
+            maxLines: 1,
             style: TextStyle(
                 color: Color(0xff0f538d),
                 fontSize: 15,
@@ -1402,7 +1402,7 @@ class _HomePageState extends State<HomePage> {
           onSubmitted: (String str) {
             setState(() {
               if (controller.text.isNotEmpty) {
-                  callback();
+                callback();
               }
             });
           },
@@ -1629,8 +1629,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                     SizedBox(height: 12.0),
                     AutoSizeText(
-                       maxLines: 1,
-                       '$nombre',
+                        maxLines: 1,
+                        '$nombre',
                         style: TextStyle(
                             color: Colors.blue,
                             fontSize: 18.0,
@@ -1639,7 +1639,7 @@ class _HomePageState extends State<HomePage> {
                       height: 12.0,
                     ),
                     AutoSizeText(
-                       maxLines: 1,
+                      maxLines: 1,
                       'Búsqueda de productos en el carrito',
                       style: TextStyle(
                           color: Color(0xff0f538d),
@@ -1684,14 +1684,14 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 SizedBox(width: 5.0),
                                 AutoSizeText(
-                              maxLines: 1,
-                              minFontSize: 10,
-                              'Categorias',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
+                                  maxLines: 1,
+                                  minFontSize: 10,
+                                  'Categorias',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18.0,
+                                      fontWeight: FontWeight.w700),
+                                ),
                               ],
                             ),
                           ),
@@ -1702,12 +1702,11 @@ class _HomePageState extends State<HomePage> {
                       height: 15.0,
                     ),
                     SizedBox(
-                      height:_size.height - 560,
+                      height: _size.height - 560,
                       child: ListView.builder(
-                        itemCount: _cartProductos.length,
-                        itemBuilder: (context, i) =>
-                         _ItemCategoryOrderCart(_cartProductos[i], i)  
-                      ),
+                          itemCount: _cartProductos.length,
+                          itemBuilder: (context, i) =>
+                              _ItemCategoryOrderCart(_cartProductos[i], i)),
                     ),
                     SizedBox(height: 15.0),
                     TextField(
@@ -1948,8 +1947,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 SizedBox(height: 12.0),
-                AutoSizeText(
-                  '$nombre',
+                AutoSizeText('$nombre',
                     maxLines: 1,
                     style: TextStyle(
                         color: Colors.blue,
@@ -1962,7 +1960,7 @@ class _HomePageState extends State<HomePage> {
                   height: 10.0,
                 ),
                 InputCallback(context, 'Buscar producto', Icons.search,
-                    searchProductosPedido, myControllerBuscarProd),  
+                    searchProductosPedido, myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 183.0,
@@ -2016,7 +2014,7 @@ class _HomePageState extends State<HomePage> {
                         height: 5.0,
                       ),
                 SizedBox(
-                  height: _size.height  -480,
+                  height: _size.height - 480,
                   child: ListView(
                     children: [
                       for (var i = 0; i < _countProductos; i++) ...[
@@ -2335,7 +2333,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AutoSizeText(
-             maxLines: 1,
+            maxLines: 1,
             'Visualice el historial del cliente',
             style: TextStyle(
                 fontSize: 18.0,
@@ -2346,7 +2344,7 @@ class _HomePageState extends State<HomePage> {
             height: 15.0,
           ),
           AutoSizeText(
-             maxLines: 1,
+            maxLines: 1,
             '$nombre_tercero',
             style: TextStyle(
                 fontSize: 20.0,
@@ -2524,7 +2522,6 @@ class _HomePageState extends State<HomePage> {
           _checkedRecibo && !_noDatos
               ? _totalHistoryRecibo(context)
               : Container(),
-              
         ],
       ),
     );
@@ -3623,7 +3620,7 @@ class _HomePageState extends State<HomePage> {
                   height: 10.0,
                 ),
                 SizedBox(
-                  height: _size.height -520,
+                  height: _size.height - 520,
                   child: ListView(
                     children: [
                       for (var i = 0; i < _dataDocumentPend.length; i++) ...[
@@ -3846,7 +3843,7 @@ class _HomePageState extends State<HomePage> {
                   height: 20.0,
                 ),
                 SizedBox(
-                  height: _size.height  -480,
+                  height: _size.height - 480,
                   child: ListView(
                     children: [
                       for (var i = 0; i < _dataDescuento.length; i++) ...[
@@ -4098,7 +4095,7 @@ class _HomePageState extends State<HomePage> {
               SizedBox(height: 10),
               DropdownFormField<Map<String, dynamic>>(
                 onEmptyActionPressed: () async {},
-                searchTextStyle:   TextStyle(
+                searchTextStyle: TextStyle(
                     color: Color(0xff06538D),
                     fontSize: 15.0,
                     fontWeight: FontWeight.w600),
@@ -4113,7 +4110,7 @@ class _HomePageState extends State<HomePage> {
                 onSaved: (dynamic str) {
                   _value_itemsTipoPago = str['value'];
                 },
-                  onChanged: (dynamic str) {
+                onChanged: (dynamic str) {
                   _value_itemsTipoPago = str['value'];
 
                   if (_value_itemsTipoPago == '01') {
@@ -4143,23 +4140,24 @@ class _HomePageState extends State<HomePage> {
                   return false;
                 },
                 filterFn: (dynamic item, str) =>
-                item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+                    item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
                 dropdownItemFn: (dynamic item, int position, bool focused,
-                    bool selected, Function() onTap) =>
+                        bool selected, Function() onTap) =>
                     ListTile(
-                      title: Text(item['label']),
-                      tileColor:
-                      focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                      onTap: onTap,
-                    ),
+                  title: Text(item['label']),
+                  tileColor: focused
+                      ? Color.fromARGB(20, 0, 0, 0)
+                      : Colors.transparent,
+                  onTap: onTap,
+                ),
               ),
               SizedBox(height: 10),
               DropdownFormField<Map<String, dynamic>>(
                 onEmptyActionPressed: () async {},
-            searchTextStyle:   TextStyle(
-              color: Color(0xff06538D),
-              fontSize: 14.0,
-              fontWeight: FontWeight.w600),
+                searchTextStyle: TextStyle(
+                    color: Color(0xff06538D),
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     suffixIcon: Icon(Icons.arrow_drop_down),
@@ -4187,19 +4185,19 @@ class _HomePageState extends State<HomePage> {
                   return false;
                 },
                 filterFn: (dynamic item, str) =>
-                item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+                    item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
                 dropdownItemFn: (dynamic item, int position, bool focused,
-                    bool selected, Function() onTap) =>
+                        bool selected, Function() onTap) =>
                     ListTile(
-                      title: Text(item['label']),
-                      tileColor:
-                      focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                      onTap: onTap,
-                    ),
+                  title: Text(item['label']),
+                  tileColor: focused
+                      ? Color.fromARGB(20, 0, 0, 0)
+                      : Colors.transparent,
+                  onTap: onTap,
+                ),
               ),
 
-
-            /* SelectFormField(
+              /* SelectFormField(
                 style: TextStyle(
                     color: Color(0xff06538D),
                     fontSize: 14.0,
@@ -4300,494 +4298,483 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   Widget _formOrderButton(BuildContext context) {
-  final _size = MediaQuery.of(context).size;
-  return
-      SizedBox(     
-      child: 
-        Row(
-          children: [
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xffCB1B1B)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Cancelar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                        setState(() {
-                          _clientShow = false;
-                          _formOrderShow = false;
-                          _search = '@';
-                          searchClient();
-                        });
-                      },
+    final _size = MediaQuery.of(context).size;
+    return SizedBox(
+        child: Row(
+      children: [
+        Container(
+            width: _size.width * 0.5 - 25,
+            child: Container(
+              width: _size.width,
+              height: 41.0,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5.0),
+                  color: Color(0xffCB1B1B)),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(5.0),
+                  child: Center(
+                    child: Text(
+                      'Cancelar',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700),
                     ),
                   ),
-                )),
-            SizedBox(width: 10.0),
-            Container(
-                width: _size.width * 0.5 - 25,
-                child: Container(
-                  width: _size.width,
-                  height: 41.0,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xff0894FD)),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      child: Center(
-                        child: Text(
-                          'Continuar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      onTap: () {
-                          setState(() {
-                        _value_DireccionMercancia =  _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : _value_DireccionMercancia;
-                        _value_DireccionFactura =  _direccionClient.length == 1 ? _direccionClient[0]['value'] : _value_DireccionFactura;
-                    
-                      });
-                        (_value_DireccionMercancia.toString() != '0' &&
-                                _value_DireccionFactura.toString() != '0')
-                            ? searchClasificacionProductos()
-                            : _showBarMsg('Seleccione las direcciones', false);
-                      },
+                  onTap: () {
+                    setState(() {
+                      _clientShow = false;
+                      _formOrderShow = false;
+                      _search = '@';
+                      searchClient();
+                    });
+                  },
+                ),
+              ),
+            )),
+        SizedBox(width: 10.0),
+        Container(
+            width: _size.width * 0.5 - 25,
+            child: Container(
+              width: _size.width,
+              height: 41.0,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5.0),
+                  color: Color(0xff0894FD)),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(5.0),
+                  child: Center(
+                    child: Text(
+                      'Continuar',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700),
                     ),
                   ),
-                ))
-          ],
-        )
-      );
+                  onTap: () {
+                    setState(() {
+                      _value_DireccionMercancia =
+                          _direccionClienMercancia.length == 1
+                              ? _direccionClienMercancia[0]['value']
+                              : _value_DireccionMercancia;
+                      _value_DireccionFactura = _direccionClient.length == 1
+                          ? _direccionClient[0]['value']
+                          : _value_DireccionFactura;
+                    });
+                    (_value_DireccionMercancia.toString() != '0' &&
+                            _value_DireccionFactura.toString() != '0')
+                        ? searchClasificacionProductos()
+                        : _showBarMsg('Seleccione las direcciones', false);
+                  },
+                ),
+              ),
+            ))
+      ],
+    ));
   }
+
   Widget _formOrder(BuildContext context, data_tercero_pedido) {
     //crear nuevo pedido
     final _size = MediaQuery.of(context).size;
-    return
-      SizedBox(
+    return SizedBox(
       height: _size.height - 190,
       child: ListView(
-      scrollDirection: Axis.vertical,             
-      children: [
-        Text(
-          'Completa los campos para crear un nuevo pedido',
-          style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff06538D)),
-        ),
-        SizedBox(height: 20.0),
-        _itemForm(context, 'Pedido', '$_value_automatico',
-            myControllerNroPedido, true, 'number', false, callback),
-        InkWell(
-          onTap: () {
-            _pickDateDialog();
-          },
-          child: InputDecorator(
-            decoration: InputDecoration(
-              labelText: 'Fecha',
-              enabled: true,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: <Widget>[
-                Text(
-                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
-                Icon(Icons.arrow_drop_down, color: Color(0xff06538D)),
-              ],
+        scrollDirection: Axis.vertical,
+        children: [
+          Text(
+            'Completa los campos para crear un nuevo pedido',
+            style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Color(0xff06538D)),
+          ),
+          SizedBox(height: 20.0),
+          _itemForm(context, 'Pedido', '$_value_automatico',
+              myControllerNroPedido, true, 'number', false, callback),
+          InkWell(
+            onTap: () {
+              _pickDateDialog();
+            },
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: 'Fecha',
+                enabled: true,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  Text(
+                      '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                  Icon(Icons.arrow_drop_down, color: Color(0xff06538D)),
+                ],
+              ),
             ),
           ),
-        ),
-        _itemForm(context, 'Nombre', '$nombre_tercero', null, true, 'text',
-            false, callback),
-        SelectFormField(
-          style: TextStyle(
-              color: Color(0xff06538D),
-              fontSize: 14.0,
-              fontWeight: FontWeight.w600),
+          _itemForm(context, 'Nombre', '$nombre_tercero', null, true, 'text',
+              false, callback),
+          SelectFormField(
+            style: TextStyle(
+                color: Color(0xff06538D),
+                fontSize: 14.0,
+                fontWeight: FontWeight.w600),
 
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Dir. envío factura',
-          initialValue: _direccionClient.length == 1 ? _direccionClient[0]['value'] : null,
-          items: _direccionClient,
-          onChanged: (val) => setState(() => _value_DireccionFactura = val),
-          
-        ),
-        SelectFormField(
-          style: TextStyle(
-              color: Color(0xff06538D),
-              fontSize: 14.0,
-              fontWeight: FontWeight.w600),
-          type: SelectFormFieldType.dropdown, // or can be dialog
+            type: SelectFormFieldType.dropdown, // or can be dialog
+            labelText: 'Dir. envío factura',
+            initialValue: _direccionClient.length == 1
+                ? _direccionClient[0]['value']
+                : null,
+            items: _direccionClient,
+            onChanged: (val) => setState(() => _value_DireccionFactura = val),
+          ),
+          SelectFormField(
+            style: TextStyle(
+                color: Color(0xff06538D),
+                fontSize: 14.0,
+                fontWeight: FontWeight.w600),
+            type: SelectFormFieldType.dropdown, // or can be dialog
 
-          labelText: 'Dir. envío mercancia',
-          initialValue: _direccionClienMercancia.length == 1 ? _direccionClienMercancia[0]['value'] : null,
-          items: _direccionClienMercancia,
-          onChanged: (val) => setState(() => _value_DireccionMercancia = val),
-          
-        ),
-        _itemForm(context, 'Orden de compra', '', myControllerOrdenCompra,
-            false, 'text', false, callback),
-        _itemForm(context, 'Forma de pago', '$forma_pago_tercero', null, true,
-            'text', false, callback),
-        SizedBox(height: 30.0),
-        Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
-        SizedBox(height: 30.0),
-        Text(
-          'Crédito',
-          style: TextStyle(
-              color: Color(0xff0091CE),
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
-              fontWeight: FontWeight.w600),
-        ),
-        SizedBox(height: 10.0),
-        _itemForm(
-            context,
-            'Cupo crédito',
-            '\$ ' + expresionRegular(double.parse(limite_credito.toString())),
-            null,
-            true,
-            'number',
-            false,
-            callback),
-        _itemSelectForm(
-            context,
-            'Total cartera',
-            '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
-            '',
-            null),
-        SizedBox(height: 20.0),
-        Column(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-              GestureDetector(
-                     onTap: () {
-                       _datFactura.length > 0
-                            ? showDialog<String>(
-                                context: context,
-                                builder: (BuildContext context) => Dialog(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(10.0))),
-                                    child: Container(
-                                      height: 510.0,
-                                      width: 340.4,
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 20.0, vertical: 15.0),
-                                      child: Column(
-                                        children: [
-                                          SizedBox(height: 10.0),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Container(
-                                                    width:
-                                                        _size.width * 0.5 - 40,
-                                                    child: Row(
-                                                      children: [
-                                                        Text(
-                                                          'N° Factura',
-                                                          style: TextStyle(
-                                                              color: Color(
-                                                                  0xff06538D),
-                                                              fontSize: 17.0,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Container(
-                                                    width:
-                                                        _size.width * 0.5 - 90,
-                                                    child: Text(
-                                                      '${_datFactura[0]['numero']}',
-                                                      style: TextStyle(
-                                                          color:
-                                                              Color(0xff707070),
-                                                          fontSize: 17.0,
-                                                          fontWeight:
-                                                              FontWeight.w700),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(height: 15.0),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Container(
-                                                    width:
-                                                        _size.width * 0.5 - 40,
-                                                    child: Row(
-                                                      children: [
-                                                        Text(
-                                                          'Fecha de factura',
-                                                          style: TextStyle(
-                                                              color: Color(
-                                                                  0xff06538D),
-                                                              fontSize: 17.0,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Container(
-                                                    width:
-                                                        _size.width * 0.5 - 90,
-                                                    child: Text(
-                                                      '${_datFactura[0]['fecha']}',
-                                                      style: TextStyle(
-                                                          color:
-                                                              Color(0xff707070),
-                                                          fontSize: 17.0,
-                                                          fontWeight:
-                                                              FontWeight.w700),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(height: 20.0),
-                                              for (var i = 0;
-                                                  i < _datFactura.length;
-                                                  i++) ...[
-                                                _ItemProductOrder(
-                                                    _datFactura[i], i),
-                                              ],
-                                              SizedBox(height: 10.0),
-                                            ],
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Container(
-                                                width: _size.width * 0.5 - 50,
-                                                child: Row(
-                                                  children: [
-                                                    Text(
-                                                      'Total',
-                                                      style: TextStyle(
-                                                          color:
-                                                              Color(0xff06538D),
-                                                          fontSize: 17.0,
-                                                          fontWeight:
-                                                              FontWeight.w700),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Container(
-                                                width: _size.width * 0.5 - 110,
-                                                child: Text(
-                                                  '\$ ' +
-                                                      expresionRegular(double
-                                                          .parse(_datFactura[0]
-                                                                  ['total_fac']
-                                                              .toString())),
-                                                  style: TextStyle(
-                                                      color: Color(0xff06538D),
-                                                      fontSize: 17.0,
-                                                      fontWeight:
-                                                          FontWeight.w700),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(
-                                            height: 30.0,
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Container(
-                                                width: _size.width * 0.6,
-                                                height: 40.0,
-                                                decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            5.0),
-                                                    color: Color(0xff0894FD)),
-                                                child: Material(
-                                                  color: Colors.transparent,
-                                                  child: InkWell(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            5.0),
-                                                    child: Center(
-                                                      child: Text(
-                                                        'Aceptar',
+            labelText: 'Dir. envío mercancia',
+            initialValue: _direccionClienMercancia.length == 1
+                ? _direccionClienMercancia[0]['value']
+                : null,
+            items: _direccionClienMercancia,
+            onChanged: (val) => setState(() => _value_DireccionMercancia = val),
+          ),
+          _itemForm(context, 'Orden de compra', '', myControllerOrdenCompra,
+              false, 'text', false, callback),
+          _itemForm(context, 'Forma de pago', '$forma_pago_tercero', null, true,
+              'text', false, callback),
+          SizedBox(height: 30.0),
+          Container(width: _size.width, height: 1.0, color: Color(0xffC7C7C7)),
+          SizedBox(height: 30.0),
+          Text(
+            'Crédito',
+            style: TextStyle(
+                color: Color(0xff0091CE),
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 10.0),
+          _itemForm(
+              context,
+              'Cupo crédito',
+              '\$ ' + expresionRegular(double.parse(limite_credito.toString())),
+              null,
+              true,
+              'number',
+              false,
+              callback),
+          _itemSelectForm(
+              context,
+              'Total cartera',
+              '\$ ' + expresionRegular(double.parse(_saldoCartera.toString())),
+              '',
+              null),
+          SizedBox(height: 20.0),
+          Column(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      _datFactura.length > 0
+                          ? showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) => Dialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10.0))),
+                                  child: Container(
+                                    height: 510.0,
+                                    width: 340.4,
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 20.0, vertical: 15.0),
+                                    child: Column(
+                                      children: [
+                                        SizedBox(height: 10.0),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Container(
+                                                  width: _size.width * 0.5 - 40,
+                                                  child: Row(
+                                                    children: [
+                                                      Text(
+                                                        'N° Factura',
                                                         style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 18,
+                                                            color: Color(
+                                                                0xff06538D),
+                                                            fontSize: 17.0,
                                                             fontWeight:
                                                                 FontWeight
                                                                     .w700),
                                                       ),
-                                                    ),
-                                                    onTap: () {
-                                                      Navigator.pop(context);
-                                                    },
+                                                    ],
                                                   ),
                                                 ),
-                                              ),
+                                                Container(
+                                                  width: _size.width * 0.5 - 90,
+                                                  child: Text(
+                                                    '${_datFactura[0]['numero']}',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Color(0xff707070),
+                                                        fontSize: 17.0,
+                                                        fontWeight:
+                                                            FontWeight.w700),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 15.0),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Container(
+                                                  width: _size.width * 0.5 - 40,
+                                                  child: Row(
+                                                    children: [
+                                                      Text(
+                                                        'Fecha de factura',
+                                                        style: TextStyle(
+                                                            color: Color(
+                                                                0xff06538D),
+                                                            fontSize: 17.0,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w700),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Container(
+                                                  width: _size.width * 0.5 - 90,
+                                                  child: Text(
+                                                    '${_datFactura[0]['fecha']}',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Color(0xff707070),
+                                                        fontSize: 17.0,
+                                                        fontWeight:
+                                                            FontWeight.w700),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 20.0),
+                                            for (var i = 0;
+                                                i < _datFactura.length;
+                                                i++) ...[
+                                              _ItemProductOrder(
+                                                  _datFactura[i], i),
                                             ],
-                                          ),
-                                        ],
-                                      ),
-                                    )),
-                              )
-                            : _showBarMsg(
-                           'Este cliente no tiene facturas', false);
-                     },
-               child:  Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [                    
-                     AutoSizeText(
-                      maxLines: 1, 
-                      'Ver la última factura del cliente',
-                      style: TextStyle(
-                          fontSize: 15.0,
-                          color: Color(0xff0f538d),
-                          fontWeight: FontWeight.w600),
-                    ),                   
-                   Icon(
-                        Icons.keyboard_arrow_down,
-                        color: Color(0xff06538D),
-                        size: 18.0,
-                      ),
-                    ],
+                                            SizedBox(height: 10.0),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Container(
+                                              width: _size.width * 0.5 - 50,
+                                              child: Row(
+                                                children: [
+                                                  Text(
+                                                    'Total',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Color(0xff06538D),
+                                                        fontSize: 17.0,
+                                                        fontWeight:
+                                                            FontWeight.w700),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              width: _size.width * 0.5 - 110,
+                                              child: Text(
+                                                '\$ ' +
+                                                    expresionRegular(double
+                                                        .parse(_datFactura[0]
+                                                                ['total_fac']
+                                                            .toString())),
+                                                style: TextStyle(
+                                                    color: Color(0xff06538D),
+                                                    fontSize: 17.0,
+                                                    fontWeight:
+                                                        FontWeight.w700),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: 30.0,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Container(
+                                              width: _size.width * 0.6,
+                                              height: 40.0,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5.0),
+                                                  color: Color(0xff0894FD)),
+                                              child: Material(
+                                                color: Colors.transparent,
+                                                child: InkWell(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                      'Aceptar',
+                                                      style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.w700),
+                                                    ),
+                                                  ),
+                                                  onTap: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                            )
+                          : _showBarMsg(
+                              'Este cliente no tiene facturas', false);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        AutoSizeText(
+                          maxLines: 1,
+                          'Ver la última factura del cliente',
+                          style: TextStyle(
+                              fontSize: 15.0,
+                              color: Color(0xff0f538d),
+                              fontWeight: FontWeight.w600),
+                        ),
+                        Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Color(0xff06538D),
+                          size: 18.0,
+                        ),
+                      ],
                     ),
-                 ),
-              ],
-            ),          
-          ],
-        ), 
-        SizedBox(height: 10.0)
-       ],
-        ),
-      );
-
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 10.0)
+        ],
+      ),
+    );
   }
 
-  void _seeTotalCartera(context,_size){
+  void _seeTotalCartera(context, _size) {
     _dataCarteraNew.length > 0
-        ?  showDialog<String>(
-      context: context,
-      builder: (BuildContext context) => Dialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                  Radius.circular(10.0))),
-          child: Container(
-            height: 500.0,
-            width: 340.4,
-            padding: EdgeInsets.symmetric(
-                horizontal: 20.0, vertical: 15.0),
-            child: Column(
-              children: [
-                SizedBox(height: 10.0),
-                Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 10.0),
-                    SizedBox(
-                      height: _size.height -520,
-                      child: ListView(
-                        scrollDirection: Axis.vertical,
+        ? showDialog<String>(
+            context: context,
+            builder: (BuildContext context) => Dialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                child: Container(
+                  height: 500.0,
+                  width: 340.4,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                  child: Column(
+                    children: [
+                      SizedBox(height: 10.0),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          for (var i = 0; i < _dataCarteraNew.length; i++) ...[
-                            _ItemDocumentClientCartera(_dataCarteraNew[i], i),
-                            SizedBox(height: 5.0),
-                          ]
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 10.0),
-                  ],
-                ),
-
-                SizedBox(
-                  height: 30.0,
-                ),
-                Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.58,
-                      height: 40.0,
-                      decoration: BoxDecoration(
-                          borderRadius:
-                          BorderRadius.circular(
-                              5.0),
-                          color: Color(0xff0894FD)),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius:
-                          BorderRadius.circular(
-                              5.0),
-                          child: Center(
-                            child: Text(
-                              'Aceptar',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight:
-                                  FontWeight
-                                      .w700),
+                          SizedBox(height: 10.0),
+                          SizedBox(
+                            height: _size.height - 520,
+                            child: ListView(
+                              scrollDirection: Axis.vertical,
+                              children: [
+                                for (var i = 0;
+                                    i < _dataCarteraNew.length;
+                                    i++) ...[
+                                  _ItemDocumentClientCartera(
+                                      _dataCarteraNew[i], i),
+                                  SizedBox(height: 5.0),
+                                ]
+                              ],
                             ),
                           ),
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                        ),
+                          SizedBox(height: 10.0),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          )),
-    ):_showBarMsg(
-        'Este cliente no tiene cartera', false);
+                      SizedBox(
+                        height: 30.0,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: _size.width * 0.58,
+                            height: 40.0,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5.0),
+                                color: Color(0xff0894FD)),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(5.0),
+                                child: Center(
+                                  child: Text(
+                                    'Aceptar',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )),
+          )
+        : _showBarMsg('Este cliente no tiene cartera', false);
   }
 
   Widget _ItemDocumentClientCartera(data, i) {
@@ -4909,8 +4896,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
   Widget _form(BuildContext context) {
     //nuevo cliente
     final _size = MediaQuery.of(context).size;
@@ -4924,7 +4909,7 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 20.0),
-       /* SelectFormField(
+        /* SelectFormField(
           type: SelectFormFieldType.dropdown, // or can be dialog
           labelText: 'Tipo de documento',
           items: _itemsTypeDoc.toList(),
@@ -4949,7 +4934,7 @@ class _HomePageState extends State<HomePage> {
 */
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
+          searchTextStyle: TextStyle(
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
@@ -4965,18 +4950,18 @@ class _HomePageState extends State<HomePage> {
             _value_itemsTypeDoc = str['value'];
           },
           onChanged: (dynamic str) => setState(() => {
-            _value_itemsTypeDoc = str['value'],
-            if (_value_itemsTypeDoc == '31')
-              {searchDigitoVerif(), isCheckedDV = false}
-            else
-              {
-                myControllerDv.clear(),
-                if (_value_itemsTypeDoc == '13')
-                  {isCheckedDV = true}
+                _value_itemsTypeDoc = str['value'],
+                if (_value_itemsTypeDoc == '31')
+                  {searchDigitoVerif(), isCheckedDV = false}
                 else
-                  {isCheckedDV = false}
-              }
-          }),
+                  {
+                    myControllerDv.clear(),
+                    if (_value_itemsTypeDoc == '13')
+                      {isCheckedDV = true}
+                    else
+                      {isCheckedDV = false}
+                  }
+              }),
           validator: (dynamic str) {},
           displayItemFn: (dynamic item) => Text(
             (item ?? {})['label'] ?? '',
@@ -4990,15 +4975,15 @@ class _HomePageState extends State<HomePage> {
             return false;
           },
           filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+              item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
           dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
+                  bool selected, Function() onTap) =>
               ListTile(
-                title: Text(item['label']),
-                tileColor:
+            title: Text(item['label']),
+            tileColor:
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
+            onTap: onTap,
+          ),
         ),
         _itemForm(context, 'N° de documento', '', myControllerNroDoc, false,
             'number', true, searchDigitoVerif),
@@ -5012,7 +4997,7 @@ class _HomePageState extends State<HomePage> {
                   color: Color(0xff06538D)),
             ),
             value: this.isCheckedDV,
-            onChanged: (bool? value) { 
+            onChanged: (bool? value) {
               setState(() {
                 isCheckedDV = !isCheckedDV;
               });
@@ -5028,7 +5013,7 @@ class _HomePageState extends State<HomePage> {
         _itemForm(context, 'Segundo apellido', '', myControllerSegundoApellido,
             !isCheckedDV, 'name', false, callback),
         _itemForm(context, 'Razón social', '', myControllerRazonSocial,
-            isCheckedDV, 'name', !isCheckedDV, callback),
+            isCheckedDV, 'text', !isCheckedDV, callback),
         _itemForm(context, 'Dirección', '', myControllerDireccion, false,
             'text', true, false),
         _itemForm(context, 'Email', '', myControllerEmail, false, 'email', true,
@@ -5037,11 +5022,10 @@ class _HomePageState extends State<HomePage> {
             'phone', false, callback),
         _itemForm(context, 'Teléfono celular', '', myControllerTelefonoCelular,
             false, 'phone', true, callback),
-
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
+          searchTextStyle: TextStyle(
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
@@ -5072,20 +5056,20 @@ class _HomePageState extends State<HomePage> {
             return false;
           },
           filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+              item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
           dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
+                  bool selected, Function() onTap) =>
               ListTile(
-                title: Text(item['label']),
-                tileColor:
+            title: Text(item['label']),
+            tileColor:
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
+            onTap: onTap,
+          ),
         ),
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
+          searchTextStyle: TextStyle(
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
@@ -5116,20 +5100,20 @@ class _HomePageState extends State<HomePage> {
             return false;
           },
           filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+              item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
           dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
+                  bool selected, Function() onTap) =>
               ListTile(
-                title: Text(item['label']),
-                tileColor:
+            title: Text(item['label']),
+            tileColor:
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
+            onTap: onTap,
+          ),
         ),
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
+          searchTextStyle: TextStyle(
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
@@ -5160,20 +5144,20 @@ class _HomePageState extends State<HomePage> {
             return false;
           },
           filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+              item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
           dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
+                  bool selected, Function() onTap) =>
               ListTile(
-                title: Text(item['label']),
-                tileColor:
+            title: Text(item['label']),
+            tileColor:
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
+            onTap: onTap,
+          ),
         ),
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
+          searchTextStyle: TextStyle(
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
@@ -5205,20 +5189,20 @@ class _HomePageState extends State<HomePage> {
             return false;
           },
           filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+              item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
           dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
+                  bool selected, Function() onTap) =>
               ListTile(
-                title: Text(item['label']),
-                tileColor:
+            title: Text(item['label']),
+            tileColor:
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
-        ), 
+            onTap: onTap,
+          ),
+        ),
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
+          searchTextStyle: TextStyle(
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
@@ -5250,20 +5234,20 @@ class _HomePageState extends State<HomePage> {
             return false;
           },
           filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+              item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
           dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
+                  bool selected, Function() onTap) =>
               ListTile(
-                title: Text(item['label']),
-                tileColor:
+            title: Text(item['label']),
+            tileColor:
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
+            onTap: onTap,
+          ),
         ),
         SizedBox(height: 10),
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
-          searchTextStyle:   TextStyle(
+          searchTextStyle: TextStyle(
               color: Color(0xff06538D),
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
@@ -5294,16 +5278,16 @@ class _HomePageState extends State<HomePage> {
             return false;
           },
           filterFn: (dynamic item, str) =>
-          item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
+              item['label'].toLowerCase().indexOf(str.toLowerCase()) >= 0,
           dropdownItemFn: (dynamic item, int position, bool focused,
-              bool selected, Function() onTap) =>
+                  bool selected, Function() onTap) =>
               ListTile(
-                title: Text(item['label']),
-                tileColor:
+            title: Text(item['label']),
+            tileColor:
                 focused ? Color.fromARGB(20, 0, 0, 0) : Colors.transparent,
-                onTap: onTap,
-              ),
-        ), 
+            onTap: onTap,
+          ),
+        ),
         SizedBox(height: 30.0),
         Row(
           children: [
@@ -5548,27 +5532,33 @@ class _HomePageState extends State<HomePage> {
       controller, enable, String type, bool isRequired, callback) {
     final _size = MediaQuery.of(context).size;
     var typeInput;
+    var format;
     var cant;
     switch (type) {
       case 'number':
         typeInput = TextInputType.number;
         cant = 15;
+        format = FilteringTextInputFormatter.digitsOnly;
         break; // The switch statement must be told to exit, or it will execute every case.
       case 'email':
         cant = 40;
         typeInput = TextInputType.emailAddress;
+        format = FilteringTextInputFormatter.singleLineFormatter;
         break;
       case 'phone':
         cant = 13;
         typeInput = TextInputType.phone;
+        format = FilteringTextInputFormatter.digitsOnly;
         break;
       case 'text':
         cant = 30;
         typeInput = TextInputType.text;
+        format = FilteringTextInputFormatter.singleLineFormatter;
         break;
       case 'name':
         cant = 30;
         typeInput = TextInputType.name;
+        format = FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]'));
         break;
     }
     return Row(
@@ -5597,9 +5587,10 @@ class _HomePageState extends State<HomePage> {
               readOnly: enable,
               keyboardType: typeInput,
               inputFormatters: <TextInputFormatter>[
-                type == "number" || type == "phone"
+                format,
+                /*type == "number" || type == "phone"
                     ? FilteringTextInputFormatter.digitsOnly
-                    : FilteringTextInputFormatter.singleLineFormatter,
+                    : FilteringTextInputFormatter.singleLineFormatter,*/
                 LengthLimitingTextInputFormatter(cant)
               ],
               textCapitalization: TextCapitalization.characters,
@@ -5829,9 +5820,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 contentPadding: EdgeInsets.only(bottom: 0, top: 15),
                 suffixIcon: GestureDetector(
-              onTap: () {
-                _seeTotalCartera(context,_size);
-              },
+                  onTap: () {
+                    _seeTotalCartera(context, _size);
+                  },
                   child: Icon(
                     Icons.keyboard_arrow_down,
                     size: 24.0,
@@ -5862,7 +5853,7 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: AutoSizeText(
-               maxLines: 1,
+              maxLines: 1,
               '$nombre',
               style: TextStyle(
                 fontSize: 16.0,
@@ -5904,7 +5895,7 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 40,
                       child: AutoSizeText('${data['direccion']}',
-                       maxLines: 2,
+                          maxLines: 2,
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -5965,7 +5956,7 @@ class _HomePageState extends State<HomePage> {
                             width: 5.0,
                           ),
                           AutoSizeText(
-                             maxLines: 2, 
+                            maxLines: 2,
                             'Límite credito',
                             style: TextStyle(
                                 color: Color(0xff707070),
@@ -6123,8 +6114,7 @@ class _HomePageState extends State<HomePage> {
                         child: InkWell(
                             borderRadius: BorderRadius.circular(8.0),
                             child: Center(
-                              child: AutoSizeText
-                              (
+                              child: AutoSizeText(
                                 maxLines: 1,
                                 'Historial',
                                 textAlign: TextAlign.center,
@@ -6150,6 +6140,42 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget getImagenBase64(String imagen) {
+
+    const Base64Codec base64 = Base64Codec();
+    Uint8List _bytes = base64.decode(imagen);
+    
+    return Container(
+       child: Row(     
+        children:[ _bytes == null
+            ? const CircularProgressIndicator()
+            : Image.memory(
+                Uint8List.fromList(_bytes),
+                fit: BoxFit.cover,
+              ),
+              Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(2),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: AutoSizeText(
+                              ' ',
+                              maxLines: 1,
+                              minFontSize: 10,
+                              style:
+                                  TextStyle(color: Colors.blue, fontSize: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+            ],
+            )
+             );               
+
+  }
+
   Widget _ItemProductos(data) {
     return GridView.count(
       scrollDirection: Axis.vertical,
@@ -6162,34 +6188,43 @@ class _HomePageState extends State<HomePage> {
       children: <Widget>[
         for (var i = 0; i < _countClasificacion; i++) ...[
           InkWell(
-            child: Container(
-              decoration: BoxDecoration(
+            child:  Container(
+                    decoration: BoxDecoration(
                 image: DecorationImage(
-                  image:
-                   NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
-                   fit: BoxFit.cover,
+                image:
+                //  AssetImage('assets/images/producto-sin-imagen.png'),
+                NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
+                fit: BoxFit.cover,
                 ),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(20.0),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(2),
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: AutoSizeText(
-                        '${data[i]['descripcion']}',
-                        maxLines: 1,
-                        minFontSize: 10,
-                        style: TextStyle(color: Colors.blue, fontSize: 14),
+
+                        /*  image: _isConnected
+                              ? NetworkImage(
+                                  "${Constant.URL}/seeImagen/${data[i]['imagen']}")
+                              : AssetImage(
+                                      'assets/images/producto-sin-imagen.png')
+                                  as ImageProvider),*/
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(20.0),
                       ),
                     ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(2),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: AutoSizeText(
+                              '${data[i]['descripcion']}',
+                              maxLines: 1,
+                              minFontSize: 10,
+                              style:
+                                  TextStyle(color: Colors.blue, fontSize: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
             onTap: () {
               setState(() {
                 idClasificacion = '${data[i]['id_clasificacion']}';
@@ -6220,7 +6255,7 @@ class _HomePageState extends State<HomePage> {
             padding:
                 const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: AutoSizeText(
-               maxLines: 2,
+              maxLines: 2,
               '${data['descripcion']}',
               style: TextStyle(
                 fontSize: 16.0,
@@ -6238,7 +6273,9 @@ class _HomePageState extends State<HomePage> {
                   type: SelectFormFieldType.dropdown, // or can be dialog
                   labelText: 'Lista de precios',
                   items: itemsListPrecio,
-                  initialValue:itemsListPrecio.length > 0 ?  itemsListPrecio[0]['value'] : null,
+                  initialValue: itemsListPrecio.length > 0
+                      ? itemsListPrecio[0]['value']
+                      : null,
                   onChanged: (val) => setState(() => {
                         _value_itemsListPrecio = val,
                         if (_value_itemsListPrecio != '0')
@@ -6420,7 +6457,7 @@ class _HomePageState extends State<HomePage> {
             padding:
                 const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: AutoSizeText(
-               maxLines: 2,
+              maxLines: 2,
               '$descripcion',
               style: TextStyle(
                 fontSize: 15.0,
@@ -6435,8 +6472,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                
-                  Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
@@ -6452,9 +6488,11 @@ class _HomePageState extends State<HomePage> {
                             width: 5.0,
                           ),
                           SizedBox(
-                         width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
+                            width: _size.width > 600
+                                ? _size.width * 0.5 - 130
+                                : _size.width * 0.5 - 80,
                             child: AutoSizeText(
-                               maxLines: 1,
+                              maxLines: 1,
                               'Precio Unidad',
                               style: TextStyle(
                                   color: Color(0xff707070),
@@ -6465,11 +6503,13 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
-                    Container( 
-                     width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
+                    Container(
+                      width: _size.width > 600
+                          ? _size.width * 0.5 - 160
+                          : _size.width * 0.5 - 90,
                       child: AutoSizeText(
                           maxLines: 1,
-                       ' \$ ' + expresionRegular(_precio),
+                          ' \$ ' + expresionRegular(_precio),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -6493,9 +6533,11 @@ class _HomePageState extends State<HomePage> {
                             width: 5.0,
                           ),
                           SizedBox(
-                         width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
+                            width: _size.width > 600
+                                ? _size.width * 0.5 - 130
+                                : _size.width * 0.5 - 80,
                             child: AutoSizeText(
-                               maxLines: 2,
+                              maxLines: 2,
                               'Unidades disponibles',
                               style: TextStyle(
                                   color: Color(0xff707070),
@@ -6506,8 +6548,10 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
-                    Container( 
-                     width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
+                    Container(
+                      width: _size.width > 600
+                          ? _size.width * 0.5 - 160
+                          : _size.width * 0.5 - 90,
                       child: AutoSizeText(
                           maxLines: 1,
                           expresionRegular(double.parse(cantidad.toString())),
@@ -6525,7 +6569,7 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: _size.width * 0.5 - 120,
                       child: AutoSizeText(
-                          maxLines: 1,
+                        maxLines: 1,
                         'Cantidad',
                         style: TextStyle(
                             color: Color(0xff707070),
@@ -6534,7 +6578,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Container(
-                          width: _size.width * 0.5 - 65,
+                        width: _size.width * 0.5 - 65,
                         child: Container(
                           width: _size.width,
                           height: 35.0,
@@ -6569,7 +6613,9 @@ class _HomePageState extends State<HomePage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                               width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 126,
+                                width: _size.width > 600
+                                    ? _size.width * 0.5 - 330
+                                    : _size.width * 0.5 - 126,
                                 height: 35.0,
                                 child: Center(
                                   child: TextField(
@@ -6687,13 +6733,12 @@ class _HomePageState extends State<HomePage> {
 
   //listado de carrito
   Widget _ItemCategoryOrderCart(data, index) {
-
     var cantidad = int.parse(data['cantidad'].toString());
     double total = 0.0;
     total = data['total'];
     final descripcion = data['descripcion'];
     final _size = MediaQuery.of(context).size;
-    double width_px = _size.width; 
+    double width_px = _size.width;
     return Container(
       width: width_px,
       decoration: BoxDecoration(
@@ -6728,8 +6773,8 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-               AutoSizeText(
-               maxLines: 2,
+                AutoSizeText(
+                  maxLines: 2,
                   '$descripcion',
                   style: TextStyle(
                     fontSize: 16.0,
@@ -6789,7 +6834,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width:width_px * 0.5 - 40,
+                      width: width_px * 0.5 - 40,
                       child: Row(
                         children: [
                           Icon(
@@ -6814,7 +6859,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Container(
-                      width: width_px  * 0.5 - 40,
+                      width: width_px * 0.5 - 40,
                       child: Text('\$ ' + expresionRegular(total),
                           style: TextStyle(
                               color: Color(0xff707070),
@@ -6873,7 +6918,9 @@ class _HomePageState extends State<HomePage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: width_px > 600 ? width_px * 0.5 - 330 : width_px* 0.5 - 120,
+                                width: width_px > 600
+                                    ? width_px * 0.5 - 330
+                                    : width_px * 0.5 - 120,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
@@ -7288,7 +7335,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 SizedBox(height: 20.0),
                 AutoSizeText(
-                   maxLines: 1,
+                  maxLines: 1,
                   '¡Espera!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -8207,7 +8254,7 @@ class _HomePageState extends State<HomePage> {
                     text: 'Reestablecer',
                     color: Color(0xffCB1B1B),
                     callback: () {
-                      setState(() {                     
+                      setState(() {
                         documentoPagarDelete(data);
                       });
                     })),
@@ -8317,7 +8364,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
-        ),      
+        ),
       ],
     );
   }
@@ -8331,28 +8378,28 @@ class _HomePageState extends State<HomePage> {
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: _size.width * 0.7,
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: _size.width * 0.6,
-                      child: Text(
-                        '${data['descripcion']}',
-                        style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.w700),
-                      ),
+          children: [
+            Container(
+              width: _size.width * 0.7,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: _size.width * 0.6,
+                    child: Text(
+                      '${data['descripcion']}',
+                      style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w700),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
             ),
-            Row(
-            children: [
+          ],
+        ),
+        Row(
+          children: [
             IconButton(
                 onPressed: () {
                   _showDialogDescuento(context, data);
@@ -8492,7 +8539,7 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 20.0),
                 AutoSizeText(
                   minFontSize: 15,
-                    maxLines: 2,
+                  maxLines: 2,
                   '¿Desea eliminar el siguiente item?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -8865,7 +8912,7 @@ class _HomePageState extends State<HomePage> {
             id_destino: "",
             id_proyecto: "",
             cuota_cruce: cuota_cruce_cpd = cuota_cruce_cpd + 1,
-            id_banco: _value_itemsBanco,          
+            id_banco: _value_itemsBanco,
             fecha: _documentosPagados[0]['fecha'].toString(),
             vencimiento: _documentosPagados[0]['vencimiento'].toString(),
             id_tercero: id_tercero,
@@ -8935,5 +8982,4 @@ class _HomePageState extends State<HomePage> {
   }
 
 //visual
-
 }

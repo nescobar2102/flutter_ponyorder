@@ -22,6 +22,7 @@ import '../../models/pedido.dart';
 import '../../models/recibo_caja.dart';
 
 import './sendData.dart';
+ import 'dart:convert';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -45,8 +46,7 @@ class CurvePainter extends CustomPainter {
     return true;
   }
 }
-
-enum LoginStatus { notSignIn, signIn }
+ 
 
 class LoginPages extends StatefulWidget {
   @override
@@ -85,6 +85,13 @@ class _LoginPageState extends State<LoginPages> {
     );
   }
 
+    Future<String> convertToBase64(file) async {    
+      final response =
+        await http.get(Uri.parse("${Constant.URL}/seeImagen/$file")); 
+      String  _base64 = base64Encode(response.bodyBytes);  
+      return _base64; 
+    }
+  
   static convertDateFormat(fecha) {
     var info = fecha.split('T00:00:00.000Z');
     var nuevaFecha2 = info[0];
@@ -710,10 +717,13 @@ class _LoginPageState extends State<LoginPages> {
             nivel: data[i]['nivel'].toString(),
             es_padre: data[i]['es_padre'],
             nit: data[i]['nit'],
-            foto: data[i]['foto'].toString() != null
+            foto:  data[i]['foto'].toString() != null
                 ? data[i]['foto'].toString()
                 : '',
-            imagen: data[i]['imagen'].toString() != null
+          /*  imagen: await convertToBase64(data[i]['imagen'].toString() != null
+                ? data[i]['imagen'].toString()
+                : '') */
+             imagen: data[i]['imagen'].toString() != null
                 ? data[i]['imagen'].toString()
                 : '',
           );

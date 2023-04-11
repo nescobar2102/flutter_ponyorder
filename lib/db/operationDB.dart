@@ -34,7 +34,7 @@ class OperationDB {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, "pony.db");
 
-    // await deleteDatabase(path);
+     //await deleteDatabase(path);
 
     const tableSincronizacion = """
     CREATE TABLE  sincronizacion  (
@@ -1216,6 +1216,13 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         "SELECT * FROM tercero_direccion WHERE id_tercero = '$idTercero' and id_direccion = '$id_direccion' ");
     if (res.isEmpty) {
       await database.insert('tercero_direccion', tercerodireccion.toMap());
+    } else {
+      await database.update(
+        'tercero_direccion',
+        tercerodireccion.toMap(),
+        where: "id_tercero = ? and id_direccion = ?",
+        whereArgs: [idTercero,id_direccion],
+      );
     }
     return true;
   }
@@ -1792,19 +1799,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     var idItem = item.id_item;
     Database database = await _openDB();
     await database.insert('item', item.toMap());
-    return true;
-    final res = await database.rawQuery(
-        "SELECT * FROM item WHERE id_item = '$idItem' and nit = '$nit' ");
-    if (res.isEmpty) {
-      await database.insert('item', item.toMap());
-    } else {
-      await database.update(
-        'item',
-        item.toMap(),
-        where: "id_item = ?",
-        whereArgs: [idItem],
-      );
-    }
     return true;
   }
 

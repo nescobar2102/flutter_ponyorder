@@ -3474,8 +3474,8 @@ class _OrderPageState extends State<OrderPage> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image:
-                //  AssetImage('assets/images/producto-sin-imagen.png'),
-                  NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
+               AssetImage('assets/images/producto-sin-imagen.png'),
+                //  NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.all(
