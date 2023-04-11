@@ -17,6 +17,7 @@ class TerceroDireccion {
     final String telefono ;   
     final String tipo_direccion ;   
     final String nit;
+    final String flag_enviado;
 
   const TerceroDireccion({
     required this.id_tercero,
@@ -28,7 +29,8 @@ class TerceroDireccion {
     required this.id_ciudad, 
     required this.telefono,   
     required this.tipo_direccion,
-    required this.nit
+    required this.nit,
+    required this.flag_enviado
   });
 
   // Convert a Dog into a Map. The keys must correspond to the names of the
@@ -44,7 +46,8 @@ class TerceroDireccion {
       'id_ciudad':id_ciudad, 
       'telefono':telefono, 
       'tipo_direccion':tipo_direccion, 
-      'nit':nit, 
+      'nit':nit,
+      'flag_enviado':flag_enviado,
     };
   }
 
@@ -53,5 +56,5 @@ class TerceroDireccion {
   @override
   String toString() {
      return 'TerceroDireccion{   id_tercero:$id_tercero,  id_sucursal_tercero:$id_sucursal_tercero, id_direccion:$id_direccion,  direccion:$direccion,' 
-     '  id_pais:$id_pais, id_depto:$id_depto,  id_ciudad:$id_ciudad,    telefono:$telefono,   tipo_direccion:$tipo_direccion, nit:$tipo_direccion  }';  }
+     '  id_pais:$id_pais, id_depto:$id_depto,  id_ciudad:$id_ciudad,    telefono:$telefono,   tipo_direccion:$tipo_direccion, nit:$nit ,flag_enviado:$flag_enviado  }';  }
 }

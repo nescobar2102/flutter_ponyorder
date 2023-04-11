@@ -33,6 +33,7 @@ class TerceroCliente {
     final String  dcto_adicional;
     final String  numero_facturas_vencidas; 
     final String  nit;
+    final String  flag_enviado;
 
   const TerceroCliente(
       {
@@ -61,8 +62,9 @@ class TerceroCliente {
     required this.dcto_cliente,
     required this.dcto_adicional,
     required this.numero_facturas_vencidas, 
-    required this.nit
-  });
+    required this.nit,
+        required this.flag_enviado,
+      });
 
   // Convert a Dog into a Map. The keys must correspond to the names of the
   // columns in the database.
@@ -93,7 +95,8 @@ class TerceroCliente {
       'dcto_cliente':dcto_cliente, 
       'dcto_adicional':dcto_adicional, 
       'numero_facturas_vencidas':numero_facturas_vencidas,
-      'nit':nit, 
+      'nit':nit,
+      'flag_enviado':flag_enviado,
     };
   }
 
@@ -106,5 +109,5 @@ class TerceroCliente {
     ' dia_cierre:$dia_cierre, id_impuesto_reteiva:$id_impuesto_reteiva,  id_agente_reteiva:$id_agente_reteiva, id_impuesto_reteica:$id_impuesto_reteica,'
     ' id_agente_reteica:$id_agente_reteica, id_impuesto_retefuente:$id_impuesto_retefuente, id_agente_retefuente :$id_agente_retefuente,  id_agente_retecree:$id_agente_retecree,'
     ' id_impuesto_retecree:$id_impuesto_retecree, id_tamanno:$id_tamanno,  limite_credito:$limite_credito, dias_gracia:$dias_gracia,  flag_cartera_vencida:$flag_cartera_vencida, '
-    ' dcto_cliente:$dcto_cliente, dcto_adicional:$dcto_adicional, numero_facturas_vencidas:$numero_facturas_vencidas, nit:$nit }';  }
+    ' dcto_cliente:$dcto_cliente, dcto_adicional:$dcto_adicional, numero_facturas_vencidas:$numero_facturas_vencidas, nit:$nit,flag_enviado:$flag_enviado }';  }
 }

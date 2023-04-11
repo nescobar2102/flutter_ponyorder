@@ -91,7 +91,6 @@ class SendataSincronizacion   {
           'flag_persona_nat': data[i]['flag_persona_nat'],
           'usuario': '',
         };
-        print("--------- print bpu $body");
         final response = await http.post(
             Uri.parse('${Constant.URL}/nuevo_cliente_app'),
             body:body );
@@ -99,7 +98,6 @@ class SendataSincronizacion   {
         var jsonResponse =
         convert.jsonDecode(response.body) as Map<String, dynamic>;
         var success = jsonResponse['success'];
-        var msg = jsonResponse['msg'];
         if (response.statusCode == 201 && success) {
           await OperationDB.updateCliente(data[i]['id_tercero'], data[i]['nit']);
         }

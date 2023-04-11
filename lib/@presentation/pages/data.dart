@@ -492,6 +492,7 @@ class _LoginPageState extends State<LoginPages> {
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
+        await OperationDB.deleteTercero();
         for (int i = 0; i < data.length; i++) {
           final tercero = Tercero(
               id_tercero: data[i]['id_tercero'].toString(),
@@ -504,7 +505,9 @@ class _LoginPageState extends State<LoginPages> {
               id_depto: data[i]['id_depto'],
               id_ciudad: data[i]['id_ciudad'],
               id_barrio: data[i]['id_barrio'],
-              telefono: data[i]['telefono'],
+              telefono: data[i]['telefono'] != null
+                  ? data[i]['telefono']
+                  : '',
               id_actividad: data[i]['id_actividad'] != null
                   ? data[i]['id_actividad']
                   : '',
@@ -599,7 +602,8 @@ class _LoginPageState extends State<LoginPages> {
               dcto_cliente: data[i]['dcto_cliente'],
               dcto_adicional: data[i]['dcto_adicional'],
               numero_facturas_vencidas: data[i]['numero_facturas_vencidas'],
-              nit: data[i]['nit']);
+              nit: data[i]['nit'],
+              flag_enviado: 'SI');
           await OperationDB.insertTerceroCliente(tercero_cliente);
         }
       }
@@ -629,7 +633,8 @@ class _LoginPageState extends State<LoginPages> {
               id_ciudad: data[i]['id_ciudad'],
               telefono: data[i]['telefono'],
               tipo_direccion: data[i]['tipo_direccion'],
-              nit: data[i]['nit']);
+              nit: data[i]['nit'],
+              flag_enviado: 'SI');
           await OperationDB.insertTerceroDireccion(tercero_direccion);
         }
       }
