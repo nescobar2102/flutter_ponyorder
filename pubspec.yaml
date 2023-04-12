@@ -43,8 +43,7 @@ dependencies:
   top_snackbar_flutter: ^2.1.1
   intl: ^0.17.0
   syncfusion_flutter_datepicker: ^19.4.56
-  dashed_circular_progress_bar: ^0.0.4
-  #badges: ^3.0.2
+  dashed_circular_progress_bar: ^0.0.4 
   email_validator: '^2.1.16'
   auto_size_text: ^3.0.0
   dropdown_plus: ^0.0.8
@@ -87,8 +86,6 @@ flutter:
     - assets/images/carrito.png
     - assets/images/carrito1.png
     - assets/images/carrito_vacio.png
-    - assets/images/logofpay.png
-    - assets/images/logofpay1.png
     - assets/images/producto-sin-imagen.png
     - assets/playstore-icon.png
   # To add assets to your application, add an assets section, like this:
