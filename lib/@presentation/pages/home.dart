@@ -189,12 +189,7 @@ class _HomePageState extends State<HomePage> {
     String result = f.format(numero);
     return result;
   }
-/* 
-   Future< > convertToImagen(base64) async {    
-     
-      Uint8List bytesImage = const Base64Decoder().convert(base64);
-      return bytesImage; 
-    } */
+ 
 
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -986,9 +981,9 @@ class _HomePageState extends State<HomePage> {
       result = myControllerDireccion.text.trim() != '' ? true : false;
     }
 
-    /* if (result) {
+ /*   /* if (result) {
       result = myControllerTelefono.text.trim() != '' ? true : false;
-    }*/
+    }*/*/
     if (result) {
       result = myControllerTelefonoCelular.text.trim() != '' ? true : false;
     }
@@ -1019,38 +1014,7 @@ class _HomePageState extends State<HomePage> {
 
     return result;
   }
-
-/* 
- void ExitModal() {
-    showDialog(
-        context: context,
-        builder: (_) => new AlertDialog(
-              title: const Text('Salir'),
-              content: const Text('¿Estás seguro de que quieres salir de la aplicación?'),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                     OperationDB.closeDB();
-                    SharedPreferences preferences =
-                        await SharedPreferences.getInstance();
-                    preferences.clear();
-                    preferences.setInt("value", 0);
-                    Navigator.pushNamed(context, 'login');
-                  },
-                  child: const Text('Yes'),
-                ),
-                TextButton(
-                  onPressed: () { 
-                    Navigator.pop(context, false);
-                  },
-                  child: const Text(
-                    'No',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
-            ));
-  }  */
+ 
   Future<bool> _onWillPop() async {
     if (_drawerscaffoldkey.currentState!.isDrawerOpen && _nit != '') {
       Navigator.pop(context);
@@ -1895,8 +1859,7 @@ class _HomePageState extends State<HomePage> {
                                                 ),
                                               ),
                                               onTap: () {
-                                                Navigator.pop(context);
-                                                // Navigator.pushNamed(context, 'home');
+                                                Navigator.pop(context); 
                                               },
                                             ),
                                           ),
@@ -1927,8 +1890,7 @@ class _HomePageState extends State<HomePage> {
         height: _size.height,
         decoration: const BoxDecoration(
           color: Colors.white,
-        ),
-        // padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+        ), 
         child: ListView(
           children: [
             Column(
@@ -3988,31 +3950,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  final List<Map<String, dynamic>> _roles = [
-    {"name": "Super Admin", "desc": "Having full access rights", "role": 1},
-    {
-      "name": "Admin",
-      "desc": "Having full access rights of a Organization",
-      "role": 2
-    },
-    {
-      "name": "Manager",
-      "desc": "Having Magenent access rights of a Organization",
-      "role": 3
-    },
-    {
-      "name": "Technician",
-      "desc": "Having Technician Support access rights",
-      "role": 4
-    },
-    {
-      "name": "Customer Support",
-      "desc": "Having Customer Support access rights",
-      "role": 5
-    },
-    {"name": "User", "desc": "Having End User access rights", "role": 6},
-  ];
+ 
 
   Widget _formRecipe(BuildContext context) {
     final _size = MediaQuery.of(context).size;
@@ -4067,31 +4005,7 @@ class _HomePageState extends State<HomePage> {
                   'number',
                   false,
                   callback),
-              /*SelectFormField(
-                style: TextStyle(
-                    color: Color(0xff06538D),
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w600),
-                type: SelectFormFieldType.dropdown, // or can be dialog
-                labelText: 'Forma de pago',
-                items: _itemsTipoPago,
-                onChanged: (val) => setState(() {
-                  _value_itemsTipoPago = val;
-                  if (_value_itemsTipoPago == '01') {
-                    isBanco = false;
-                    isCheque = false;
-                    myControllerNroCheque.clear();
-                  } else if (_value_itemsTipoPago != '01' &&
-                      _value_itemsTipoPago != '02') {
-                    isBanco = true;
-                    isCheque = false;
-                    myControllerNroCheque.clear();
-                  } else if (_value_itemsTipoPago == '02') {
-                    isCheque = true;
-                    isBanco = false;
-                  }
-                }),
-              ),*/
+              
               SizedBox(height: 10),
               DropdownFormField<Map<String, dynamic>>(
                 onEmptyActionPressed: () async {},
@@ -4196,17 +4110,7 @@ class _HomePageState extends State<HomePage> {
                   onTap: onTap,
                 ),
               ),
-
-              /* SelectFormField(
-                style: TextStyle(
-                    color: Color(0xff06538D),
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w600),
-                type: SelectFormFieldType.dropdown, // or can be dialog
-                labelText: 'Banco',
-                items: _itemsBanco,
-                onChanged: (val) => setState(() => _value_itemsBanco = val),
-              ),*/
+ 
               _itemForm(context, 'N° cheque', '00000', myControllerNroCheque,
                   false, 'number', isCheque, callback),
               SizedBox(height: 30.0),
@@ -4909,29 +4813,7 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 20.0),
-        /* SelectFormField(
-          type: SelectFormFieldType.dropdown, // or can be dialog
-          labelText: 'Tipo de documento',
-          items: _itemsTypeDoc.toList(),
-          onChanged: (val) => setState(() => {
-                _value_itemsTypeDoc = val,
-                if (_value_itemsTypeDoc == '31')
-                  {searchDigitoVerif(), isCheckedDV = false}
-                else
-                  {
-                    myControllerDv.clear(),
-                    if (_value_itemsTypeDoc == '13')
-                      {isCheckedDV = true}
-                    else
-                      {isCheckedDV = false}
-                  }
-              }),
-          validator: (val) {
-            setState(() => _value_itemsTypeDoc = val ?? '');
-            return null;
-          },
-        ),
-*/
+        
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
           searchTextStyle: TextStyle(
@@ -5587,10 +5469,7 @@ class _HomePageState extends State<HomePage> {
               readOnly: enable,
               keyboardType: typeInput,
               inputFormatters: <TextInputFormatter>[
-                format,
-                /*type == "number" || type == "phone"
-                    ? FilteringTextInputFormatter.digitsOnly
-                    : FilteringTextInputFormatter.singleLineFormatter,*/
+                format,                
                 LengthLimitingTextInputFormatter(cant)
               ],
               textCapitalization: TextCapitalization.characters,
@@ -6195,14 +6074,7 @@ class _HomePageState extends State<HomePage> {
                 //  AssetImage('assets/images/producto-sin-imagen.png'),
                 NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
                 fit: BoxFit.cover,
-                ),
-
-                        /*  image: _isConnected
-                              ? NetworkImage(
-                                  "${Constant.URL}/seeImagen/${data[i]['imagen']}")
-                              : AssetImage(
-                                      'assets/images/producto-sin-imagen.png')
-                                  as ImageProvider),*/
+                ),                    
                       borderRadius: BorderRadius.all(
                         Radius.circular(20.0),
                       ),
@@ -8957,9 +8829,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _letras = data;
         });
-      } else {
-        // _letras = await LetraN.convertirLetras(numero);
-      }
+      }  
     } else {
       // _letras = await LetraN.convertirLetras(numero);
     }
