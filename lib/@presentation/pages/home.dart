@@ -980,10 +980,7 @@ class _HomePageState extends State<HomePage> {
     if (result) {
       result = myControllerDireccion.text.trim() != '' ? true : false;
     }
-
- /*   /* if (result) {
-      result = myControllerTelefono.text.trim() != '' ? true : false;
-    }*/*/
+ 
     if (result) {
       result = myControllerTelefonoCelular.text.trim() != '' ? true : false;
     }
@@ -8830,9 +8827,7 @@ class _HomePageState extends State<HomePage> {
           _letras = data;
         });
       }  
-    } else {
-      // _letras = await LetraN.convertirLetras(numero);
-    }
+    }  
 
     Navigator.pop(context);
   }
