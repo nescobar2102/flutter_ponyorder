@@ -58,34 +58,35 @@ class MenuPage extends StatelessWidget {
                 ),
               ),
             ),
-            _item(context, Icons.document_scanner, 'Pedidos', () => {Navigator.pushNamed(context, 'order')}),
+            _item(context, Icons.document_scanner, 'Pedidos',
+                () => {Navigator.pushNamed(context, 'order')}),
             SizedBox(height: 1.0),
-            _item(
-                context, Icons.text_snippet_rounded, 'Recibos de caja', () => {Navigator.pushNamed(context, 'receipts')}),
+            _item(context, Icons.text_snippet_rounded, 'Recibos de caja',
+                () => {Navigator.pushNamed(context, 'receipts')}),
             SizedBox(height: 1.0),
-            _item(context, Icons.paid, 'Cuota de venta', () => {Navigator.pushNamed(context, 'sale')}),
+            _item(context, Icons.paid, 'Cuota de venta',
+                () => {Navigator.pushNamed(context, 'sale')}),
             SizedBox(height: 1.0),
-            _item(context, Icons.shopping_bag_rounded, 'Unidades', () => {Navigator.pushNamed(context, 'units')}),
+            _item(context, Icons.shopping_bag_rounded, 'Unidades',
+                () => {Navigator.pushNamed(context, 'units')}),
             SizedBox(height: 1.0),
-            _item(context, Icons.remove_red_eye, 'Visitados', () => {Navigator.pushNamed(context, 'visiteds')}),
+            _item(context, Icons.remove_red_eye, 'Visitados',
+                () => {Navigator.pushNamed(context, 'visiteds')}),
             SizedBox(height: 1.0),
-            _item(context, Icons.backup, 'Sincronización', () => {Navigator.pushNamed(context, 'data')}),
+            _item(context, Icons.backup, 'Sincronización',
+                () => {Navigator.pushNamed(context, 'data')}),
             SizedBox(height: 1.0),
             Container(
               width: _size.width,
               color: Color(0xff06538D),
               child: ListTile(
-                 onTap: () async { 
-                        // OperationDB.closeDB(),
-                     
-              
-                               SharedPreferences preferences =
-                        await SharedPreferences.getInstance();
-                       preferences.clear();
-                       preferences.setInt("value", 0);
-                        Navigator.pushNamed(context, 'login');
-                        
-                        }, 
+                onTap: () async {
+                  SharedPreferences preferences =
+                      await SharedPreferences.getInstance();
+                  preferences.clear();
+                  preferences.setInt("value", 0);
+                  Navigator.pushNamed(context, 'login');
+                },
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                 minLeadingWidth: 20.0,

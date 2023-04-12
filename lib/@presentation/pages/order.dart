@@ -1,5 +1,5 @@
 import 'package:pony_order/@presentation/components/inputCallback.dart';
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:convert' as convert;
@@ -14,6 +14,7 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../db/operationDB.dart';
 import '../../models/pedido.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+
 class OrderPage extends StatefulWidget {
   @override
   _OrderPageState createState() => _OrderPageState();
@@ -44,7 +45,7 @@ class _OrderPageState extends State<OrderPage> {
   final myControllerNroPedido = TextEditingController();
   final myControllerSearch = TextEditingController();
   final myControllerBuscarProd = TextEditingController();
-  final myControllerBuscarCatego= TextEditingController();
+  final myControllerBuscarCatego = TextEditingController();
 
   late String _saldoCartera = '0.00';
   late String id_tipo_pago = '';
@@ -83,8 +84,8 @@ class _OrderPageState extends State<OrderPage> {
   bool selectItem = false;
   final myControllerDescuentos = TextEditingController(text: "0");
   final myControllerObservacion = TextEditingController();
-  final myControllerCantidad = TextEditingController(text: "1"); 
-    final myControllerCantidadCart = TextEditingController();
+  final myControllerCantidad = TextEditingController(text: "1");
+  final myControllerCantidadCart = TextEditingController();
   String _value_itemsFormaPago = '';
   int _cantidadProducto = 1;
   late int _checked = 0;
@@ -147,23 +148,25 @@ class _OrderPageState extends State<OrderPage> {
   // Perform login
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(()  {
+    setState(() {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       idPedidoUser = (prefs.getString('idPedidoUser') ?? '');
       id_vendedor = (prefs.getString('id_vendedor') ?? '');
-      id_sucursal_tercero_cliente = (prefs.getString('id_sucursal_tercero') ?? '');
+      id_sucursal_tercero_cliente =
+          (prefs.getString('id_sucursal_tercero') ?? '');
       id_forma_pago_cliente = (prefs.getString('id_forma_pago') ?? '');
       id_precio_item_cliente = (prefs.getString('id_precio_item') ?? '');
       id_lista_precio_cliente = (prefs.getString('id_lista_precio') ?? '');
       id_suc_vendedor_cliente = (prefs.getString('id_suc_vendedor') ?? '');
 
-      if (_nit != '' && id_vendedor!='') {
+      if (_nit != '' && id_vendedor != '') {
         searchPedido();
-      }else{
-        _showBarMsg('No se obtuvo información del vendedor,sincronice los datos', false);
-       }
-
+      } else {
+        _showBarMsg(
+            'No se obtuvo información del vendedor,sincronice los datos',
+            false);
+      }
     });
     await ObtieneCarrito();
   }
@@ -217,12 +220,11 @@ class _OrderPageState extends State<OrderPage> {
       id_direccion = _cartProductos[0]['id_direccion'];
       id_direccion_factura = _cartProductos[0]['id_direccion_factura'];
     } else {
-       _cartProductos = [];
+      _cartProductos = [];
     }
-    setState(()   {
-      totalPedido =  valorTotal();
+    setState(() {
+      totalPedido = valorTotal();
     });
-   
   }
 
   Future<void> saldoCartera() async {
@@ -231,7 +233,7 @@ class _OrderPageState extends State<OrderPage> {
     if (data != false) {
       setState(() {
         _saldoCartera =
-        data[0]['DEBITO'] != null ? data[0]['DEBITO'].toString() : '0';
+            data[0]['DEBITO'] != null ? data[0]['DEBITO'].toString() : '0';
       });
       var data1 = await OperationDB.getFormPago(id_tercero, _nit);
       if (data1 != false) {
@@ -254,16 +256,18 @@ class _OrderPageState extends State<OrderPage> {
   late List<Map<String, dynamic>> _direccionClient = [];
   late List<Map<String, dynamic>> _direccionClienMercancia = [];
   Future<void> searchClientDireccion() async {
-    final allDireccionMercancia = await OperationDB.getDireccion(_nit, id_tercero,'Mercancia');
+    final allDireccionMercancia =
+        await OperationDB.getDireccion(_nit, id_tercero, 'Mercancia');
     if (allDireccionMercancia != false) {
       _direccionClienMercancia = (allDireccionMercancia as List)
           .map((dynamic e) => e as Map<String, dynamic>)
           .toList();
-    }else{
+    } else {
       _showBarMsg('El cliente no registra dirección', false);
     }
 
-    final allDireccion = await OperationDB.getDireccion(_nit, id_tercero,'Factura');
+    final allDireccion =
+        await OperationDB.getDireccion(_nit, id_tercero, 'Factura');
     if (allDireccion != false && allDireccionMercancia != false) {
       setState(() {
         _direccionClient = (allDireccion as List)
@@ -271,14 +275,14 @@ class _OrderPageState extends State<OrderPage> {
             .toList();
 
         _clientShow = false;
-
       });
     } else {
       _showBarMsg('El cliente no registra dirección', false);
     }
   }
+
   late List<Map<String, dynamic>> itemsListPrecio = [];
-  Future  getListPrecio() async {
+  Future getListPrecio() async {
     final data = await OperationDB.getListPrecio(_nit);
     if (data != false) {
       setState(() {
@@ -326,7 +330,8 @@ class _OrderPageState extends State<OrderPage> {
             //which date will display when user open the picker
             firstDate: DateTime(1950),
             //what will be the previous supported year in picker
-            lastDate: DateTime(2030)) //what will be the up to supported date in picker
+            lastDate: DateTime(
+                2030)) //what will be the up to supported date in picker
         .then((pickedDate) {
       //then usually do the future job
       if (pickedDate == null) {
@@ -358,9 +363,11 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Future<void> searchClasificacionProductos() async {
-    _search =  myControllerBuscarCatego.text.isNotEmpty ? myControllerBuscarCatego.text :'@';
-    var data =
-        await OperationDB.getClasificacionProductos(_nit, '1', '', true,_search);
+    _search = myControllerBuscarCatego.text.isNotEmpty
+        ? myControllerBuscarCatego.text
+        : '@';
+    var data = await OperationDB.getClasificacionProductos(
+        _nit, '1', '', true, _search);
     if (data != false) {
       _datClasificacionProductos = data;
       _countClasificacion = data.length;
@@ -384,8 +391,8 @@ class _OrderPageState extends State<OrderPage> {
   Future<void> selectProducto() async {
     String _search = '@';
 
-    var data =
-        await OperationDB.getClasificacionProductos(_nit, '1', '', true,_search);
+    var data = await OperationDB.getClasificacionProductos(
+        _nit, '1', '', true, _search);
     if (data != false) {
       _datClasificacionProductos = data;
       _countClasificacion = data.length;
@@ -406,14 +413,13 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Future<void> selectProductoNivel() async {
-    var data =
-        await OperationDB.getClasificacionProductos(_nit, '2', _id_padre, true,'@');
+    var data = await OperationDB.getClasificacionProductos(
+        _nit, '2', _id_padre, true, '@');
     if (data != false) {
       _datClasificacionProductosNivel = data;
       _countClasificacionNivel = data.length;
-      setState(() {     
-        idClasificacion =
-        '${_datClasificacionProductosNivel[0]['id_padre']}';
+      setState(() {
+        idClasificacion = '${_datClasificacionProductosNivel[0]['id_padre']}';
         searchProductosPedido();
       });
     } else {
@@ -422,8 +428,10 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Future<void> searchProductosPedido() async {
-    final  _search =  myControllerBuscarProd.text.isNotEmpty ? myControllerBuscarProd.text : '@';
-    var data = await OperationDB.getItems(_nit, idClasificacion,_search,'');
+    final _search = myControllerBuscarProd.text.isNotEmpty
+        ? myControllerBuscarProd.text
+        : '@';
+    var data = await OperationDB.getItems(_nit, idClasificacion, _search, '');
     if (data != false) {
       setState(() {
         _datProductos = data;
@@ -461,13 +469,13 @@ class _OrderPageState extends State<OrderPage> {
 
   Widget _getCarritoLleno() {
     if (_cartProductos.length > 0) {
-      return    Container(
-        padding:  const EdgeInsets.all(1.0),
+      return Container(
+        padding: const EdgeInsets.all(1.0),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Color(0xffCB1B1B),
           border: Border.all(
-            color:Color(0xffCB1B1B),
+            color: Color(0xffCB1B1B),
             width: 10,
           ),
         ),
@@ -478,33 +486,33 @@ class _OrderPageState extends State<OrderPage> {
           _cartProductos.length.toString(),
           style: TextStyle(
             fontSize: 12,
-            fontWeight:FontWeight.bold,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
       );
-
     } else {
       return Container();
     }
   }
+
   TextEditingController dateinput = TextEditingController();
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
 
-  Future<bool> _onWillPop() async {       
-    if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
-          Navigator.pop(context);              
-            return false;
-      } 
+  Future<bool> _onWillPop() async {
+    if (_drawerscaffoldkey.currentState!.isDrawerOpen && _nit != '') {
+      Navigator.pop(context);
       return false;
     }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return WillPopScope(
-       onWillPop:_onWillPop,
+      onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 60,
@@ -528,46 +536,22 @@ class _OrderPageState extends State<OrderPage> {
             ),
           ),
           actions: [
-           /* badges.Badge(
-              badgeContent: Text((_cartProductos.length).toString(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ),*/
-              _getCarritoLleno(),
-                GestureDetector(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Color(0xff0090ce),
-                      size: 30,
-                    ),
+            _getCarritoLleno(),
+            GestureDetector(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 15.0),
+                  child: Icon(
+                    Icons.shopping_cart_outlined,
+                    color: Color(0xff0090ce),
+                    size: 30,
                   ),
-                  onTap: () => {
-                    _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                        ? Navigator.pop(context)
-                        : _drawerscaffoldkey.currentState!.openEndDrawer()
-                  }),
-            //  position: badges.BadgePosition.topEnd(top: -5, end: 45),
-
-            //),
+                ),
+                onTap: () => {
+                      _drawerscaffoldkey.currentState!.isEndDrawerOpen
+                          ? Navigator.pop(context)
+                          : _drawerscaffoldkey.currentState!.openEndDrawer()
+                    }),
           ],
-         /*   actions: [
-              GestureDetector(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Color(0xff0090ce),
-                      size: 30,
-                    ),
-                  ),
-                  onTap: () => {
-                    _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                        ? Navigator.pop(context)
-                        : _drawerscaffoldkey.currentState!.openEndDrawer()
-                  }),
-          ],    */
           title: Text(
             'Pedidos',
             style: TextStyle(
@@ -586,8 +570,9 @@ class _OrderPageState extends State<OrderPage> {
         ),
         body: Scaffold(
           key: _drawerscaffoldkey,
-          drawer: _menu(context),       
-          endDrawer: _shoppingCart(context, _cartProductos, _cartProductos.length),
+          drawer: _menu(context),
+          endDrawer:
+              _shoppingCart(context, _cartProductos, _cartProductos.length),
           body: CustomScrollView(
             slivers: [
               SliverList(
@@ -618,8 +603,8 @@ class _OrderPageState extends State<OrderPage> {
                                     TextField(
                                       controller: myControllerSearch,
                                       textInputAction: TextInputAction.done,
-                                      onSubmitted: (String str){
-                                        setState((){
+                                      onSubmitted: (String str) {
+                                        setState(() {
                                           searchPedido();
                                         });
                                       },
@@ -702,8 +687,7 @@ class _OrderPageState extends State<OrderPage> {
                                                         ),
                                                       )));
                                         },
-                                        controller: null ),
-
+                                        controller: null),
                                   ],
                                 ),
                           SizedBox(height: 10.0),
@@ -757,7 +741,6 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Widget itemOrder(data, i) {
-
     final nombre = data['nombre_sucursal'].length > 24
         ? data['nombre_sucursal'].substring(0, 23)
         : data['nombre_sucursal'];
@@ -812,7 +795,8 @@ class _OrderPageState extends State<OrderPage> {
                     ),
                     onTap: () => {
                           setState(() {
-                            if (_cartProductos.isNotEmpty && data['id_tercero']!=id_tercero) {
+                            if (_cartProductos.isNotEmpty &&
+                                data['id_tercero'] != id_tercero) {
                               modalNuevoPedido(context, data, i);
                             } else {
                               _seePedido = i;
@@ -820,10 +804,12 @@ class _OrderPageState extends State<OrderPage> {
                               id_sucursal_tercero =
                                   '${data['id_sucursal_tercero']}';
                               limite_credito = '${data['limite_credito']}';
-                              listaPrecioTercero = '${data['lista_precio'].toString()}';
+                              listaPrecioTercero =
+                                  '${data['lista_precio'].toString()}';
                               id_tercero = '${data['id_tercero']}';
                               id_empresa = '${data['id_empresa']}';
-                              _value_itemsFormaPago = '${data['id_forma_pago'].toString()}';
+                              _value_itemsFormaPago =
+                                  '${data['id_forma_pago'].toString()}';
                               _value_automatico =
                                   '${data['numero'].toString()}';
                               nombre_tercero =
@@ -937,7 +923,8 @@ class _OrderPageState extends State<OrderPage> {
 
   Widget _ItemProductOrder(data, i) {
     final _size = MediaQuery.of(context).size;
-    final subtotal = double.parse(data['cantidad'].toString()) * double.parse(data['precio'].toString());
+    final subtotal = double.parse(data['cantidad'].toString()) *
+        double.parse(data['precio'].toString());
     final total = subtotal - double.parse(data['total_dcto'].toString());
     final descripcion = data['descripcion'].length >= 30
         ? data['descripcion'].substring(0, 30) + '...'
@@ -963,7 +950,7 @@ class _OrderPageState extends State<OrderPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                 descripcion.toUpperCase(),
+                  descripcion.toUpperCase(),
                   style: TextStyle(
                     fontSize: 14.0,
                     fontWeight: FontWeight.w700,
@@ -1096,8 +1083,7 @@ class _OrderPageState extends State<OrderPage> {
                       width: _size.width * 0.5 - 40,
                       child: Text(
                           '\$ ' +
-                              expresionRegular(
-                                  double.parse(total.toString())),
+                              expresionRegular(double.parse(total.toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -1114,7 +1100,8 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-  Widget InputCallbackf(BuildContext context,hintText,iconCallback,callback,controller) {
+  Widget InputCallbackf(
+      BuildContext context, hintText, iconCallback, callback, controller) {
     final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
@@ -1126,16 +1113,16 @@ class _OrderPageState extends State<OrderPage> {
         },
         child: TextField(
           controller: controller,
-             textInputAction: TextInputAction.done,
+          textInputAction: TextInputAction.done,
           onChanged: (text) {
-            if(text.isEmpty){
+            if (text.isEmpty) {
               callback();
             }
           },
-           onSubmitted: (String str) {
+          onSubmitted: (String str) {
             setState(() {
               if (controller.text.isNotEmpty) {
-                  callback();
+                callback();
               }
             });
           },
@@ -1157,13 +1144,14 @@ class _OrderPageState extends State<OrderPage> {
             ),
             suffixIcon: GestureDetector(
               onTap: () {
-                if( controller.text.isNotEmpty){
+                if (controller.text.isNotEmpty) {
                   callback();
                 }
               },
               child: Padding(
                 padding: const EdgeInsets.only(left: 17.0, right: 12.0),
-                child: Icon( iconCallback,
+                child: Icon(
+                  iconCallback,
                   color: focus ? Color(0xff0f538d) : Color(0xffc7c7c7),
                 ),
               ),
@@ -1177,6 +1165,7 @@ class _OrderPageState extends State<OrderPage> {
       ),
     );
   }
+
   Widget _ItemCategoryOrderState(i, data) {
     final _size = MediaQuery.of(context).size;
     final saldo =
@@ -1192,7 +1181,7 @@ class _OrderPageState extends State<OrderPage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            child:  AutoSizeText(
+            child: AutoSizeText(
               maxLines: 2,
               '${data['descripcion']}',
               style: TextStyle(
@@ -1211,15 +1200,17 @@ class _OrderPageState extends State<OrderPage> {
                   type: SelectFormFieldType.dropdown, // or can be dialog
                   labelText: 'Lista de precios',
                   items: itemsListPrecio,
-                  initialValue:itemsListPrecio.length > 0 ?  itemsListPrecio[0]['value'] : null,
+                  initialValue: itemsListPrecio.length > 0
+                      ? itemsListPrecio[0]['value']
+                      : null,
                   onChanged: (val) => setState(() => {
-                    _value_itemsListPrecio = val,
-                    if (_value_itemsListPrecio !='0')
-                      {
-                        _itemSelect = data['id_item'],
-                        searchPrecioProductos('${data['id_item']}'),
-                      }
-                  }),
+                        _value_itemsListPrecio = val,
+                        if (_value_itemsListPrecio != '0')
+                          {
+                            _itemSelect = data['id_item'],
+                            searchPrecioProductos('${data['id_item']}'),
+                          }
+                      }),
                 ),
                 SizedBox(height: 10.0),
                 Row(
@@ -1249,10 +1240,12 @@ class _OrderPageState extends State<OrderPage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child:Text(
+                      child: Text(
                           (_itemSelect == data['id_item'])
                               ? '\$ ' + expresionRegular(_precio)
-                              : '\$ ' + expresionRegular(double.parse(data['precio'].toString())),
+                              : '\$ ' +
+                                  expresionRegular(
+                                      double.parse(data['precio'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -1310,9 +1303,14 @@ class _OrderPageState extends State<OrderPage> {
                       height: 40.0,
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8.0),
-                          color: (_itemSelect == data['id_item'] && _precio > 0  ) && !validExistCarrito(data['id_item'])
-                              || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
-                                  && !validExistCarrito(data['id_item'])
+                          color: (_itemSelect == data['id_item'] &&
+                                          _precio > 0) &&
+                                      !validExistCarrito(data['id_item']) ||
+                                  (_itemSelect != data['id_item'] &&
+                                          double.parse(
+                                                  data['precio'].toString()) >
+                                              0) &&
+                                      !validExistCarrito(data['id_item'])
                               ? Colors.blue
                               : Colors.grey[300]),
                       child: Material(
@@ -1328,23 +1326,32 @@ class _OrderPageState extends State<OrderPage> {
                                   fontWeight: FontWeight.w400),
                             ),
                           ),
-                          onTap: (_itemSelect == data['id_item'] && _precio > 0  ) || (_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 )
+                          onTap: (_itemSelect == data['id_item'] &&
+                                      _precio > 0) ||
+                                  (_itemSelect != data['id_item'] &&
+                                      double.parse(data['precio'].toString()) >
+                                          0)
                               ? () {
-                              if (validExistCarrito(data['id_item'])) {
-                               _showBarMsg('Este producto ya existe en el carrito', false);
-                              }else {
-
-                                if(_itemSelect != data['id_item'] && double.parse(data['precio'].toString()) > 0 ) {
-                                  _precio = double.parse(data['precio'].toString());
+                                  if (validExistCarrito(data['id_item'])) {
+                                    _showBarMsg(
+                                        'Este producto ya existe en el carrito',
+                                        false);
+                                  } else {
+                                    if (_itemSelect != data['id_item'] &&
+                                        double.parse(
+                                                data['precio'].toString()) >
+                                            0) {
+                                      _precio = double.parse(
+                                          data['precio'].toString());
+                                    }
+                                    _itemSelect = data['id_item'];
+                                    _showAlert(
+                                        i,
+                                        data['id_item'],
+                                        data['descripcion'],
+                                        int.parse(data['saldo_inventario']));
+                                  }
                                 }
-                              _itemSelect = data['id_item'];
-                              _showAlert(
-                                  i,
-                                  data['id_item'],
-                                  data['descripcion'],
-                                  int.parse(data['saldo_inventario']));
-                            }
-                          }
                               : null,
                         ),
                       ),
@@ -1384,7 +1391,7 @@ class _OrderPageState extends State<OrderPage> {
         children: [
           Padding(
             padding:
-            const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: AutoSizeText(
               maxLines: 2,
               '$descripcion',
@@ -1397,11 +1404,10 @@ class _OrderPageState extends State<OrderPage> {
           ),
           Padding(
             padding:
-            const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1418,7 +1424,9 @@ class _OrderPageState extends State<OrderPage> {
                             width: 5.0,
                           ),
                           SizedBox(
-                            width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
+                            width: _size.width > 600
+                                ? _size.width * 0.5 - 130
+                                : _size.width * 0.5 - 80,
                             child: AutoSizeText(
                               maxLines: 1,
                               'Precio Unidad',
@@ -1432,7 +1440,9 @@ class _OrderPageState extends State<OrderPage> {
                       ),
                     ),
                     Container(
-                      width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
+                      width: _size.width > 600
+                          ? _size.width * 0.5 - 160
+                          : _size.width * 0.5 - 90,
                       child: AutoSizeText(
                           maxLines: 1,
                           ' \$ ' + expresionRegular(_precio),
@@ -1459,7 +1469,9 @@ class _OrderPageState extends State<OrderPage> {
                             width: 5.0,
                           ),
                           SizedBox(
-                            width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
+                            width: _size.width > 600
+                                ? _size.width * 0.5 - 130
+                                : _size.width * 0.5 - 80,
                             child: AutoSizeText(
                               maxLines: 2,
                               'Unidades disponibles',
@@ -1473,7 +1485,9 @@ class _OrderPageState extends State<OrderPage> {
                       ),
                     ),
                     Container(
-                      width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
+                      width: _size.width > 600
+                          ? _size.width * 0.5 - 160
+                          : _size.width * 0.5 - 90,
                       child: AutoSizeText(
                           maxLines: 1,
                           expresionRegular(double.parse(cantidad.toString())),
@@ -1527,264 +1541,6 @@ class _OrderPageState extends State<OrderPage> {
                                             topLeft: Radius.circular(15.0),
                                             bottomLeft: Radius.circular(15.0))),
                                     child:
-                                    Icon(Icons.remove, color: Colors.white),
-                                  )),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      width: 1.0, color: Color(0xffC7C7C7)),
-                                  color: Colors.white,
-                                ),
-                                width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 126,
-                                height: 35.0,
-                                child: Center(
-                                  child: TextField(
-                                      textAlign: TextAlign.center,
-                                      controller: myControllerCantidad,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        disabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                                width: 0.8,
-                                                color: Color(0xff707070))),
-                                      )),
-                                ),
-                              ),
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _cantidadProducto = int.parse(
-                                          myControllerCantidad.text.trim());
-                                      _cantidadProducto++;
-                                      myControllerCantidad.text =
-                                          _cantidadProducto.toString();
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 35.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(15.0),
-                                            bottomRight:
-                                            Radius.circular(15.0))),
-                                    child: Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                    ),
-                                  ))
-                            ],
-                          ),
-                        )),
-                  ],
-                ),
-                TextField(
-                    controller: myControllerDescuentos,
-                    keyboardType:
-                    TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      disabledBorder: UnderlineInputBorder(
-                          borderSide:
-                          BorderSide(width: 0.8, color: Color(0xff707070))),
-                      labelText: 'Descuento',
-                      hintText: 'Ingrese descuento $_descuento',
-                    )),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: OutlinedButton(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Align(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 3.0),
-                                ),
-                              ),
-                              Text("Cancelar")
-                            ],
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          }),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: ElevatedButton(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Align(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 3.0),
-                                ),
-                              ),
-                              Text("Continuar")
-                            ],
-                          ),
-                          style: ButtonStyle(
-                            //backgroundColor: Colors.blue,
-                          ),
-                          onPressed: () {
-                            if (!validExistCarrito(idItem)) {
-                              _addProductoPedido(descripcion, idItem);
-                            }
-                          }),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-  Widget _ItemCategoryOrderEditOLD(index, idItem, descripcion, cantidad) {
-    final _size = MediaQuery.of(context).size;
-    double maxWidth = MediaQuery.of(context).size.width * 0.8;
-    return Container(
-      width: maxWidth,
-      height: 355.0,
-      decoration: BoxDecoration(
-          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
-          borderRadius: BorderRadius.circular(5.0)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
-            child: Text(
-              '$descripcion',
-              style: TextStyle(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w700,
-                color: Colors.blue,
-              ),
-            ),
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.label_important,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          Text(
-                            'Precio Unidad \n \$ ' + expresionRegular(_precio),
-                            style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_box,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          SizedBox(
-                         width: _size.width> 600 ?_size.width * 0.5 - 130 : _size.width * 0.5 - 80,
-                            child: Text(
-                              'Unidades disponibles',
-                              style: TextStyle(
-                                  color: Color(0xff707070),
-                                  fontSize: 15.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container( 
-                     width: _size.width> 600 ?_size.width * 0.5 - 160 : _size.width * 0.5 - 90,
-                      child: Text(
-                          expresionRegular(double.parse(cantidad.toString())),
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 130,
-                      child: Text(
-                        'Cantidad',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Container(
-                          width: _size.width * 0.5 - 65,
-                        child: Container(
-                          width: _size.width,
-                          height: 35.0,
-                          child: Row(
-                            children: <Widget>[
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      if (_cantidadProducto > 1) {
-                                        _cantidadProducto = int.parse(
-                                            myControllerCantidad.text.trim());
-                                        _cantidadProducto--;
-                                        myControllerCantidad.text =
-                                            _cantidadProducto.toString();
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 35.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(15.0),
-                                            bottomLeft: Radius.circular(15.0))),
-                                    child:
                                         Icon(Icons.remove, color: Colors.white),
                                   )),
                               Container(
@@ -1793,7 +1549,9 @@ class _OrderPageState extends State<OrderPage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                               width: _size.width> 600 ?_size.width * 0.5 - 330 : _size.width * 0.5 - 126,
+                                width: _size.width > 600
+                                    ? _size.width * 0.5 - 330
+                                    : _size.width * 0.5 - 126,
                                 height: 35.0,
                                 child: Center(
                                   child: TextField(
@@ -1837,23 +1595,23 @@ class _OrderPageState extends State<OrderPage> {
                         )),
                   ],
                 ),
-                    TextField(
+                TextField(
                     controller: myControllerDescuentos,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
                       disabledBorder: UnderlineInputBorder(
                           borderSide:
-                          BorderSide(width: 0.8, color: Color(0xff707070))),
+                              BorderSide(width: 0.8, color: Color(0xff707070))),
                       labelText: 'Descuento',
                       hintText: 'Ingrese descuento $_descuento',
                     )),
-                 
                 SizedBox(height: 10.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(3.0),
                       child: OutlinedButton(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -1861,7 +1619,7 @@ class _OrderPageState extends State<OrderPage> {
                               Align(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
+                                      horizontal: 3.0),
                                 ),
                               ),
                               Text("Cancelar")
@@ -1872,7 +1630,7 @@ class _OrderPageState extends State<OrderPage> {
                           }),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(3.0),
                       child: ElevatedButton(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -1880,15 +1638,13 @@ class _OrderPageState extends State<OrderPage> {
                               Align(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0),
+                                      horizontal: 3.0),
                                 ),
                               ),
                               Text("Continuar")
                             ],
                           ),
-                          style: ButtonStyle(
-                              //backgroundColor: Colors.blue,
-                              ),
+                          style: ButtonStyle(),
                           onPressed: () {
                             if (!validExistCarrito(idItem)) {
                               _addProductoPedido(descripcion, idItem);
@@ -1903,7 +1659,8 @@ class _OrderPageState extends State<OrderPage> {
         ],
       ),
     );
-  }  
+  }
+
   Widget _shoppingCart(BuildContext context, data, cant) {
     final _size = MediaQuery.of(context).size;
     final nombre = nombre_tercero.toUpperCase();
@@ -1917,282 +1674,155 @@ class _OrderPageState extends State<OrderPage> {
         padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
         child: ListView(
           children: [
-            cant > 0 ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [               
-                   Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Carrito de compras',
-                          style: TextStyle(
+            cant > 0
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Carrito de compras',
+                            style: TextStyle(
+                                color: Color(0xff0f538d),
+                                fontSize: 24.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                          GestureDetector(
+                            child: Icon(
+                              Icons.disabled_by_default_outlined,
                               color: Color(0xff0f538d),
-                              fontSize: 24.0,
-                              fontWeight: FontWeight.w700),
-                        ),
-                        GestureDetector(
-                        child:Icon(
-                          Icons.disabled_by_default_outlined,
-                          color: Color(0xff0f538d),
-                          size: 30.0,
-                        ),
-                          onTap: () {
-                            myControllerBuscarProd.clear();
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    ),
-                SizedBox(height: 12.0),
-                Text('$nombre',
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w600)),
-                SizedBox(
-                  height: 12.0,
-                ),
-                Text(
-                  'Búsqueda de productos en el carrito',
-                  style: TextStyle(
-                      color: Color(0xff0f538d),
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w500),
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                InputCallbackf(context,
-                    'Buscar producto',
-                    Icons.search,
-                    _searchProducto,
-                    myControllerBuscarProd),
-                SizedBox(height: 15.0),
-                Container(
-                  width: 185.0,
-                  height: 45.0,
-                  decoration: BoxDecoration(
-                      color: Color(0xff06538D),
-                      borderRadius: BorderRadius.circular(5.0)),
-                  child: Material(
-                    borderRadius: BorderRadius.circular(5.0),
-                    color: Color(0xff06538D),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      onTap: () => {
-                        setState(() {
-                          Navigator.pop(context);
-                          _formShowEdit = false;
-                          _clientShow = false;
-                          _formShow = false;
-                          _productosShowCat = false;
-                          searchClasificacionProductos();
-                        }),
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: <Widget>[
-                            Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
+                              size: 30.0,
                             ),
-                            SizedBox(width: 5.0),
-                            AutoSizeText(
-                              maxLines: 1,
-                              minFontSize: 10,
-                              'Categorias',
+                            onTap: () {
+                              myControllerBuscarProd.clear();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.0),
+                      Text('$nombre',
+                          style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w600)),
+                      SizedBox(
+                        height: 12.0,
+                      ),
+                      Text(
+                        'Búsqueda de productos en el carrito',
+                        style: TextStyle(
+                            color: Color(0xff0f538d),
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w500),
+                      ),
+                      SizedBox(
+                        height: 10.0,
+                      ),
+                      InputCallbackf(context, 'Buscar producto', Icons.search,
+                          _searchProducto, myControllerBuscarProd),
+                      SizedBox(height: 15.0),
+                      Container(
+                        width: 185.0,
+                        height: 45.0,
+                        decoration: BoxDecoration(
+                            color: Color(0xff06538D),
+                            borderRadius: BorderRadius.circular(5.0)),
+                        child: Material(
+                          borderRadius: BorderRadius.circular(5.0),
+                          color: Color(0xff06538D),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(5.0),
+                            onTap: () => {
+                              setState(() {
+                                Navigator.pop(context);
+                                _formShowEdit = false;
+                                _clientShow = false;
+                                _formShow = false;
+                                _productosShowCat = false;
+                                searchClasificacionProductos();
+                              }),
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: <Widget>[
+                                  Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 5.0),
+                                  AutoSizeText(
+                                    maxLines: 1,
+                                    minFontSize: 10,
+                                    'Categorias',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18.0,
+                                        fontWeight: FontWeight.w700),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 15.0,
+                      ),
+                      SizedBox(
+                        height: _size.height - 560,
+                        child: ListView.builder(
+                          itemCount: _cartProductos.length,
+                          itemBuilder: (context, i) =>
+                              _ItemCategoryOrderCart(_cartProductos[i], i),
+                        ),
+                      ),
+                      SizedBox(height: 15.0),
+                      TextField(
+                          controller: myControllerObservacion,
+                          decoration: InputDecoration(
+                            disabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 0.8, color: Color(0xff707070))),
+                            labelText: 'Observaciones',
+                            hintText: 'Ingrese observacion',
+                          )),
+                      SizedBox(height: 30.0),
+                      Container(
+                        width: _size.width,
+                        height: 40.0,
+                        padding: EdgeInsets.symmetric(horizontal: 15.0),
+                        decoration: BoxDecoration(
+                            color: Color(0xffE8E8E8),
+                            borderRadius: BorderRadius.circular(5.0)),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Text('Total',
+                                style: TextStyle(
+                                    fontSize: 18.0,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xff06538D))),
+                            Text(
+                              '\$ ' +
+                                  expresionRegular(
+                                      double.parse(totalPedido.toString())),
                               style: TextStyle(
-                                  color: Colors.white,
                                   fontSize: 18.0,
-                                  fontWeight: FontWeight.w700),
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xff06538D)),
                             )
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 15.0,
-                ),
-                SizedBox(
-                  height:_size.height - 560,
-                     child: ListView.builder(
-                      itemCount: _cartProductos.length,
-                      itemBuilder: (context, i) =>   _ItemCategoryOrderCart(_cartProductos[i], i),
-                    ),
-
-                ),
-                SizedBox(height: 15.0),
-                TextField(
-                    controller: myControllerObservacion,
-                    decoration: InputDecoration(
-                      disabledBorder: UnderlineInputBorder(
-                          borderSide:
-                              BorderSide(width: 0.8, color: Color(0xff707070))),
-                      labelText: 'Observaciones',
-                      hintText: 'Ingrese observacion',
-                    )),
-                SizedBox(height: 30.0),
-                Container(
-                  width: _size.width,
-                  height: 40.0,
-                  padding: EdgeInsets.symmetric(horizontal: 15.0),
-                  decoration: BoxDecoration(
-                      color: Color(0xffE8E8E8),
-                      borderRadius: BorderRadius.circular(5.0)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Total',
-                          style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff06538D))),
-                      Text(
-                        '\$ ' +
-                            expresionRegular(
-                                double.parse(totalPedido.toString())),
-                        style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),
-                      )
-                    ],
-                  ),
-                ),
-                SizedBox(height: 15.0),
-                Row(
-                  children: [
-                    Container(
-                        width: _size.width * 0.5 - 30,
-                        child: Container(
-                          width: _size.width,
-                          height: 41.0,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5.0),
-                              color: Color(0xffCB1B1B)),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(5.0),
-                              child: Center(
-                                child: Text(
-                                  'Vaciar carrito',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                              onTap: () => {
-                                setState(() {
-                                  removeCarrito();
-                                  Navigator.of(context)
-                                      .pop(); // close the drawer
-                                  _formShow = true;
-                                  _formShowCategories = false;
-                                  _clientShow = false;
-                                  _productosShowCat = false;
-                                }),
-                              },
-                            ),
-                          ),
-                        )),
-                    SizedBox(width: 10.0),
-                    Container(
-                        width: _size.width * 0.5 - 30,
-                        child: Container(
-                          width: _size.width,
-                          height: 41.0,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5.0),
-                              color: (_cartProductos.length > 0)
-                                  ? Color(0xff0894FD)
-                                  : Color.fromARGB(255, 146, 144, 144)),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(5.0),
-                              child: Center(
-                                child: Text(
-                                  'Guardar',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                              onTap: () {
-                                _cartProductos.length > 0
-                                    ? editarPedido()
-                                    : modalSinPedido();
-                              },
-                            ),
-                          ),
-                        )),
-                  ],
-                )
-              ],
-            ):
-
-        Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Carrito de compras',
-                style: TextStyle(
-                    color: Color(0xff0f538d),
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.w700),
-              ),
-                GestureDetector(
-                  child:Icon(
-                    Icons.disabled_by_default_outlined,
-                    color: Color(0xff0f538d),
-                    size: 30.0,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-            ],
-          ),
-          SizedBox(height: 60.0),
-          SizedBox(width: 20.0),
-          SizedBox(
-            height: 400.0,
-            child:
-            new Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                new Card(
-                  elevation: 10,
-                  child: new Column(
-                    children: <Widget>[
-                      new Row(
-                        children: <Widget>[
-                          SizedBox(width: 50.0),
-                          new Container(
-                            child:  Image(
-                              height: 250.0,
-                              width: 250.0,
-                              image: AssetImage('assets/images/carrito_vacio.png'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20.0),
-                      new Row(
+                      SizedBox(height: 15.0),
+                      Row(
                         children: [
-                          SizedBox(width: 88.0),
                           Container(
                               width: _size.width * 0.5 - 30,
                               child: Container(
@@ -2200,16 +1830,52 @@ class _OrderPageState extends State<OrderPage> {
                                 height: 41.0,
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(5.0),
-                                    color:
-                                    Color(0xff0894FD)
-                                ),
+                                    color: Color(0xffCB1B1B)),
                                 child: Material(
                                   color: Colors.transparent,
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Center(
                                       child: Text(
-                                        'Cerrar',
+                                        'Vaciar carrito',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                    onTap: () => {
+                                      setState(() {
+                                        removeCarrito();
+                                        Navigator.of(context)
+                                            .pop(); // close the drawer
+                                        _formShow = true;
+                                        _formShowCategories = false;
+                                        _clientShow = false;
+                                        _productosShowCat = false;
+                                      }),
+                                    },
+                                  ),
+                                ),
+                              )),
+                          SizedBox(width: 10.0),
+                          Container(
+                              width: _size.width * 0.5 - 30,
+                              child: Container(
+                                width: _size.width,
+                                height: 41.0,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    color: (_cartProductos.length > 0)
+                                        ? Color(0xff0894FD)
+                                        : Color.fromARGB(255, 146, 144, 144)),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Guardar',
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 18,
@@ -2217,34 +1883,121 @@ class _OrderPageState extends State<OrderPage> {
                                       ),
                                     ),
                                     onTap: () {
-                                      Navigator.pop(context);
-                                    //  Navigator.pushNamed(context, 'order');
+                                      _cartProductos.length > 0
+                                          ? editarPedido()
+                                          : modalSinPedido();
                                     },
                                   ),
                                 ),
                               )),
                         ],
-                      ),  SizedBox(height: 20.0),
-
+                      )
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Carrito de compras',
+                            style: TextStyle(
+                                color: Color(0xff0f538d),
+                                fontSize: 24.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                          GestureDetector(
+                            child: Icon(
+                              Icons.disabled_by_default_outlined,
+                              color: Color(0xff0f538d),
+                              size: 30.0,
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 60.0),
+                      SizedBox(width: 20.0),
+                      SizedBox(
+                        height: 400.0,
+                        child: new Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            new Card(
+                              elevation: 10,
+                              child: new Column(
+                                children: <Widget>[
+                                  new Row(
+                                    children: <Widget>[
+                                      SizedBox(width: 50.0),
+                                      new Container(
+                                        child: Image(
+                                          height: 250.0,
+                                          width: 250.0,
+                                          image: AssetImage(
+                                              'assets/images/carrito_vacio.png'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 20.0),
+                                  new Row(
+                                    children: [
+                                      SizedBox(width: 88.0),
+                                      Container(
+                                          width: _size.width * 0.5 - 30,
+                                          child: Container(
+                                            width: _size.width,
+                                            height: 41.0,
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(5.0),
+                                                color: Color(0xff0894FD)),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(5.0),
+                                                child: Center(
+                                                  child: Text(
+                                                    'Cerrar',
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 18,
+                                                        fontWeight:
+                                                            FontWeight.w700),
+                                                  ),
+                                                ),
+                                                onTap: () {
+                                                  Navigator.pop(context);
+                                                  //  Navigator.pushNamed(context, 'order');
+                                                },
+                                              ),
+                                            ),
+                                          )),
+                                    ],
+                                  ),
+                                  SizedBox(height: 20.0),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 20.0),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 20.0),
-        ],
-      ),
           ],
         ),
       ),
     );
   }
 
-
   //listado de carrito
   Widget _ItemCategoryOrderCart(data, index) {
-
     var cantidad = int.parse(data['cantidad'].toString());
     double total = 0.0;
     total = data['total'];
@@ -2275,8 +2028,8 @@ class _OrderPageState extends State<OrderPage> {
                       ),
                     ),
                     onTap: () => {
-                      _showDialog(context, index),
-                    }),
+                          _showDialog(context, index),
+                        }),
               ],
             ),
           ),
@@ -2299,7 +2052,7 @@ class _OrderPageState extends State<OrderPage> {
           ),
           Padding(
             padding:
-            const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2346,7 +2099,7 @@ class _OrderPageState extends State<OrderPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width:width_px * 0.5 - 40,
+                      width: width_px * 0.5 - 40,
                       child: Row(
                         children: [
                           Icon(
@@ -2371,7 +2124,7 @@ class _OrderPageState extends State<OrderPage> {
                       ),
                     ),
                     Container(
-                      width: width_px  * 0.5 - 40,
+                      width: width_px * 0.5 - 40,
                       child: Text('\$ ' + expresionRegular(total),
                           style: TextStyle(
                               color: Color(0xff707070),
@@ -2422,7 +2175,7 @@ class _OrderPageState extends State<OrderPage> {
                                             topLeft: Radius.circular(15.0),
                                             bottomLeft: Radius.circular(15.0))),
                                     child:
-                                    Icon(Icons.remove, color: Colors.white),
+                                        Icon(Icons.remove, color: Colors.white),
                                   )),
                               Container(
                                 decoration: BoxDecoration(
@@ -2430,7 +2183,9 @@ class _OrderPageState extends State<OrderPage> {
                                       width: 1.0, color: Color(0xffC7C7C7)),
                                   color: Colors.white,
                                 ),
-                                width: width_px > 600 ? width_px * 0.5 - 330 : width_px* 0.5 - 120,
+                                width: width_px > 600
+                                    ? width_px * 0.5 - 330
+                                    : width_px * 0.5 - 120,
                                 height: 30.0,
                                 child: Center(
                                   child: TextField(
@@ -2467,273 +2222,6 @@ class _OrderPageState extends State<OrderPage> {
                                   onTap: () {
                                     setState(() {
                                       if (cantidad >= 0) {
-                                        OperationDB.updateCantidad(
-                                            _cartProductos[index]['id_item'],
-                                            _value_automatico,
-                                            true);
-                                        ObtieneCarrito();
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 30.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(15.0),
-                                            bottomRight:
-                                            Radius.circular(15.0))),
-                                    child: Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                    ),
-                                  ))
-                            ],
-                          ),
-                        )),
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  //listado de carrito
-  Widget _ItemCategoryOrderCartold(data, index) {
-    var cantidad = int.parse(data['cantidad'].toString());
-    double total = 0.0;
-    total = data['total'];
-    final descripcion = data['descripcion'] ;
-    final _size = MediaQuery.of(context).size;
-    return Container(
-      width: _size.width,
-      decoration: BoxDecoration(
-          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
-          borderRadius: BorderRadius.circular(5.0)),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-      Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal:0.0),
-      child:Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          GestureDetector(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 300.0, bottom:0.0),
-                child: Icon(
-                  Icons.do_disturb_on,
-                  color: Color(0xffCB1B1B),
-                  size: 20,
-                ),
-              ),
-              onTap: () => {
-                _showDialog(context, index),
-              }),
-        ],
-      ),
-    ),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child:Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                AutoSizeText(
-                maxLines: 2,
-                '$descripcion',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.label_important,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          Text(
-                            'Precio unidad',
-                            style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Text(
-                          '\$ ' +
-                              expresionRegular(
-                                  double.parse(data['precio'].toString())),
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_box,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          SizedBox(
-                            width: _size.width * 0.5 - 60,
-                            child: Text(
-                              'Total',
-                              style: TextStyle(
-                                  color: Color(0xff707070),
-                                  fontSize: 15.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Text('\$ ' + expresionRegular(total),
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: _size.width * 0.5 - 40,
-                      child: Text(
-                        'Cantidad',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Container(
-                        width: _size.width * 0.5 - 40,
-                        child: Container(
-                          width: _size.width,
-                          height: 30.0,
-                          child: Row(
-                            children: <Widget>[
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      if (cantidad > 1) { 
-                                        OperationDB.updateCantidad(
-                                            _cartProductos[index]['id_item'],
-                                            _value_automatico,
-                                            false);
-                                        ObtieneCarrito();
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 30.0,
-                                    height: 30.0,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(15.0),
-                                            bottomLeft: Radius.circular(15.0))),
-                                    child:
-                                        Icon(Icons.remove, color: Colors.white),
-                                  )),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      width: 1.0, color: Color(0xffC7C7C7)),
-                                  color: Colors.white,
-                                ), 
-                                width:_size.width> 600 ? _size.width* 0.5 - 330 :_size.width * 0.5 - 120,
-                                height: 30.0,
-                                child: Center(
-                                  child:
-                                   TextField(                                  
-                                      textAlign: TextAlign.center, 
-                                      controller: myControllerCantidadCart,
-                                      keyboardType: TextInputType.number,
-                                      textInputAction: TextInputAction.done,
-                                      
-                                     onSubmitted: (String str){
-                                     
-                                         if (str.isNotEmpty) {
-                                      OperationDB.updateCantidadFinal(
-                                              _cartProductos[index]['id_item'],
-                                              _value_automatico,
-                                            int.parse(
-                                              myControllerCantidadCart.text.trim()));
-                                            myControllerCantidadCart.clear(); 
-                                          ObtieneCarrito();
-                                        }
-                                    },
-                                   
-                                      decoration: InputDecoration(
-                                        hintText:  cantidad.toString(),
-                                         hintStyle: TextStyle( color: Color(0xff707070),
-                                                  fontSize: 15.0,
-                                                  fontWeight: FontWeight.w700),
-                                        disabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                                width: 0.8,
-                                                color: Color(0xff707070))),
-                                      )),
-                                  /* Text(
-                                    cantidad.toString(),
-                                    style: TextStyle(
-                                        color: Color(0xff707070),
-                                        fontSize: 15.0,
-                                        fontWeight: FontWeight.w700),
-                                  ),*/
-                                ),
-                              ),
-                              InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      if (cantidad >= 0) { 
                                         OperationDB.updateCantidad(
                                             _cartProductos[index]['id_item'],
                                             _value_automatico,
@@ -2982,7 +2470,7 @@ class _OrderPageState extends State<OrderPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AutoSizeText(
-            maxLines: 1,
+          maxLines: 1,
           'Visualice los detalles del pedido',
           style: TextStyle(
               fontSize: 18.0,
@@ -2990,7 +2478,8 @@ class _OrderPageState extends State<OrderPage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 15.0),
-        AutoSizeText(  maxLines: 1,
+        AutoSizeText(
+          maxLines: 1,
           '${_datPedido[_seePedido]['nombre_sucursal'].toUpperCase()}',
           style: TextStyle(
               fontSize: 17.0, fontWeight: FontWeight.bold, color: Colors.blue),
@@ -3020,8 +2509,8 @@ class _OrderPageState extends State<OrderPage> {
         ),
         SizedBox(height: 10.0),
         SizedBox(
-          height: _size.height -500,
-            child: ListView(
+          height: _size.height - 500,
+          child: ListView(
             children: [
               for (var i = 0; i < total_d; i++) ...[
                 if (_cartProductos.isNotEmpty) ...[
@@ -3065,7 +2554,6 @@ class _OrderPageState extends State<OrderPage> {
                           _productosShowCat = false;
                           _formShow = false;
                           _clientShow = true;
-
                         });
                       },
                     ),
@@ -3264,8 +2752,8 @@ class _OrderPageState extends State<OrderPage> {
                           _productosShowCat = false;
                           _clientShow = false;
                           _formShow = true;
-                       //   _search = '@';
-                        //  searchPedido();
+                          //   _search = '@';
+                          //  searchPedido();
                         });
                       },
                     ),
@@ -3330,7 +2818,7 @@ class _OrderPageState extends State<OrderPage> {
           height: 15.0,
         ),
         AutoSizeText(
-            maxLines: 1,
+          maxLines: 1,
           '$nombre',
           style: TextStyle(
               fontSize: 20.0,
@@ -3340,17 +2828,14 @@ class _OrderPageState extends State<OrderPage> {
         SizedBox(
           height: 10.0,
         ),
-        InputCallbackf(context,
-            'Buscar Categoria',
-            Icons.search,
-            searchClasificacionProductos,
-            myControllerBuscarCatego),
+        InputCallbackf(context, 'Buscar Categoria', Icons.search,
+            searchClasificacionProductos, myControllerBuscarCatego),
         SizedBox(
           height: 20.0,
         ),
         SizedBox(
           height: _size.height - 400,
-            child: ListView(
+          child: ListView(
             children: [
               _ItemProductos(data),
             ],
@@ -3428,7 +2913,8 @@ class _OrderPageState extends State<OrderPage> {
                   height: 41.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5.0),
-                      color: (_cartProductos.length > 0 && double.parse(totalPedido) > 0)
+                      color: (_cartProductos.length > 0 &&
+                              double.parse(totalPedido) > 0)
                           ? Color(0xff0894FD)
                           : Color.fromARGB(255, 146, 144, 144)),
                   child: Material(
@@ -3474,8 +2960,9 @@ class _OrderPageState extends State<OrderPage> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image:
-               AssetImage('assets/images/producto-sin-imagen.png'),
-                //  NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
+                      //  AssetImage('assets/images/producto-sin-imagen.png'),
+                      NetworkImage(
+                          "${Constant.URL}/seeImagen/${data[i]['imagen']}"),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.all(
@@ -3497,43 +2984,6 @@ class _OrderPageState extends State<OrderPage> {
                     ),
                   ),
                 ],
-              ),
-            ),
-            onTap: () {
-              setState(() {
-                idClasificacion = '${data[i]['id_clasificacion']}';
-                _id_padre = idClasificacion;
-                selectProductoNivel();
-              });
-            },
-          ),
-        ],
-      ],
-    );
-  }
-  Widget _ItemProductosOld(data) {
-    return GridView.count(
-      scrollDirection: Axis.vertical,
-      primary: false,
-      shrinkWrap: true,
-      padding: const EdgeInsets.all(20),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      crossAxisCount: 2,
-      children: <Widget>[
-        for (var i = 0; i < _countClasificacion; i++) ...[
-          InkWell(
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image:
-                     // AssetImage('assets/images/${data[i]['descripcion']}.png'),
-                  AssetImage('assets/images/producto-sin-imagen.png'),
-                  fit: BoxFit.cover,
-                ),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(20.0),
-                ),
               ),
             ),
             onTap: () {
@@ -3589,12 +3039,8 @@ class _OrderPageState extends State<OrderPage> {
                 SizedBox(
                   height: 10.0,
                 ),
-                InputCallbackf(context,
-                    'Buscar producto',
-                    Icons.search,
-                    searchProductosPedido,
-                    myControllerBuscarProd),
-
+                InputCallbackf(context, 'Buscar producto', Icons.search,
+                    searchProductosPedido, myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 185.0,
@@ -3626,10 +3072,10 @@ class _OrderPageState extends State<OrderPage> {
                               color: Colors.white,
                             ),
                             SizedBox(width: 5.0),
-                              AutoSizeText(
-                                maxLines: 1,
-                                minFontSize: 10,
-                                'Categorias',
+                            AutoSizeText(
+                              maxLines: 1,
+                              minFontSize: 10,
+                              'Categorias',
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18.0,
@@ -3650,7 +3096,7 @@ class _OrderPageState extends State<OrderPage> {
                         height: 5.0,
                       ),
                 SizedBox(
-                  height: _size.height  -480,
+                  height: _size.height - 480,
                   child: ListView(
                     children: [
                       for (var i = 0; i < _countProductos; i++) ...[
@@ -3715,7 +3161,7 @@ class _OrderPageState extends State<OrderPage> {
                               ),
                               onTap: () {
                                 setState(() {
-                                //  myControllerOrdenCompra.clear();
+                                  //  myControllerOrdenCompra.clear();
                                   _formShow = false;
                                   _clientShow = false;
                                   _productosShowCat = false;
@@ -3830,24 +3276,23 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   _addProductoPedidoItems(data) async {
-
     final precio = double.parse(data['precio']);
     final total = data['cantidad'] * precio;
     final cantidad = data['cantidad'];
 
-    if(!validExistCarrito(data['id_item'])) {
-          _cartProductos.add({
-            "descripcion": data['descripcion_item'],
-            "id_item": data['id_item'],
-            "precio": precio,
-            "cantidad": cantidad,
-            "total_dcto": double.parse(data['total_dcto']),
-            "dcto": data['dcto'] != null ? double.parse(data['dcto']) : 0,
-            "id_precio_item": data['id_precio_item'],
-            "total": total
-          });
+    if (!validExistCarrito(data['id_item'])) {
+      _cartProductos.add({
+        "descripcion": data['descripcion_item'],
+        "id_item": data['id_item'],
+        "precio": precio,
+        "cantidad": cantidad,
+        "total_dcto": double.parse(data['total_dcto']),
+        "dcto": data['dcto'] != null ? double.parse(data['dcto']) : 0,
+        "id_precio_item": data['id_precio_item'],
+        "total": total
+      });
 
-      setState(()   {
+      setState(() {
         totalPedido = valorTotal();
       });
       sendCarritoBD("viene de _addProductoPedidoItems");
@@ -3855,38 +3300,36 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   _addProductoPedido(String descripcion, String idItem) {
+    final cantidad = int.parse(myControllerCantidad.text.trim());
+    final total = double.parse(cantidad.toString()) * _precio;
 
-      final cantidad = int.parse(myControllerCantidad.text.trim());
-      final total = double.parse(cantidad.toString()) * _precio;
+    _cartProductos.add({
+      "descripcion": descripcion,
+      "id_item": idItem,
+      "precio": _precio,
+      "cantidad": cantidad,
+      "total_dcto": double.parse(myControllerDescuentos.text.trim()),
+      "dcto": double.parse(myControllerDescuentos.text.trim()),
+      "id_precio_item": _value_itemsListPrecio != ''
+          ? _value_itemsListPrecio
+          : listaPrecioTercero,
+      "total": total
+    });
 
-      _cartProductos.add({
-        "descripcion": descripcion,
-        "id_item": idItem,
-        "precio": _precio,
-        "cantidad": cantidad,
-        "total_dcto": double.parse(myControllerDescuentos.text.trim()),
-        "dcto": double.parse(myControllerDescuentos.text.trim()),
-        "id_precio_item": _value_itemsListPrecio != ''
-            ? _value_itemsListPrecio
-            : listaPrecioTercero,
-        "total": total
-      });
-
-      setState(()   {
-        totalPedido =   valorTotal();
-        myControllerCantidad.clear();
-        myControllerDescuentos.clear();
-        myControllerDescuentos.text = '0';
-        myControllerCantidad.text = '1';
-        _cantidadProducto = 1;
-        sendCarritoBD("_addProductoPedido");
-      });
-      Navigator.of(context).pop();
-      _showBarMsg('Has agregado estos productos a tu carrito', true);
-
+    setState(() {
+      totalPedido = valorTotal();
+      myControllerCantidad.clear();
+      myControllerDescuentos.clear();
+      myControllerDescuentos.text = '0';
+      myControllerCantidad.text = '1';
+      _cantidadProducto = 1;
+      sendCarritoBD("_addProductoPedido");
+    });
+    Navigator.of(context).pop();
+    _showBarMsg('Has agregado estos productos a tu carrito', true);
   }
 
-  valorTotal()   {
+  valorTotal() {
     double total = 0.0;
     double total_descuento = 0.0;
 
@@ -3921,7 +3364,6 @@ class _OrderPageState extends State<OrderPage> {
     return flag;
   }
 
-
   void removeCarritoEditar(data, i) {
     OperationDB.deleteCarrito();
     _cartProductos = [];
@@ -3945,7 +3387,6 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Future sendCarritoBD(String origen) async {
-
     final totalCosto = double.parse(totalPedido) + double.parse(totalDescuento);
     final carrito = Carrito(
         nit: _nit,
@@ -3965,7 +3406,9 @@ class _OrderPageState extends State<OrderPage> {
         total_costo: totalCosto.toString(),
         total_dcto: '$totalDescuento',
         total: '$totalPedido',
-        orden_compra: myControllerOrdenCompra.text != '' ?myControllerOrdenCompra.text : orden_compra ,
+        orden_compra: myControllerOrdenCompra.text != ''
+            ? myControllerOrdenCompra.text
+            : orden_compra,
         observacion: 'CARRITO',
         letras: _letras,
         id_direccion_factura: id_direccion_factura,
@@ -4182,7 +3625,7 @@ class _OrderPageState extends State<OrderPage> {
                               _cartProductos.removeAt(index);
 
                               totalPedido = valorTotal();
-                             //numeroAletra(totalPedido.toString());
+                              //numeroAletra(totalPedido.toString());
                             });
                             Navigator.pop(context);
                           },
@@ -4264,7 +3707,7 @@ class _OrderPageState extends State<OrderPage> {
 
     print("la data que se emvia a editar del pedido $nuevo_pedido");
 
-    flag_pedido = await OperationDB.insertPedido(nuevo_pedido,true);
+    flag_pedido = await OperationDB.insertPedido(nuevo_pedido, true);
     await OperationDB.editarPedido(_value_automatico);
 
     for (var i = 0; i < _cartProductos.length; i++) {
@@ -4309,8 +3752,10 @@ class _OrderPageState extends State<OrderPage> {
           precio_kit: "0",
           tasa_dcto_cliente: "0",
           total_dcto_cliente: "0");
-      print("la data que se emvia a editar del pedido detalle $nuevo_pedido_det");
-      flag_pedido_det = await OperationDB.insertPedidoDet(nuevo_pedido_det,true);
+      print(
+          "la data que se emvia a editar del pedido detalle $nuevo_pedido_det");
+      flag_pedido_det =
+          await OperationDB.insertPedidoDet(nuevo_pedido_det, true);
     }
     if (flag_pedido && flag_pedido_det) {
       !isEdit
@@ -4325,7 +3770,6 @@ class _OrderPageState extends State<OrderPage> {
       _isConnected ? await edicionPedidoAPI() : modalExitosa();
     } else {
       _showBarMsg('Error en la edición del pedido', false);
-
     }
   }
 
@@ -4389,7 +3833,6 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-
   Future edicionPedidoAPI() async {
     _submitDialog(context);
     final response = await http.post(
@@ -4420,7 +3863,7 @@ class _OrderPageState extends State<OrderPage> {
             "trm": "1",
             "subtotal": '$totalSubTotal',
             "total_costo":
-            double.parse(totalPedido) + double.parse(totalDescuento),
+                double.parse(totalPedido) + double.parse(totalDescuento),
             "total_iva": "0",
             "total_dcto": '$totalDescuento',
             "total": '$totalPedido',
@@ -4458,13 +3901,13 @@ class _OrderPageState extends State<OrderPage> {
                   "total_dcto": _cartProductos[i]['total_dcto'].toString(),
                   "costo": "0",
                   "subtotal": double.parse(
-                      _cartProductos[i]['precio'].toString()) *
+                          _cartProductos[i]['precio'].toString()) *
                       double.parse(_cartProductos[i]['cantidad'].toString()),
                   "total":
-                  (double.parse(_cartProductos[i]['precio'].toString()) *
-                      double.parse(
-                          _cartProductos[i]['cantidad'].toString())) -
-                      double.parse(_cartProductos[i]['dcto'].toString()),
+                      (double.parse(_cartProductos[i]['precio'].toString()) *
+                              double.parse(
+                                  _cartProductos[i]['cantidad'].toString())) -
+                          double.parse(_cartProductos[i]['dcto'].toString()),
                   "total_item": "0",
                   "id_unidad": "Und",
                   "cantidad_kit": "0",
@@ -4488,7 +3931,7 @@ class _OrderPageState extends State<OrderPage> {
     );
 
     var jsonResponse =
-    convert.jsonDecode(response.body) as Map<String, dynamic>;
+        convert.jsonDecode(response.body) as Map<String, dynamic>;
     var success = jsonResponse['success'];
     var msg = jsonResponse['msg'];
     Navigator.pop(context);
@@ -4502,7 +3945,6 @@ class _OrderPageState extends State<OrderPage> {
     removeCarrito();
     modalExitosa();
   }
-
 
   Widget _itemForm(BuildContext context, String label, String hintText,
       controller, enable, String type, bool isRequired) {
@@ -4626,20 +4068,21 @@ class _OrderPageState extends State<OrderPage> {
       print("LA CONEXION $_isConnected");
     });
 
-    if (_isConnected){
-      final response = await http.get(Uri.parse("${Constant.URL}/letras/$numero"));
+    if (_isConnected) {
+      final response =
+          await http.get(Uri.parse("${Constant.URL}/letras/$numero"));
       var jsonResponse =
-      convert.jsonDecode(response.body) as Map<String, dynamic>;
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
       var success = jsonResponse['success'];
       if (response.statusCode == 200 && success) {
         var data = jsonResponse['data'];
         setState(() {
-          _letras = data ;
+          _letras = data;
         });
-      } else{
+      } else {
         // _letras = await LetraN.convertirLetras(numero);
       }
-    }else{
+    } else {
       // _letras = await LetraN.convertirLetras(numero);
     }
 
@@ -4648,16 +4091,17 @@ class _OrderPageState extends State<OrderPage> {
     Navigator.pop(context);
   }
 
-
-  void _showBarMsg(msg,bool type) {
+  void _showBarMsg(msg, bool type) {
     showTopSnackBar(
       context,
       animationDuration: const Duration(seconds: 1),
-      type ? CustomSnackBar.info(
-        message: msg,
-      ):CustomSnackBar.error(
-        message: msg,
-      ) ,
+      type
+          ? CustomSnackBar.info(
+              message: msg,
+            )
+          : CustomSnackBar.error(
+              message: msg,
+            ),
     );
   }
 }

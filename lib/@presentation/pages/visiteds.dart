@@ -30,7 +30,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
   bool _isSelected2 = false;
 
   final myControllerBuscarProd = TextEditingController();
-  final myControllerBuscarCatego= TextEditingController();
+  final myControllerBuscarCatego = TextEditingController();
 
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
@@ -67,34 +67,34 @@ class _VisitedsPageState extends State<VisitedsPage> {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       id_vendedor = (prefs.getString('id_vendedor') ?? '');
-      
-      if (_nit != '' &&  id_vendedor!='') {
+
+      if (_nit != '' && id_vendedor != '') {
         searchVisitados();
-      }else{
+      } else {
         showTopSnackBar(
           context,
           CustomSnackBar.error(
-            message: "No se obtuvo información del vendedor,sincronice los datos",
+            message:
+                "No se obtuvo información del vendedor,sincronice los datos",
           ),
         );
       }
     });
   }
- 
-  
-    Future<bool> _onWillPop() async {       
-    if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
-          Navigator.pop(context);              
-            return false;
-      } 
+
+  Future<bool> _onWillPop() async {
+    if (_drawerscaffoldkey.currentState!.isDrawerOpen && _nit != '') {
+      Navigator.pop(context);
       return false;
     }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return WillPopScope(
-        onWillPop:_onWillPop,
+      onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 60,
@@ -117,7 +117,6 @@ class _VisitedsPageState extends State<VisitedsPage> {
               ),
             ),
           ),
-
           title: Text(
             'Visitados',
             style: TextStyle(
@@ -180,7 +179,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                             Radius.circular(
                                                                 10.0))),
                                                 child: Container(
-                                                  height:_size.height - 400,
+                                                  height: _size.height - 400,
                                                   width: _size.width * 0.8,
                                                   padding: EdgeInsets.symmetric(
                                                       horizontal: 20.0,
@@ -210,7 +209,7 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                               Colors.blue,
                                                           title: const Text(
                                                               "Más reciente al más antiguo"),
-                                                          onChanged: (val) {                                                            
+                                                          onChanged: (val) {
                                                             setState(() {
                                                               selectedRadio =
                                                                   val as int;
@@ -218,7 +217,6 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                                   true;
                                                               _isSelected2 =
                                                                   !_isSelected;
-                                                             
                                                             });
                                                           },
                                                           selected: _isSelected,
@@ -233,14 +231,14 @@ class _VisitedsPageState extends State<VisitedsPage> {
                                                               selectedRadio,
                                                           activeColor:
                                                               Colors.blue,
-                                                          onChanged: (val) {                                                          
+                                                          onChanged: (val) {
                                                             setState(() {
                                                               selectedRadio =
                                                                   val as int;
                                                               _isSelected2 =
                                                                   true;
                                                               _isSelected =
-                                                                  !_isSelected2;                                                               
+                                                                  !_isSelected2;
                                                             });
                                                           },
                                                           selected:
@@ -570,9 +568,9 @@ class _VisitedsPageState extends State<VisitedsPage> {
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
                     callback: () => {
-                       // _searchProducto();
-                      },
-                controller:myControllerBuscarProd),
+                          // _searchProducto();
+                        },
+                    controller: myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,

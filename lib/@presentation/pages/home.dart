@@ -189,7 +189,6 @@ class _HomePageState extends State<HomePage> {
     String result = f.format(numero);
     return result;
   }
- 
 
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -604,8 +603,12 @@ class _HomePageState extends State<HomePage> {
         id_pais: "",
         id_depto: _value_itemsDepartamento.toString(),
         id_ciudad: _value_itemsCiudad.toString(),
-        id_barrio: _value_itemsBarrio.toString() != '' ? _value_itemsBarrio.toString() : '0',
-        telefono: myControllerTelefono.text.trim() != '' ? myControllerTelefono.text.trim() : "''",
+        id_barrio: _value_itemsBarrio.toString() != ''
+            ? _value_itemsBarrio.toString()
+            : '0',
+        telefono: myControllerTelefono.text.trim() != ''
+            ? myControllerTelefono.text.trim()
+            : "''",
         telefono_celular: myControllerTelefonoCelular.text.trim(),
         id_actividad: _value_itemsClasification,
         fecha_creacion:
@@ -980,7 +983,7 @@ class _HomePageState extends State<HomePage> {
     if (result) {
       result = myControllerDireccion.text.trim() != '' ? true : false;
     }
- 
+
     if (result) {
       result = myControllerTelefonoCelular.text.trim() != '' ? true : false;
     }
@@ -1011,7 +1014,7 @@ class _HomePageState extends State<HomePage> {
 
     return result;
   }
- 
+
   Future<bool> _onWillPop() async {
     if (_drawerscaffoldkey.currentState!.isDrawerOpen && _nit != '') {
       Navigator.pop(context);
@@ -1856,7 +1859,7 @@ class _HomePageState extends State<HomePage> {
                                                 ),
                                               ),
                                               onTap: () {
-                                                Navigator.pop(context); 
+                                                Navigator.pop(context);
                                               },
                                             ),
                                           ),
@@ -1887,7 +1890,7 @@ class _HomePageState extends State<HomePage> {
         height: _size.height,
         decoration: const BoxDecoration(
           color: Colors.white,
-        ), 
+        ),
         child: ListView(
           children: [
             Column(
@@ -3947,7 +3950,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
 
   Widget _formRecipe(BuildContext context) {
     final _size = MediaQuery.of(context).size;
@@ -4002,7 +4004,6 @@ class _HomePageState extends State<HomePage> {
                   'number',
                   false,
                   callback),
-              
               SizedBox(height: 10),
               DropdownFormField<Map<String, dynamic>>(
                 onEmptyActionPressed: () async {},
@@ -4107,7 +4108,6 @@ class _HomePageState extends State<HomePage> {
                   onTap: onTap,
                 ),
               ),
- 
               _itemForm(context, 'N° cheque', '00000', myControllerNroCheque,
                   false, 'number', isCheque, callback),
               SizedBox(height: 30.0),
@@ -4810,7 +4810,6 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xff06538D)),
         ),
         SizedBox(height: 20.0),
-        
         DropdownFormField<Map<String, dynamic>>(
           onEmptyActionPressed: () async {},
           searchTextStyle: TextStyle(
@@ -5466,7 +5465,7 @@ class _HomePageState extends State<HomePage> {
               readOnly: enable,
               keyboardType: typeInput,
               inputFormatters: <TextInputFormatter>[
-                format,                
+                format,
                 LengthLimitingTextInputFormatter(cant)
               ],
               textCapitalization: TextCapitalization.characters,
@@ -6017,39 +6016,36 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget getImagenBase64(String imagen) {
-
     const Base64Codec base64 = Base64Codec();
     Uint8List _bytes = base64.decode(imagen);
-    
+
     return Container(
-       child: Row(     
-        children:[ _bytes == null
+        child: Row(
+      children: [
+        _bytes == null
             ? const CircularProgressIndicator()
             : Image.memory(
                 Uint8List.fromList(_bytes),
                 fit: BoxFit.cover,
               ),
-              Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(2),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: AutoSizeText(
-                              ' ',
-                              maxLines: 1,
-                              minFontSize: 10,
-                              style:
-                                  TextStyle(color: Colors.blue, fontSize: 14),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-            ],
-            )
-             );               
-
+        Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(2),
+              child: Align(
+                alignment: Alignment.center,
+                child: AutoSizeText(
+                  ' ',
+                  maxLines: 1,
+                  minFontSize: 10,
+                  style: TextStyle(color: Colors.blue, fontSize: 14),
+                ),
+              ),
+            ),
+          ],
+        )
+      ],
+    ));
   }
 
   Widget _ItemProductos(data) {
@@ -6064,36 +6060,36 @@ class _HomePageState extends State<HomePage> {
       children: <Widget>[
         for (var i = 0; i < _countClasificacion; i++) ...[
           InkWell(
-            child:  Container(
-                    decoration: BoxDecoration(
+            child: Container(
+              decoration: BoxDecoration(
                 image: DecorationImage(
-                image:
-                //  AssetImage('assets/images/producto-sin-imagen.png'),
-                NetworkImage("${Constant.URL}/seeImagen/${data[i]['imagen']}"),
-                fit: BoxFit.cover,
-                ),                    
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(20.0),
+                  image:
+                      //  AssetImage('assets/images/producto-sin-imagen.png'),
+                      NetworkImage(
+                          "${Constant.URL}/seeImagen/${data[i]['imagen']}"),
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(20.0),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: AutoSizeText(
+                        '${data[i]['descripcion']}',
+                        maxLines: 1,
+                        minFontSize: 10,
+                        style: TextStyle(color: Colors.blue, fontSize: 14),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(2),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: AutoSizeText(
-                              '${data[i]['descripcion']}',
-                              maxLines: 1,
-                              minFontSize: 10,
-                              style:
-                                  TextStyle(color: Colors.blue, fontSize: 14),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
+                ],
+              ),
+            ),
             onTap: () {
               setState(() {
                 idClasificacion = '${data[i]['id_clasificacion']}';
@@ -8826,8 +8822,8 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _letras = data;
         });
-      }  
-    }  
+      }
+    }
 
     Navigator.pop(context);
   }

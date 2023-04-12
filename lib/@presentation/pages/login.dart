@@ -82,41 +82,40 @@ class _LoginPageState extends State<LoginPage> {
 
     _user.isEmpty ? _validate = false : _validate = true;
     _password.isEmpty ? _validatePass = false : _validatePass = true;
-      if (_validate && _validatePass) {
-        _submitDialog(context);
-          final user =  await OperationDB.getLogin(_user.trim());
-          if (user != false) {
-            final pass =  await OperationDB.getLoginPassw(_user.trim(),_password.trim());
-            if (pass) {
-                    setState(() {
-                        savePref(1, _user.trim(), user[0]['nit'],
-                            user[0]['id_tipo_doc_pe'], user[0]['id_tipo_doc_rc']);
+    if (_validate && _validatePass) {
+      _submitDialog(context);
+      final user = await OperationDB.getLogin(_user.trim());
+      if (user != false) {
+        final pass =
+            await OperationDB.getLoginPassw(_user.trim(), _password.trim());
+        if (pass) {
+          setState(() {
+            savePref(1, _user.trim(), user[0]['nit'], user[0]['id_tipo_doc_pe'],
+                user[0]['id_tipo_doc_rc']);
 
-                        _loginStatus = LoginStatus.signIn;
-                        });
-                        Navigator.pop(context);
-                        Navigator.pushNamed(context, 'home');
-                } else {
-                  Navigator.pop(context);
-                  _showBarMsg("Clave Inválida",false);
-                }
-          } else {
-            Navigator.pop(context);
-            _showBarMsg("Usuario no existe",false);
-          }
-      }else {
-        if(!_validate){
-          _showBarMsg("Ingrese el usuario",true);
-        }else
-        if(!_validatePass){
-          _showBarMsg("Ingrese la clave",true);
+            _loginStatus = LoginStatus.signIn;
+          });
+          Navigator.pop(context);
+          Navigator.pushNamed(context, 'home');
+        } else {
+          Navigator.pop(context);
+          _showBarMsg("Clave Inválida", false);
         }
+      } else {
+        Navigator.pop(context);
+        _showBarMsg("Usuario no existe", false);
       }
+    } else {
+      if (!_validate) {
+        _showBarMsg("Ingrese el usuario", true);
+      } else if (!_validatePass) {
+        _showBarMsg("Ingrese la clave", true);
+      }
+    }
   }
 
   var value;
   getPref() async {
-
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
       value = preferences.getInt("value");
@@ -141,12 +140,12 @@ class _LoginPageState extends State<LoginPage> {
 
   /////api obtiene todos los usuarios de la bd postgres
   Future getUsuariosSincronizacion() async {
-    final val =  await validateConexion.checkInternetConnection(); 
+    final val = await validateConexion.checkInternetConnection();
     setState(() {
       _isConnected = val!;
     });
 
-   if(_isConnected!=null && _isConnected) { 
+    if (_isConnected != null && _isConnected) {
       final response = await http.get(Uri.parse("${Constant.URL}/users_all"));
       var jsonResponse =
           convert.jsonDecode(response.body) as Map<String, dynamic>;
@@ -154,36 +153,51 @@ class _LoginPageState extends State<LoginPage> {
       var msg = jsonResponse['msg'];
       if (response.statusCode == 200 && success) {
         var data = jsonResponse['data'];
-        if (data.length > 0) {    
-           await OperationDB.deleteDataUsuario();
+        if (data.length > 0) {
+          await OperationDB.deleteDataUsuario();
           for (int i = 0; i < data.length; i++) {
             final user = Usuario(
-                usuario: data[i]['usuario'],
-                clave: data[i]['clave'],
-                nit: data[i]['nit'],
-                id_tipo_doc_pe: data[i]['id_tipo_doc_pe'],
-                id_tipo_doc_rc: data[i]['id_tipo_doc_rc'],
-                id_bodega: data[i]['id_bodega'],
-                flag_activo:  data[i]['flag_activo']!= null ? data[i]['flag_activo'] : '',
-                edita_fecha_rc: data[i]['edita_fecha_rc']!= null ? data[i]['edita_fecha_rc'] : '',
-                flag_cambia_fp: data[i]['flag_cambia_fp']!= null ? data[i]['flag_cambia_fp'] : '',
-                flag_cambia_lp: data[i]['flag_cambia_lp']!= null ? data[i]['flag_cambia_lp'] : '',
-                flag_edita_cliente: data[i]['flag_edita_cliente']!= null ? data[i]['flag_edita_cliente'] : '',
-                flag_edita_dcto: data[i]['flag_edita_dcto']!=null ? data[i]['flag_edita_dcto'] : '',
-                flag_mobile: data[i]['flag_mobile']!=null ? data[i]['flag_mobile'] : '',
-                id_tipo_doc_fac:data[i]['id_tipo_doc_fac']!=null ? data[i]['id_tipo_doc_fac'] : '',
-                edita_consecutivo_rc: data[i]['id_tipo_doc_fac']!=null ? data[i]['id_tipo_doc_fac'] : '',
+              usuario: data[i]['usuario'],
+              clave: data[i]['clave'],
+              nit: data[i]['nit'],
+              id_tipo_doc_pe: data[i]['id_tipo_doc_pe'],
+              id_tipo_doc_rc: data[i]['id_tipo_doc_rc'],
+              id_bodega: data[i]['id_bodega'],
+              flag_activo:
+                  data[i]['flag_activo'] != null ? data[i]['flag_activo'] : '',
+              edita_fecha_rc: data[i]['edita_fecha_rc'] != null
+                  ? data[i]['edita_fecha_rc']
+                  : '',
+              flag_cambia_fp: data[i]['flag_cambia_fp'] != null
+                  ? data[i]['flag_cambia_fp']
+                  : '',
+              flag_cambia_lp: data[i]['flag_cambia_lp'] != null
+                  ? data[i]['flag_cambia_lp']
+                  : '',
+              flag_edita_cliente: data[i]['flag_edita_cliente'] != null
+                  ? data[i]['flag_edita_cliente']
+                  : '',
+              flag_edita_dcto: data[i]['flag_edita_dcto'] != null
+                  ? data[i]['flag_edita_dcto']
+                  : '',
+              flag_mobile:
+                  data[i]['flag_mobile'] != null ? data[i]['flag_mobile'] : '',
+              id_tipo_doc_fac: data[i]['id_tipo_doc_fac'] != null
+                  ? data[i]['id_tipo_doc_fac']
+                  : '',
+              edita_consecutivo_rc: data[i]['id_tipo_doc_fac'] != null
+                  ? data[i]['id_tipo_doc_fac']
+                  : '',
             );
             await OperationDB.insertUser(user);
           }
         }
-      await SendataSincronizacion.getEmpresaSincronizacion();
-
+        await SendataSincronizacion.getEmpresaSincronizacion();
       } else {
         _showBarMsg(msg, false);
       }
     } else {
-       _showBarMsg("Sin conexión a internet", true);
+      _showBarMsg("Sin conexión a internet", true);
     }
   }
 
@@ -256,12 +270,12 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget textFormFieldPass(hintText, controller, icon,  maxLength) {
+  Widget textFormFieldPass(hintText, controller, icon, maxLength) {
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
       child: Focus(
         onFocusChange: (e) {
-          setState(() {           
+          setState(() {
             focusPass = e;
           });
         },
@@ -269,16 +283,16 @@ class _LoginPageState extends State<LoginPage> {
           controller: controller,
           autofocus: false,
           textInputAction: TextInputAction.done,
-            onSubmitted: (String str){
-              setState((){
-                validateAndSubmit();
-              });
-            },
+          onSubmitted: (String str) {
+            setState(() {
+              validateAndSubmit();
+            });
+          },
           style: TextStyle(fontSize: 16.5),
           obscureText: !_passwordVisible,
           decoration: InputDecoration(
             errorText:
-            focusPass  && controller.text.isEmpty ? 'Es requerido' : null,
+                focusPass && controller.text.isEmpty ? 'Es requerido' : null,
             hintText: hintText,
             fillColor: Colors.white,
             filled: true,
@@ -291,10 +305,6 @@ class _LoginPageState extends State<LoginPage> {
                 width: 1.5,
               ),
             ),
-          /*  enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(5.0),
-              borderSide: BorderSide(color: Color(0xffc7c7c7), width: 1.2),
-            ),*/
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 17.0, right: 12.0),
               child: Icon(
@@ -322,14 +332,14 @@ class _LoginPageState extends State<LoginPage> {
       _passwordVisible = !_passwordVisible;
     });
   }
-  
-  Widget textFormField(hintText, controller, icon,  maxLength) {
+
+  Widget textFormField(hintText, controller, icon, maxLength) {
     final _size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(top: 0.0),
       child: Focus(
         onFocusChange: (e) {
-          setState(() { 
+          setState(() {
             focus = e;
           });
         },
@@ -340,8 +350,7 @@ class _LoginPageState extends State<LoginPage> {
           obscureText: false,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            errorText:
-             focus  && controller.text.isEmpty ? 'Es requerido' : null,
+            errorText: focus && controller.text.isEmpty ? 'Es requerido' : null,
             hintText: hintText,
             fillColor: Colors.white,
             filled: true,
@@ -354,10 +363,6 @@ class _LoginPageState extends State<LoginPage> {
                 width: 1.5,
               ),
             ),
-           /* enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(5.0),
-              borderSide: BorderSide(color: Color(0xffc7c7c7), width: 1.2),
-            ),*/
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 17.0, right: 12.0),
               child: Icon(
@@ -396,8 +401,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   children: [
                     Image(
-                      //  image: AssetImage('assets/images/Logo version 1.png')),
-                    image: AssetImage('assets/images/Logo version 1.png')),
+                        image: AssetImage('assets/images/Logo version 1.png')),
                     Text(
                       'Versión D-18-11-2022',
                       style: TextStyle(
@@ -411,19 +415,25 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 30.0),
               Text(
                 'Usuario',
-                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700,color: Color(0xff707070)),
+                style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xff707070)),
               ),
               SizedBox(height: 5.0),
               textFormField('Ingrese su usuario', myControllerUsers,
-                  Icons.account_circle,  20 ),
+                  Icons.account_circle, 20),
               SizedBox(height: 25.0),
               Text(
                 'Contraseña',
-                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700,color: Color(0xff707070)),
+                style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xff707070)),
               ),
               SizedBox(height: 5.0),
-              textFormFieldPass('* * * * * * * *', myControllerPassword,
-                  Icons.vpn_key, 20),
+              textFormFieldPass(
+                  '* * * * * * * *', myControllerPassword, Icons.vpn_key, 20),
               SizedBox(
                 height: 20.0,
               ),
@@ -447,17 +457,17 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-
-  void _showBarMsg(msg,bool type) {
+  void _showBarMsg(msg, bool type) {
     showTopSnackBar(
       context,
       animationDuration: const Duration(seconds: 1),
-      type ? CustomSnackBar.info(
-        message: msg,
-      ):CustomSnackBar.error(
-        message: msg,
-      ) ,
+      type
+          ? CustomSnackBar.info(
+              message: msg,
+            )
+          : CustomSnackBar.error(
+              message: msg,
+            ),
     );
   }
-
 }

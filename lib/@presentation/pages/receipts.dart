@@ -48,7 +48,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
   late String fecha2;
 
   final myControllerBuscarProd = TextEditingController();
-  final myControllerBuscarCatego= TextEditingController();
+  final myControllerBuscarCatego = TextEditingController();
 
   /// called whenever a selection changed on the date picker widget.
   void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
@@ -71,6 +71,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       }
     });
   }
+
   String id_sucursal_tercero_cliente = '';
   String id_forma_pago_cliente = '';
   String id_precio_item_cliente = '';
@@ -84,19 +85,21 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       _nit = (prefs.getString('nit') ?? '');
       idReciboUser = (prefs.getString('idReciboUser') ?? '');
       id_vendedor = (prefs.getString('id_vendedor') ?? '');
-      id_sucursal_tercero_cliente = (prefs.getString('id_sucursal_tercero') ?? '');
+      id_sucursal_tercero_cliente =
+          (prefs.getString('id_sucursal_tercero') ?? '');
       id_forma_pago_cliente = (prefs.getString('id_forma_pago') ?? '');
       id_precio_item_cliente = (prefs.getString('id_precio_item') ?? '');
       id_lista_precio_cliente = (prefs.getString('id_lista_precio') ?? '');
       id_suc_vendedor_cliente = (prefs.getString('id_suc_vendedor') ?? '');
       print("el usuario es $_user $_nit $id_vendedor");
-      if (_nit != '' && id_vendedor!='') {
+      if (_nit != '' && id_vendedor != '') {
         searchRecibo();
-      }else{
+      } else {
         showTopSnackBar(
           context,
           CustomSnackBar.error(
-            message: "No se obtuvo información del vendedor,sincronice los datos",
+            message:
+                "No se obtuvo información del vendedor,sincronice los datos",
           ),
         );
       }
@@ -165,20 +168,19 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
     _loadDataUserLogin();
   }
 
-    Future<bool> _onWillPop() async {       
-    if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
-          Navigator.pop(context);              
-            return false;
-      } 
+  Future<bool> _onWillPop() async {
+    if (_drawerscaffoldkey.currentState!.isDrawerOpen && _nit != '') {
+      Navigator.pop(context);
       return false;
     }
-
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return WillPopScope(
-        onWillPop:_onWillPop,
+        onWillPop: _onWillPop,
         child: Scaffold(
           appBar: AppBar(
             toolbarHeight: 60,
@@ -201,22 +203,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                 ),
               ),
             ),
-           /* actions: [
-              GestureDetector(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Color(0xff0090ce),
-                      size: 30,
-                    ),
-                  ),
-                  onTap: () => {
-                        _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                            ? Navigator.pop(context)
-                            : _drawerscaffoldkey.currentState!.openEndDrawer()
-                      })
-            ],*/
             title: Text(
               'Recibos de caja',
               style: TextStyle(
@@ -236,7 +222,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
           body: Scaffold(
             key: _drawerscaffoldkey,
             drawer: _menu(context),
-           // endDrawer: _shoppingCart(context),
             body: CustomScrollView(
               slivers: [
                 SliverList(
@@ -260,8 +245,8 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                             TextField(
                               controller: myControllerSearch,
                               textInputAction: TextInputAction.done,
-                              onSubmitted: (String str){
-                                setState((){
+                              onSubmitted: (String str) {
+                                setState(() {
                                   searchRecibo();
                                 });
                               },
@@ -270,7 +255,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                                   searchRecibo();
                                 }
                               },
-
                               decoration: InputDecoration(
                                 hintText:
                                     'Identificación, nombre ó N° de recibo',
@@ -337,7 +321,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                                             ),
                                           )));
                                 },
-                            controller:null),
+                                controller: null),
                             SizedBox(height: 15.0),
                             _showItems ? _items(context) : Container(),
                             _showItemsOrder ? _itemsOrder(context) : Container()
@@ -399,12 +383,12 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
           child: ListView(
             children: [
               for (var i = 0; i < _datRecibo.length; i++) ...[
-                 _ItemReceipts(_datRecibo[i], i),
+                _ItemReceipts(_datRecibo[i], i),
                 SizedBox(height: 10.0),
               ],
             ],
           ),
-        ),       
+        ),
       ],
     );
   }
@@ -419,10 +403,10 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
           cancelText: 'CANCEL',
           confirmText: 'OK',
           onCancel: () {
-            Navigator.pop(context); 
+            Navigator.pop(context);
           },
           onSubmit: (Object? value) {
-            Navigator.pop(context); 
+            Navigator.pop(context);
             searchRecibo();
           },
           selectionMode: DateRangePickerSelectionMode.range,
@@ -432,8 +416,10 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
   }
 
   Widget _ItemReceipts(data, i) {
-       final nombre = data['nombre'].toUpperCase();
-       final tlf_cliente = data['telefono_celular']!=null   ? data['telefono_celular'] : data['telefono'];
+    final nombre = data['nombre'].toUpperCase();
+    final tlf_cliente = data['telefono_celular'] != null
+        ? data['telefono_celular']
+        : data['telefono'];
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -445,7 +431,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            // color: Colors.blue,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(4.0),
@@ -454,7 +439,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
             width: _size.width,
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: Text(
-                '$nombre',
+              '$nombre',
               style: TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w700,
@@ -674,7 +659,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
                     callback: () => {},
-                    controller:myControllerBuscarProd),
+                    controller: myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,

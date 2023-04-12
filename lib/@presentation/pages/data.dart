@@ -22,7 +22,7 @@ import '../../models/pedido.dart';
 import '../../models/recibo_caja.dart';
 
 import './sendData.dart';
- import 'dart:convert';
+import 'dart:convert';
 
 class CurvePainter extends CustomPainter {
   @override
@@ -46,7 +46,6 @@ class CurvePainter extends CustomPainter {
     return true;
   }
 }
- 
 
 class LoginPages extends StatefulWidget {
   @override
@@ -85,13 +84,13 @@ class _LoginPageState extends State<LoginPages> {
     );
   }
 
-    Future<String> convertToBase64(file) async {    
-      final response =
-        await http.get(Uri.parse("${Constant.URL}/seeImagen/$file")); 
-      String  _base64 = base64Encode(response.bodyBytes);  
-      return _base64; 
-    }
-  
+  Future<String> convertToBase64(file) async {
+    final response =
+        await http.get(Uri.parse("${Constant.URL}/seeImagen/$file"));
+    String _base64 = base64Encode(response.bodyBytes);
+    return _base64;
+  }
+
   static convertDateFormat(fecha) {
     var info = fecha.split('T00:00:00.000Z');
     var nuevaFecha2 = info[0];
@@ -505,9 +504,7 @@ class _LoginPageState extends State<LoginPages> {
               id_depto: data[i]['id_depto'],
               id_ciudad: data[i]['id_ciudad'],
               id_barrio: data[i]['id_barrio'],
-              telefono: data[i]['telefono'] != null
-                  ? data[i]['telefono']
-                  : '',
+              telefono: data[i]['telefono'] != null ? data[i]['telefono'] : '',
               id_actividad: data[i]['id_actividad'] != null
                   ? data[i]['id_actividad']
                   : '',
@@ -722,13 +719,13 @@ class _LoginPageState extends State<LoginPages> {
             nivel: data[i]['nivel'].toString(),
             es_padre: data[i]['es_padre'],
             nit: data[i]['nit'],
-            foto:  data[i]['foto'].toString() != null
+            foto: data[i]['foto'].toString() != null
                 ? data[i]['foto'].toString()
                 : '',
-          /*  imagen: await convertToBase64(data[i]['imagen'].toString() != null
+            /*  imagen: await convertToBase64(data[i]['imagen'].toString() != null
                 ? data[i]['imagen'].toString()
                 : '') */
-             imagen: data[i]['imagen'].toString() != null
+            imagen: data[i]['imagen'].toString() != null
                 ? data[i]['imagen'].toString()
                 : '',
           );

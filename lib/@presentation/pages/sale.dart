@@ -2,7 +2,7 @@ import 'package:pony_order/@presentation/components/inputCallback.dart';
 import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:flutter/material.dart';
- 
+
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
@@ -11,7 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/safe_area_values.dart';
 import 'package:top_snackbar_flutter/tap_bounce_container.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart'; 
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import '../../db/OperationDB.dart';
 
@@ -21,14 +21,13 @@ class SalePage extends StatefulWidget {
 }
 
 class _SalePageState extends State<SalePage> {
-
-  late String id_vendedor; 
+  late String id_vendedor;
   late int _count;
   String _user = '';
   String _nit = '';
-  late double total_cuota =0;
+  late double total_cuota = 0;
   late double total_venta = 0;
-  late double total_pedido =0;
+  late double total_pedido = 0;
   late double total_recibo = 0;
   late double porcentaje = 0;
 
@@ -39,16 +38,15 @@ class _SalePageState extends State<SalePage> {
 
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
-  
-   late ValueNotifier<double> _valueNotifier;
-  
+
+  late ValueNotifier<double> _valueNotifier;
+
   @override
   void initState() {
-     
-    _count = 0; 
-     _valueNotifier = ValueNotifier(0.0);
-    _fecha = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();    
-    _loadDataUserLogin(); 
+    _count = 0;
+    _valueNotifier = ValueNotifier(0.0);
+    _fecha = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
+    _loadDataUserLogin();
     super.initState();
   }
 
@@ -56,27 +54,35 @@ class _SalePageState extends State<SalePage> {
     NumberFormat f = new NumberFormat("###,###,###.00#", "es_US");
     String result = f.format(numero);
     return result;
-  } 
+  }
 
   Future searchBalanceApi() async {
-     _datBalance = await  OperationDB.getCBalance(_nit,id_vendedor,_fecha);      
-      if(_datBalance != null) {
-        for (int i = 0; i < _datBalance.length; i++) {
-           if(_datBalance[i]['tipo'] == 'MES'){
-             total_cuota =  _datBalance[i]['total_cuota']!=null ? double.parse(_datBalance[i]['total_cuota'].toString()) : 0.00;
-             total_venta =  _datBalance[i]['total_venta']!=null ? double.parse(_datBalance[i]['total_venta'].toString()) : 0.00;
-             porcentaje =  _datBalance[i]['balance_general']!=null ? double.parse(_datBalance[i]['balance_general'].toString()) : 0.00;
-                     
-           }
-           if(_datBalance[i]['tipo'] == 'DIA_RECIBO'){
-             total_recibo =  _datBalance[i]['total_venta']!=null ? double.parse(_datBalance[i]['total_venta'].toString()): 0.00;
-           }
-           if(_datBalance[i]['tipo'] == 'DIA_PEDIDO'){
-             total_pedido = _datBalance[i]['total_venta']!=null ? double.parse(_datBalance[i]['total_venta'].toString()) : 0.00;
-           }
+    _datBalance = await OperationDB.getCBalance(_nit, id_vendedor, _fecha);
+    if (_datBalance != null) {
+      for (int i = 0; i < _datBalance.length; i++) {
+        if (_datBalance[i]['tipo'] == 'MES') {
+          total_cuota = _datBalance[i]['total_cuota'] != null
+              ? double.parse(_datBalance[i]['total_cuota'].toString())
+              : 0.00;
+          total_venta = _datBalance[i]['total_venta'] != null
+              ? double.parse(_datBalance[i]['total_venta'].toString())
+              : 0.00;
+          porcentaje = _datBalance[i]['balance_general'] != null
+              ? double.parse(_datBalance[i]['balance_general'].toString())
+              : 0.00;
+        }
+        if (_datBalance[i]['tipo'] == 'DIA_RECIBO') {
+          total_recibo = _datBalance[i]['total_venta'] != null
+              ? double.parse(_datBalance[i]['total_venta'].toString())
+              : 0.00;
+        }
+        if (_datBalance[i]['tipo'] == 'DIA_PEDIDO') {
+          total_pedido = _datBalance[i]['total_venta'] != null
+              ? double.parse(_datBalance[i]['total_venta'].toString())
+              : 0.00;
         }
       }
-     else {
+    } else {
       showTopSnackBar(
         context,
         CustomSnackBar.error(
@@ -85,65 +91,65 @@ class _SalePageState extends State<SalePage> {
       );
     }
   }
- 
 
   Future searchSaleApi() async {
-      final allSale = await  OperationDB.getCuotaValue(_nit,id_vendedor);   
-        if(allSale!=null) {
-        setState(() {
-           _datSale = allSale;
-          _count = _datSale.length; 
-     });
-      }
+    final allSale = await OperationDB.getCuotaValue(_nit, id_vendedor);
+    if (allSale != null) {
+      setState(() {
+        _datSale = allSale;
+        _count = _datSale.length;
+      });
+    }
   }
-  
+
   String id_sucursal_tercero_cliente = '';
   String id_forma_pago_cliente = '';
   String id_precio_item_cliente = '';
   String id_lista_precio_cliente = '';
   String id_suc_vendedor_cliente = '';
-  
+
   _loadDataUserLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _user = (prefs.getString('user') ?? '');
       _nit = (prefs.getString('nit') ?? '');
       id_vendedor = (prefs.getString('id_vendedor') ?? '');
-      id_sucursal_tercero_cliente = (prefs.getString('id_sucursal_tercero') ?? '');
+      id_sucursal_tercero_cliente =
+          (prefs.getString('id_sucursal_tercero') ?? '');
       id_forma_pago_cliente = (prefs.getString('id_forma_pago') ?? '');
       id_precio_item_cliente = (prefs.getString('id_precio_item') ?? '');
       id_lista_precio_cliente = (prefs.getString('id_lista_precio') ?? '');
       id_suc_vendedor_cliente = (prefs.getString('id_suc_vendedor') ?? '');
       print("el usuario es $_user $_nit $id_vendedor");
 
-      if (_nit != '' && id_vendedor!='' ) {
+      if (_nit != '' && id_vendedor != '') {
         searchBalanceApi();
-        searchSaleApi();             
-     } else{
+        searchSaleApi();
+      } else {
         showTopSnackBar(
           context,
           CustomSnackBar.error(
-            message: "No se obtuvo información del vendedor,sincronice los datos",
+            message:
+                "No se obtuvo información del vendedor,sincronice los datos",
           ),
-        ); 
+        );
       }
     });
   }
-  
-  
-  Future<bool> _onWillPop() async {       
-    if( _drawerscaffoldkey.currentState!.isDrawerOpen && _nit!='') { 
-          Navigator.pop(context);              
-            return false;
-      } 
+
+  Future<bool> _onWillPop() async {
+    if (_drawerscaffoldkey.currentState!.isDrawerOpen && _nit != '') {
+      Navigator.pop(context);
       return false;
     }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return WillPopScope(
-        onWillPop:_onWillPop,
+        onWillPop: _onWillPop,
         child: Scaffold(
           appBar: AppBar(
             toolbarHeight: 60,
@@ -166,22 +172,6 @@ class _SalePageState extends State<SalePage> {
                 ),
               ),
             ),
-          /*  actions: [
-              GestureDetector(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Color(0xff0090ce),
-                      size: 30,
-                    ),
-                  ),
-                  onTap: () => {
-                        _drawerscaffoldkey.currentState!.isEndDrawerOpen
-                            ? Navigator.pop(context)
-                            : _drawerscaffoldkey.currentState!.openEndDrawer()
-                      })
-            ],*/
             title: Text(
               'Cuota de venta',
               style: TextStyle(
@@ -201,7 +191,6 @@ class _SalePageState extends State<SalePage> {
           body: Scaffold(
             key: _drawerscaffoldkey,
             drawer: _menu(context),
-          //  endDrawer: _shoppingCart(context),
             body: CustomScrollView(
               slivers: [
                 SliverList(
@@ -233,7 +222,7 @@ class _SalePageState extends State<SalePage> {
   }
 
   Widget _balance(BuildContext context) {
-    final _size = MediaQuery.of(context).size; 
+    final _size = MediaQuery.of(context).size;
     return Column(
       children: [
         Container(
@@ -254,38 +243,36 @@ class _SalePageState extends State<SalePage> {
                     fontWeight: FontWeight.w700,
                     color: Color(0xff06538D)),
               ),
-                DashedCircularProgressBar.aspectRatio(                      
-                      aspectRatio: 1.25, // width ÷ height
-                      valueNotifier: _valueNotifier,
-                      progress: double.parse(porcentaje.toString()),
-                      startAngle: 225,
-                      sweepAngle: 270,
-                      foregroundColor: Colors.blue,
-                      backgroundColor: const Color(0xffeeeeee),
-                      foregroundStrokeWidth: 15,
-                      backgroundStrokeWidth: 15,
-                      animation: true,
-                      seekSize: 6,
-                      seekColor: const Color(0xffeeeeee),
-                      child: Center(
-                        child: ValueListenableBuilder(
-                           valueListenable: _valueNotifier,
-                          builder: (_, double value, __) => Column(
+              DashedCircularProgressBar.aspectRatio(
+                aspectRatio: 1.25, // width ÷ height
+                valueNotifier: _valueNotifier,
+                progress: double.parse(porcentaje.toString()),
+                startAngle: 225,
+                sweepAngle: 270,
+                foregroundColor: Colors.blue,
+                backgroundColor: const Color(0xffeeeeee),
+                foregroundStrokeWidth: 15,
+                backgroundStrokeWidth: 15,
+                animation: true,
+                seekSize: 6,
+                seekColor: const Color(0xffeeeeee),
+                child: Center(
+                  child: ValueListenableBuilder(
+                      valueListenable: _valueNotifier,
+                      builder: (_, double value, __) => Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 '${value.toInt()}%',
-                                 style: TextStyle( 
-                                  color: Colors.blue,
-                                  fontSize: 50.0,
-                                  fontWeight: FontWeight.w600
-                                ),  
-                              ),                      
+                                style: TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 50.0,
+                                    fontWeight: FontWeight.w600),
+                              ),
                             ],
-                          )
-                        ),
-                      ),
-                    ),           
+                          )),
+                ),
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -311,8 +298,7 @@ class _SalePageState extends State<SalePage> {
                   ),
                   Text(
                     '\$ ' +
-                        expresionRegular(
-                            double.parse(total_cuota.toString())),
+                        expresionRegular(double.parse(total_cuota.toString())),
                     style: TextStyle(
                         fontSize: 13.0,
                         fontWeight: FontWeight.w700,
@@ -348,8 +334,7 @@ class _SalePageState extends State<SalePage> {
                   ),
                   Text(
                     '\$ ' +
-                        expresionRegular(
-                            double.parse(total_venta.toString())),
+                        expresionRegular(double.parse(total_venta.toString())),
                     style: TextStyle(
                         fontSize: 13.0,
                         fontWeight: FontWeight.w700,
@@ -385,8 +370,7 @@ class _SalePageState extends State<SalePage> {
                   ),
                   Text(
                     '\$ ' +
-                        expresionRegular(
-                            double.parse(total_pedido.toString())),
+                        expresionRegular(double.parse(total_pedido.toString())),
                     style: TextStyle(
                         fontSize: 13.0,
                         fontWeight: FontWeight.w700,
@@ -422,8 +406,7 @@ class _SalePageState extends State<SalePage> {
                   ),
                   Text(
                     '\$ ' +
-                        expresionRegular(
-                            double.parse(total_recibo.toString())),
+                        expresionRegular(double.parse(total_recibo.toString())),
                     style: TextStyle(
                         fontSize: 13.0,
                         fontWeight: FontWeight.w700,
@@ -439,7 +422,7 @@ class _SalePageState extends State<SalePage> {
   }
 
   Widget _balanceDetail(BuildContext context) {
-    final _size = MediaQuery.of(context).size;  
+    final _size = MediaQuery.of(context).size;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -471,130 +454,143 @@ class _SalePageState extends State<SalePage> {
               for (var i = 0; i < _count; i++) ...[
                 Container(
                   width: _size.width,
-                  padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
                   decoration: BoxDecoration(
                       border: Border.all(
                         color: Color(0xffC7C7C7),
                       ),
                       borderRadius: BorderRadius.circular(8.0)),
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                   /* crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,*/
-                  //  children: [
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
                     child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${_datSale[i]['nombre']}',
-                            style: TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xff06538D)),
-                          ),
-                          SizedBox(
-                            height: 12.0,
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10.0,
-                                height: 10.0,
-                                color: Color(0xff707070),
-                              ),
-                              SizedBox(
-                                width: 12.0,
-                              ),
-                              Text(
-                                'Meta',
-                                style: TextStyle(
-                                    color: Color(0xff707070),
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14.0),
-                              ),
-                              SizedBox(
-                                width: 15.0,
-                              ),
-                              Text(
-                                '\$ ' + expresionRegular(double.parse(_datSale[i]['cuota'].toString())),
-                                style: TextStyle(
-                                    color: Color(0xff707070),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14.0),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: 10.0,
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10.0,
-                                height: 10.0,
-                                color: Color(0xff0091CE),
-                              ),
-                              SizedBox(
-                                width: 12.0,
-                              ),
-                              Text(
-                                'Venta',
-                                style: TextStyle(
-                                    color: Color(0xff0091CE),
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14.0),
-                              ),
-                              SizedBox(
-                                width: 15.0,
-                              ),
-                              Text(
-                                '\$ ' + expresionRegular(double.parse(_datSale[i]['venta'].toString())),
-                                style: TextStyle(
-                                    color: Color(0xff0091CE),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14.0),
-                              )
-                            ],
-                          ),
-                      SizedBox(
-                        width: 100.0,
-                        height: 100.0,
-                        child :   DashedCircularProgressBar.aspectRatio(
-                          aspectRatio: 2, // width ÷ height
-                          valueNotifier: ValueNotifier( _datSale[i]['porcentaje'] != null ? double.parse(_datSale[i]['porcentaje'].toString()) : 0),
-                          progress: _datSale[i]['porcentaje'] != null ? double.parse(_datSale[i]['porcentaje'].toString()) : 0,
-                          startAngle: 225,
-                          sweepAngle: 270,
-                          foregroundColor: Colors.blue,
-                          backgroundColor: const Color(0xffeeeeee),
-                          foregroundStrokeWidth: 15,
-                          backgroundStrokeWidth: 15,
-                          animation: true,
-                          seekSize: 6,
-                          seekColor: const Color(0xffeeeeee),
-                          child: Center(
-                            child: ValueListenableBuilder(
-                                valueListenable:  ValueNotifier( _datSale[i]['porcentaje'] != null ? double.parse(_datSale[i]['porcentaje'].toString()) : 0.00),
-                                builder: (_, double value, __) => Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '${value.toInt()}%',
-                                      style: TextStyle(
-                                          color: Colors.blue,
-                                          fontSize: 26.0,
-                                          fontWeight: FontWeight.w600
-                                      ),
-                                    ),
-                                  ],
-                                )
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_datSale[i]['nombre']}',
+                          style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xff06538D)),
+                        ),
+                        SizedBox(
+                          height: 12.0,
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 10.0,
+                              height: 10.0,
+                              color: Color(0xff707070),
+                            ),
+                            SizedBox(
+                              width: 12.0,
+                            ),
+                            Text(
+                              'Meta',
+                              style: TextStyle(
+                                  color: Color(0xff707070),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14.0),
+                            ),
+                            SizedBox(
+                              width: 15.0,
+                            ),
+                            Text(
+                              '\$ ' +
+                                  expresionRegular(double.parse(
+                                      _datSale[i]['cuota'].toString())),
+                              style: TextStyle(
+                                  color: Color(0xff707070),
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14.0),
+                            )
+                          ],
+                        ),
+                        SizedBox(
+                          height: 10.0,
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 10.0,
+                              height: 10.0,
+                              color: Color(0xff0091CE),
+                            ),
+                            SizedBox(
+                              width: 12.0,
+                            ),
+                            Text(
+                              'Venta',
+                              style: TextStyle(
+                                  color: Color(0xff0091CE),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14.0),
+                            ),
+                            SizedBox(
+                              width: 15.0,
+                            ),
+                            Text(
+                              '\$ ' +
+                                  expresionRegular(double.parse(
+                                      _datSale[i]['venta'].toString())),
+                              style: TextStyle(
+                                  color: Color(0xff0091CE),
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14.0),
+                            )
+                          ],
+                        ),
+                        SizedBox(
+                          width: 100.0,
+                          height: 100.0,
+                          child: DashedCircularProgressBar.aspectRatio(
+                            aspectRatio: 2, // width ÷ height
+                            valueNotifier: ValueNotifier(
+                                _datSale[i]['porcentaje'] != null
+                                    ? double.parse(
+                                        _datSale[i]['porcentaje'].toString())
+                                    : 0),
+                            progress: _datSale[i]['porcentaje'] != null
+                                ? double.parse(
+                                    _datSale[i]['porcentaje'].toString())
+                                : 0,
+                            startAngle: 225,
+                            sweepAngle: 270,
+                            foregroundColor: Colors.blue,
+                            backgroundColor: const Color(0xffeeeeee),
+                            foregroundStrokeWidth: 15,
+                            backgroundStrokeWidth: 15,
+                            animation: true,
+                            seekSize: 6,
+                            seekColor: const Color(0xffeeeeee),
+                            child: Center(
+                              child: ValueListenableBuilder(
+                                  valueListenable: ValueNotifier(_datSale[i]
+                                              ['porcentaje'] !=
+                                          null
+                                      ? double.parse(
+                                          _datSale[i]['porcentaje'].toString())
+                                      : 0.00),
+                                  builder: (_, double value, __) => Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '${value.toInt()}%',
+                                            style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: 26.0,
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      )),
                             ),
                           ),
                         ),
-                      ),
                       ],
                     ),
-                   // ],
+                    // ],
                   ),
                 ),
                 SizedBox(height: 10.0),
@@ -602,138 +598,6 @@ class _SalePageState extends State<SalePage> {
             ],
           ),
         ),
-     /*    for (var i = 0; i < _count; i++) ...[
-        Container(
-          width: _size.width,
-          padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 12.0),
-          decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(0xffC7C7C7),
-              ),
-              borderRadius: BorderRadius.circular(8.0)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                   '${_datSale[i]['nombre']}',
-                    style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xff06538D)),
-                  ),
-                  SizedBox(
-                    height: 12.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff707070),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Meta',
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '\$ ' + expresionRegular(double.parse(_datSale[i]['cuota'].toString())),
-                        style: TextStyle(
-                            color: Color(0xff707070),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10.0,
-                        height: 10.0,
-                        color: Color(0xff0091CE),
-                      ),
-                      SizedBox(
-                        width: 12.0,
-                      ),
-                      Text(
-                        'Venta',
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.0),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      Text(
-                        '\$ ' + expresionRegular(double.parse(_datSale[i]['venta'].toString())),
-                        style: TextStyle(
-                            color: Color(0xff0091CE),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.0),
-                      )
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(
-                width: 100.0,
-                height: 100.0, 
-             child :   DashedCircularProgressBar.aspectRatio(                      
-                      aspectRatio: 2, // width ÷ height
-                      valueNotifier: ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
-                      progress:double.parse(_datSale[i]['porcentaje'].toString()),
-                      startAngle: 225,
-                      sweepAngle: 270,
-                      foregroundColor: Colors.blue,
-                      backgroundColor: const Color(0xffeeeeee),
-                      foregroundStrokeWidth: 15,
-                      backgroundStrokeWidth: 15,
-                      animation: true,
-                      seekSize: 6,
-                      seekColor: const Color(0xffeeeeee),
-                      child: Center(
-                        child: ValueListenableBuilder(
-                          valueListenable:  ValueNotifier(double.parse(_datSale[i]['porcentaje'].toString())),
-                          builder: (_, double value, __) => Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${value.toInt()}%',
-                                 style: TextStyle( 
-                                  color: Colors.blue,
-                                  fontSize: 26.0,
-                                  fontWeight: FontWeight.w600
-                                ),  
-                              ),                      
-                            ],
-                          )
-                        ),
-                      ),
-                    ),  
-              ),
-            ],
-          ),
-        ),
-       SizedBox(
-          height: 10.0,
-        ), 
-      ],*/
       ],
     );
   }
@@ -793,7 +657,7 @@ class _SalePageState extends State<SalePage> {
                     hintText: 'Buscar producto',
                     iconCallback: Icons.search,
                     callback: () => {},
-                    controller:myControllerBuscarProd),
+                    controller: myControllerBuscarProd),
                 SizedBox(height: 15.0),
                 Container(
                   width: 160.0,
@@ -1003,7 +867,6 @@ class _SalePageState extends State<SalePage> {
                   onTap: () => Navigator.pushNamed(context, 'order'),
                 ),
               ),
-
               Container(
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
@@ -1072,7 +935,7 @@ class _SalePageState extends State<SalePage> {
                   onTap: () => Navigator.pushNamed(context, 'visiteds'),
                 ),
               ),
-                  Container(
+              Container(
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
@@ -1093,14 +956,14 @@ class _SalePageState extends State<SalePage> {
                 padding: EdgeInsets.symmetric(vertical: 5.0),
                 color: Color(0xfff4f4f4),
                 child: ListTile(
-                 onTap: () async { 
-                   // OperationDB.closeDB();              
-                            SharedPreferences preferences =
-                    await SharedPreferences.getInstance();
+                  onTap: () async {
+                    // OperationDB.closeDB();
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
                     preferences.clear();
-                  preferences.setInt("value", 0);
+                    preferences.setInt("value", 0);
                     Navigator.pushNamed(context, 'login');
-                    }, 
+                  },
                   minLeadingWidth: 20,
                   leading: const Icon(
                     Icons.exit_to_app,
@@ -1120,4 +983,3 @@ class _SalePageState extends State<SalePage> {
     );
   }
 }
- 
