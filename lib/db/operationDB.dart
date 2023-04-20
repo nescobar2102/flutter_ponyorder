@@ -684,76 +684,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     PRIMARY KEY("id_empresa","id_sucursal","id_tipo_doc","numero","consecutivo","nit") 
 );""";
 
-    const viewCartera = """
-   CREATE VIEW SALDO_CARTERA AS 
-  SELECT CT.ID_EMPRESA,
-  CT.ID_SUCURSAL,
-  CT.TIPO_DOC,
-  CT.NUMERO,
-  CT.CUOTA,
-  --CAST (round(julianday( (date(( NOW) ), 'localtime') ) -(round(julianday(CT.VENCIMIENTO, '+' || TC.DIAS_GRACIA, || ' days', 'localtime') ) )  ) as DIAS_VENCIDOS,
-  --CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(CT.VENCIMIENTO, 'localtime') ) )  )  as DIAS,
-  CT.ID_TERCERO,
-  CT.ID_VENDEDOR,
-  CT.ID_SUCURSAL_TERCERO,
-  CT.FECHA,
-  TC.DIAS_GRACIA,
-  CT.VENCIMIENTO,
-  CT.CREDITO,
-  --CT.ID_AUXILIAR,
-  CT.DCTOMAX,
-  CT.DEBITO,
-  CT.ID_DESTINO,
-  CT.ID_PROYECTO
-  FROM CUENTAS_POR_TERCERO CT
-  INNER JOIN
-  TERCERO_CLIENTE TC ON (CT.ID_TERCERO = TC.ID_TERCERO AND
-  CT.ID_SUCURSAL_TERCERO = TC.ID_SUCURSAL_TERCERO)
-  GROUP BY CT.ID_EMPRESA,
-  CT.ID_SUCURSAL,
-  CT.TIPO_DOC,
-  CT.NUMERO,
-  CT.CUOTA,
-  CT.ID_TERCERO,
-  CT.ID_VENDEDOR,
-  CT.ID_SUCURSAL_TERCERO,
-  CT.FECHA,
-  TC.DIAS_GRACIA,
-  CT.VENCIMIENTO,
-  --CT.ID_AUXILIAR,
-  CT.DCTOMAX,
-  CT.CUOTA_CRUCE,
-  CT.ID_DESTINO,
-  CT.ID_PROYECTO
-  HAVING SUM(CT.DEBITO) < -0.01 OR
-  SUM(CT.DEBITO) > 0.01
-  UNION ALL
-  SELECT C.ID_EMPRESA,
-  C.ID_SUCURSAL,
-  C.ID_TIPO_DOC_CRUCE,
-  C.NUMERO_CRUCE,
-  C.CUOTA_CRUCE,
-  --CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(C.VENCIMIENTO, '+'  || TC.DIAS_GRACIA, || 'days', 'localtime') ) ) ) as  DIAS_VENCIDOS,
-  --CAST (round(julianday( (date((NOW) ), 'localtime') ) -(round(julianday(C.VENCIMIENTO, 'localtime') ) )  ) as  DIAS,
-  C.ID_TERCERO,
-  C.ID_VENDEDOR,
-  C.ID_SUCURSAL_TERCERO,
-  --C.FECHA,
-   STRFTIME('%d/%m/%Y ', C.FECHA)  AS FECHA,
-  TC.DIAS_GRACIA,
-  --C.VENCIMIENTO,
-  STRFTIME('%d/%m/%Y ', C.VENCIMIENTO)  AS VENCIMIENTO,
-  C.CREDITO,
-  --C.ID_AUXILIAR,
-  0,
-  C.DEBITO,
-  C.ID_DESTINO,
-  C.ID_PROYECTO
-  FROM CARTERA_PROVEEDORES_DET C
-  INNER JOIN
-  TERCERO_CLIENTE TC ON (C.ID_TERCERO = TC.ID_TERCERO AND
-  C.ID_SUCURSAL_TERCERO = TC.ID_SUCURSAL_TERCERO)
-  WHERE C.DISTRIBUCION = 'DC';""";
 
     const tableCarrito = """ CREATE TABLE carrito (
 	id_tercero	TEXT,
@@ -2132,8 +2062,9 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     Database database = await _openDB();
 
     var sql =
-        " SELECT numero,STRFTIME('%d/%m/%Y ', fecha) as fecha, strftime('%d', fecha) - strftime('%d', vencimiento) AS dias,total"
-        " from cartera_proveedores WHERE id_tercero=  '$idTercero'  and nit='$nit' order by 1 desc limit 1";
+        " SELECT numero,STRFTIME('%d/%m/%Y ', fecha) as fecha, strftime('%d', fecha) - strftime('%d', vencimiento) AS diasold,total,"
+        " CAST( abs(julianday('now') - julianday(substr(STRFTIME('%d/%m/%Y ', vencimiento), 7, 4) || '-' || substr(STRFTIME('%d/%m/%Y ', vencimiento), 4, 2) || '-' || substr(STRFTIME('%d/%m/%Y ', vencimiento), 1, 2))) AS INTEGER) AS dias   "
+        " from cartera_proveedores WHERE id_tercero=  '$idTercero'  and nit='$nit'   order by 1 desc limit 1";
 
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
@@ -2179,8 +2110,8 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     var sql =
         "  SELECT SC.ID_EMPRESA,SC.ID_SUCURSAL, SC.TIPO_DOC,SC.NUMERO,  SC.CUOTA,  SC.ID_TERCERO AS ID_TERCERO , "
         " SC.ID_VENDEDOR AS ID_VENDEDOR, SC.ID_SUCURSAL_TERCERO AS SUC_TERCERO,"
-        "SC.FECHA, SC.VENCIMIENTO,"
-        " STRFTIME('%d/%m/%Y ',DATE()) - strftime(SC.VENCIMIENTO) AS DIAS,"
+        " SC.FECHA, SC.VENCIMIENTO,"
+        " CAST (abs(julianday('now') - julianday(substr(SC.VENCIMIENTO, 7, 4) || '-' || substr(SC.VENCIMIENTO, 4, 2) || '-' || substr(SC.VENCIMIENTO, 1, 2))) AS INTEGER )AS DIAS, "
         " SC.DCTOMAX, SUM(SC.DEBITO - SC.CREDITO) AS DEBITO, SC.ID_DESTINO AS ID_DESTINO ,"
         " SC.ID_PROYECTO AS ID_PROYECTO FROM SALDO_CARTERA_NEW SC WHERE SC.ID_TERCERO = '$idTercero'"
         " AND SC.ID_SUCURSAL_TERCERO ='$id_sucursal_tercero' GROUP BY SC.ID_EMPRESA,SC.ID_SUCURSAL,"
@@ -2304,12 +2235,12 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 
     var sql =
         " SELECT * from item i INNER JOIN precio_item_det pd  ON pd.id_item = i.id_item "
-        "  WHERE i.nit= '$nit' and id_clasificacion='$idClasificacion'  ";
+        "  WHERE i.nit= '$nit' and id_clasificacion='$idClasificacion'   GROUP BY i.id_item  ";
     if (search != '@') {
       sql += ' AND descripcion LIKE  "%$search%" ';
     }
     sql += ' ORDER BY descripcion ASC  ';
- 
+
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
       return res;
@@ -2535,9 +2466,8 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 
     //insertar el detalle
     var idItem = carritodet.id_item;
-
     final resdet = await database.rawQuery(
-        "SELECT * FROM carrito_detalle WHERE  numero = $numero AND nit = '$nit' AND id_item = '$idItem'");
+        "SELECT * FROM carrito_detalle WHERE  numero = '$numero' AND nit = '$nit' AND id_item = '$idItem'");
     if (resdet.isEmpty || resdet.length== 0) {
       await database.insert('carrito_detalle', carritodet.toMap());
     } else {

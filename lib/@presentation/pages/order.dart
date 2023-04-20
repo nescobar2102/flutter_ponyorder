@@ -46,7 +46,7 @@ class _OrderPageState extends State<OrderPage> {
   final myControllerSearch = TextEditingController();
   final myControllerBuscarProd = TextEditingController();
   final myControllerBuscarCatego = TextEditingController();
-
+  final myControllerBuscarProdCart = TextEditingController();
   late String _saldoCartera = '0.00';
   late String id_tipo_pago = '';
   late String forma_pago_tercero = '';
@@ -168,6 +168,7 @@ class _OrderPageState extends State<OrderPage> {
             false);
       }
     });
+    await getListPrecio();
     await ObtieneCarrito();
   }
 
@@ -380,7 +381,7 @@ class _OrderPageState extends State<OrderPage> {
           _formShowCategories
               ? _formCategories(context, _datClasificacionProductos)
               : Container();
-          getListPrecio();
+        //  getListPrecio();
         }
       });
     } else {
@@ -447,6 +448,30 @@ class _OrderPageState extends State<OrderPage> {
         _countProductos = 0;
       });
       _showBarMsg('No tiene productos', false);
+    }
+  }
+
+  bool _ShowCartSearch = false;
+  List<dynamic> _cartProductosSearch = [];
+  Future<void> searchProductosPedidoCart() async {
+
+    if( myControllerBuscarProdCart.text.isNotEmpty){
+      final _search =  myControllerBuscarProdCart.text.trim().toUpperCase();
+   _cartProductosSearch
+      = _cartProductos.where((prod) => prod["descripcion"].toString().contains(_search)).toList();
+      if (_cartProductosSearch.isNotEmpty) {
+        setState(() {
+          _ShowCartSearch = true;
+        });
+      }else{
+        setState(() {
+          _ShowCartSearch = false;
+        });
+      }
+     }else{
+      setState(() {
+        _ShowCartSearch = false;
+      });
     }
   }
 
@@ -692,7 +717,7 @@ class _OrderPageState extends State<OrderPage> {
                                 ),
                           SizedBox(height: 10.0),
                           _clientShow ? _client(context) : Container(),
-                          _formShow ? _form() : Container(),
+                          _formShow && _datPedido.length > 0 ? _form() : Container(),
                           _formShowEdit ? _formEdit(context) : Container(),
                           _formShowCategories
                               ? _formCategories(
@@ -1742,6 +1767,9 @@ class _OrderPageState extends State<OrderPage> {
                                 _formShow = false;
                                 _productosShowCat = false;
                                 searchClasificacionProductos();
+                                _ShowCartSearch = false;
+                                _cartProductosSearch = [];
+                                myControllerBuscarProdCart.clear();
                               }),
                             },
                             child: Padding(
@@ -1776,9 +1804,9 @@ class _OrderPageState extends State<OrderPage> {
                       SizedBox(
                         height: _size.height - 560,
                         child: ListView.builder(
-                          itemCount: _cartProductos.length,
+                          itemCount: _ShowCartSearch ? _cartProductosSearch.length : _cartProductos.length,
                           itemBuilder: (context, i) =>
-                              _ItemCategoryOrderCart(_cartProductos[i], i),
+                            _ShowCartSearch ? _ItemCategoryOrderCart(_cartProductosSearch[i], i) : _ItemCategoryOrderCart(_cartProductos[i], i) ,
                         ),
                       ),
                       SizedBox(height: 15.0),
@@ -1846,9 +1874,10 @@ class _OrderPageState extends State<OrderPage> {
                                     ),
                                     onTap: () => {
                                       setState(() {
-                                        removeCarrito();
+                                        _seePedido = 0;
                                         Navigator.of(context)
                                             .pop(); // close the drawer
+                                        removeCarrito();
                                         _formShow = true;
                                         _formShowCategories = false;
                                         _clientShow = false;
@@ -2046,6 +2075,30 @@ class _OrderPageState extends State<OrderPage> {
                     fontWeight: FontWeight.w700,
                     color: Colors.blue,
                   ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SelectFormField(
+                  type: SelectFormFieldType.dropdown, // or can be dialog
+                  labelText: 'Lista de precios',
+                  items: itemsListPrecio,
+                  initialValue: itemsListPrecio.length > 0
+                      ? data['id_precio_item']
+                      : null,
+                  onChanged: (val) => setState(() => {
+                    _value_itemsListPrecio = val,
+                    if (_value_itemsListPrecio != '0')
+                      {
+                        _itemSelect = data['id_item'],
+                        _updateProductoPedido(_itemSelect),
+                      }
+                  }),
                 ),
               ],
             ),
@@ -2256,7 +2309,268 @@ class _OrderPageState extends State<OrderPage> {
       ),
     );
   }
-
+/*
+  //listado de carrito
+  Widget _ItemCategoryOrderCartOld(data, index) {
+    var cantidad = int.parse(data['cantidad'].toString());
+    double total = 0.0;
+    total = data['total'];
+    final descripcion = data['descripcion'];
+    final _size = MediaQuery.of(context).size;
+    double width_px = _size.width;
+    return Container(
+      width: width_px,
+      decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
+          borderRadius: BorderRadius.circular(5.0)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 0.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                GestureDetector(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 300.0, bottom: 0.0),
+                      child: Icon(
+                        Icons.do_disturb_on,
+                        color: Color(0xffCB1B1B),
+                        size: 20,
+                      ),
+                    ),
+                    onTap: () => {
+                      _showDialog(context, index),
+                    }),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AutoSizeText(
+                  maxLines: 2,
+                  '$descripcion',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.label_important,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          Text(
+                            'Precio unidad',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Text(
+                          '\$ ' +
+                              expresionRegular(
+                                  double.parse(data['precio'].toString())),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_box,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          SizedBox(
+                            width: width_px * 0.5 - 60,
+                            child: Text(
+                              'Total',
+                              style: TextStyle(
+                                  color: Color(0xff707070),
+                                  fontSize: 15.0,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Text('\$ ' + expresionRegular(total),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Text(
+                        'Cantidad',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Container(
+                        width: width_px * 0.5 - 40,
+                        child: Container(
+                          width: width_px,
+                          height: 30.0,
+                          child: Row(
+                            children: <Widget>[
+                              InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      if (cantidad > 1) {
+                                        OperationDB.updateCantidad(
+                                            _cartProductos[index]['id_item'],
+                                            _value_automatico,
+                                            false);
+                                        ObtieneCarrito();
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 30.0,
+                                    height: 30.0,
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(15.0),
+                                            bottomLeft: Radius.circular(15.0))),
+                                    child:
+                                    Icon(Icons.remove, color: Colors.white),
+                                  )),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      width: 1.0, color: Color(0xffC7C7C7)),
+                                  color: Colors.white,
+                                ),
+                                width: width_px > 600
+                                    ? width_px * 0.5 - 330
+                                    : width_px * 0.5 - 120,
+                                height: 30.0,
+                                child: Center(
+                                  child: TextField(
+                                      textAlign: TextAlign.center,
+                                      controller: myControllerCantidadCart,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (String str) {
+                                        if (str.isNotEmpty) {
+                                          OperationDB.updateCantidadFinal(
+                                              _cartProductos[index]['id_item'],
+                                              _value_automatico,
+                                              int.parse(myControllerCantidadCart
+                                                  .text
+                                                  .trim()));
+                                          myControllerCantidadCart.clear();
+                                          ObtieneCarrito();
+                                        }
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: cantidad.toString(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize: 15.0,
+                                            fontWeight: FontWeight.w700),
+                                        disabledBorder: UnderlineInputBorder(
+                                            borderSide: BorderSide(
+                                                width: 0.8,
+                                                color: Color(0xff707070))),
+                                      )),
+                                ),
+                              ),
+                              InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      if (cantidad >= 0) {
+                                        OperationDB.updateCantidad(
+                                            _cartProductos[index]['id_item'],
+                                            _value_automatico,
+                                            true);
+                                        ObtieneCarrito();
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 30.0,
+                                    height: 30.0,
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.only(
+                                            topRight: Radius.circular(15.0),
+                                            bottomRight:
+                                            Radius.circular(15.0))),
+                                    child: Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                    ),
+                                  ))
+                            ],
+                          ),
+                        )),
+                  ],
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+*/
   Widget getDateRangePicker() {
     return Container(
         height: 250,
@@ -3351,6 +3665,9 @@ class _OrderPageState extends State<OrderPage> {
 
   void removeCarrito() {
     OperationDB.deleteCarrito();
+    _cartProductosSearch = [];
+    _ShowCartSearch = false;
+    myControllerBuscarProdCart.clear();
     Navigator.pushNamed(context, 'order');
   }
 
@@ -3427,6 +3744,56 @@ class _OrderPageState extends State<OrderPage> {
           id_precio_item: _cartProductos[i]['id_precio_item']);
       //guardar el carrito en la BD ENVIADO
       await OperationDB.insertCarrito(carrito, carritodetalle);
+    }
+  }
+
+  _updateProductoPedido(String idItem) async {
+    late double _precioNew = 0;
+    var data = await OperationDB.getPrecioProducto(
+        _nit, idItem, _value_itemsListPrecio);
+    if (data != false) {
+      setState(() {
+        _precioNew = double.parse(data[0]['precio']);
+      });
+    }
+    if(_precioNew > 0){
+
+      var result = _cartProductos.singleWhere((obj) => obj["id_item"] == idItem);
+      //searchPrecioProductos(idItem);
+      print("----update carrito item $result");
+      final cantidad = int.parse(result['cantidad'].toString());
+      final totalNew = double.parse(cantidad.toString()) * _precioNew;
+      final total_dcto = result['total_dcto'];
+      final dcto = result['dcto'];
+      final descripcion = result['descripcion'];
+
+      final cartNew = {
+        "descripcion":descripcion,
+        "id_item": idItem,
+        "precio": _precioNew,
+        "cantidad": cantidad,
+        "total_dcto":total_dcto,
+        "dcto": dcto,
+        "id_precio_item": _value_itemsListPrecio != '0'
+            ? _value_itemsListPrecio
+            : listaPrecioTercero,
+        "total":totalNew
+      };
+      _cartProductos.removeWhere((obj) => obj["id_item"] == idItem);
+      _cartProductos.add(cartNew);
+
+      setState(() {
+        totalPedido = valorTotal();
+        myControllerCantidad.clear();
+        myControllerDescuentos.clear();
+        myControllerDescuentos.text = '0';
+        myControllerCantidad.text = '1';
+        _value_itemsListPrecio = '';
+        _cantidadProducto = 1;
+        _precioNew = 0;
+        _precio = 0;
+        sendCarritoBD('editar');
+      });
     }
   }
 
@@ -3623,9 +3990,10 @@ class _OrderPageState extends State<OrderPage> {
                               OperationDB.deleteProductoCarrito(
                                   _cartProductos[index]['id_item']);
                               _cartProductos.removeAt(index);
-
                               totalPedido = valorTotal();
-                              //numeroAletra(totalPedido.toString());
+                              _cartProductosSearch = [];
+                              _ShowCartSearch = false;
+                              myControllerBuscarProdCart.clear();
                             });
                             Navigator.pop(context);
                           },

@@ -144,6 +144,7 @@ class _HomePageState extends State<HomePage> {
   final myControllerOrdenCompra = TextEditingController();
   final myControllerBuscarProd = TextEditingController();
   final myControllerBuscarCatego = TextEditingController();
+  final myControllerBuscarProdCart = TextEditingController();
 
   late String _value_itemsListPrecio = '0';
   late String _itemSelect = '';
@@ -511,6 +512,7 @@ class _HomePageState extends State<HomePage> {
         _formNewClientShow = false;
       });
       if (_search == '@') {
+        await getListPrecio();
         await ObtieneCarrito();
       }
     } else if (allClient == false && id_vendedor != '') {
@@ -752,7 +754,7 @@ class _HomePageState extends State<HomePage> {
           _productosShow
               ? _productos(context, _datClasificacionProductos)
               : Container();
-          getListPrecio();
+      //    getListPrecio();
         }
       });
     } else {
@@ -823,6 +825,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  bool _ShowCartSearch = false;
+  List<Map<String, dynamic>> _cartProductosSearch = [];
+  Future<void> searchProductosPedidoCart() async {
+
+  if( myControllerBuscarProdCart.text.isNotEmpty){
+    final _search =  myControllerBuscarProdCart.text.trim().toUpperCase();
+   _cartProductosSearch
+           = _cartProductos.where((person) => person["descripcion"].toString().contains(_search)).toList();
+      if (_cartProductosSearch.isNotEmpty) {
+        setState(() {
+          _ShowCartSearch = true;
+        });
+      }else{
+        setState(() {
+          _ShowCartSearch = false;
+        });
+      }
+    }else{
+    setState(() {
+      _ShowCartSearch = false;
+    });
+  }
+  }
   void searchPrecioProductos(String idItem) async {
     var data = await OperationDB.getPrecioProducto(
         _nit, idItem, _value_itemsListPrecio);
@@ -830,7 +855,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _precio = double.parse(data[0]['precio']);
         _descuento = data[0]['descuento_maximo'] != null
-            ? double.parse(data[0]['descuento_maximo'])
+            ? double.parse(data[0]['descuento_maximo'].toString())
             : 0;
       });
     } else {
@@ -1614,7 +1639,7 @@ class _HomePageState extends State<HomePage> {
                       height: 10.0,
                     ),
                     InputCallback(context, 'Buscar producto', Icons.search,
-                        callback, myControllerBuscarProd),
+                        searchProductosPedidoCart, myControllerBuscarProdCart),
                     SizedBox(height: 15.0),
                     Container(
                       width: 185.0,
@@ -1635,6 +1660,9 @@ class _HomePageState extends State<HomePage> {
                               _clientShowNoFound = false;
                               _formShow = false;
                               searchClasificacionProductos();
+                              _ShowCartSearch = false;
+                              _cartProductosSearch = [];
+                              myControllerBuscarProdCart.clear();
                             }),
                           },
                           child: Padding(
@@ -1668,9 +1696,9 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(
                       height: _size.height - 560,
                       child: ListView.builder(
-                          itemCount: _cartProductos.length,
+                          itemCount: _ShowCartSearch ? _cartProductosSearch.length : _cartProductos.length,
                           itemBuilder: (context, i) =>
-                              _ItemCategoryOrderCart(_cartProductos[i], i)),
+                          _ShowCartSearch ? _ItemCategoryOrderCart(_cartProductosSearch[i], i) : _ItemCategoryOrderCart(_cartProductos[i], i)),
                     ),
                     SizedBox(height: 15.0),
                     TextField(
@@ -2484,6 +2512,35 @@ class _HomePageState extends State<HomePage> {
           _checkedRecibo && !_noDatos
               ? _totalHistoryRecibo(context)
               : Container(),
+          Container(
+            width: _size.width,
+            height: 50.0,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6.0),
+                color: Color(0xff0894FD)),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  borderRadius: BorderRadius.circular(6.0),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17.0,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      Navigator.pushNamed(context, 'home');
+                    });
+                  }),
+            ),
+          ),
         ],
       ),
     );
@@ -2518,36 +2575,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           SizedBox(
-            height: 200.0,
-          ),
-          Container(
-            width: _size.width,
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0),
-                color: Color(0xff0894FD)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0),
-                      child: Text(
-                        'Aceptar',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17.0,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      Navigator.pushNamed(context, 'home');
-                    });
-                  }),
-            ),
+            height: 320.0,
           ),
         ],
       ),
@@ -2728,36 +2756,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           SizedBox(
-            height: 190.0,
-          ),
-          Container(
-            width: _size.width,
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0),
-                color: Color(0xff0894FD)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0),
-                      child: Text(
-                        'Aceptar',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17.0,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      Navigator.pushNamed(context, 'home');
-                    });
-                  }),
-            ),
+            height: 200.0,
           ),
         ],
       ),
@@ -2910,46 +2909,23 @@ class _HomePageState extends State<HomePage> {
           ),
           SizedBox(height: 10.0),
           SizedBox(
-            height: 160.0,
-            child: ListView.builder(
+            height: 180.0,
+            child: ListView(
               scrollDirection: Axis.vertical,
-              itemCount: total_item,
-              itemBuilder: (context, i) =>
-                  ItemProductOrderHistoryNew(_datDetallePedido[i], i),
+              children: [
+                for (var i = 0; i < total_item; i++) ...[
+                  if (_datDetallePedido.isNotEmpty) ...[
+                    ItemProductOrderHistoryNew(_datDetallePedido[i], i),
+                    SizedBox(height: 10.0),
+                  ],
+                ],
+              ],
             ),
           ),
           SizedBox(
             height: 20.0,
           ),
-          Container(
-            width: _size.width,
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0),
-                color: Color(0xff0894FD)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0),
-                      child: Text(
-                        'Aceptar',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17.0,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      Navigator.pushNamed(context, 'home');
-                    });
-                  }),
-            ),
-          ),
+
         ],
       ),
     );
@@ -3324,35 +3300,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             height: 20.0,
           ),
-          Container(
-            width: _size.width,
-            height: 50.0,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6.0),
-                color: Color(0xff0894FD)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.0),
-                      child: Text(
-                        'Aceptar',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17.0,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      Navigator.pushNamed(context, 'home');
-                    });
-                  }),
-            ),
-          ),
+
         ],
       ),
     );
@@ -6628,6 +6576,296 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     onTap: () => {
+                      _showDialog(context, index),
+                    }),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AutoSizeText(
+                  maxLines: 2,
+                  '$descripcion',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SelectFormField(
+                  type: SelectFormFieldType.dropdown, // or can be dialog
+                  labelText: 'Lista de precios',
+                  items: itemsListPrecio,
+                  initialValue: itemsListPrecio.length > 0
+                      ? data['id_precio_item']
+                      : null,
+                  onChanged: (val) => setState(() => {
+                    _value_itemsListPrecio = val,
+                    if (_value_itemsListPrecio != '0')
+                      {
+                        _itemSelect = data['id_item'],
+                       _updateProductoPedido(_itemSelect),
+                      }
+                  }),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.label_important,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          Text(
+                            'Precio unidad',
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Text(
+                      '\$ '+ _itemSelect != data['id_item']
+                      ?
+                      expresionRegular(
+                      double.parse(data['precio'].toString()))
+                                     :
+                                expresionRegular(
+                                double.parse(_precio.toString())
+                                ),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_box,
+                            color: Color(0xff707070),
+                            size: 15.0,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          SizedBox(
+                            width: width_px * 0.5 - 60,
+                            child: Text(
+                              'Total',
+                              style: TextStyle(
+                                  color: Color(0xff707070),
+                                  fontSize: 15.0,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Text('\$ ' + expresionRegular(total),
+                          style: TextStyle(
+                              color: Color(0xff707070),
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600)),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: width_px * 0.5 - 40,
+                      child: Text(
+                        'Cantidad',
+                        style: TextStyle(
+                            color: Color(0xff707070),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Container(
+                        width: width_px * 0.5 - 40,
+                        child: Container(
+                          width: width_px,
+                          height: 30.0,
+                          child: Row(
+                            children: <Widget>[
+                              InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      if (cantidad > 1) {
+                                        OperationDB.updateCantidad(
+                                            _cartProductos[index]['id_item'],
+                                            _value_automatico,
+                                            false);
+                                        ObtieneCarrito();
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 30.0,
+                                    height: 30.0,
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(15.0),
+                                            bottomLeft: Radius.circular(15.0))),
+                                    child:
+                                    Icon(Icons.remove, color: Colors.white),
+                                  )),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      width: 1.0, color: Color(0xffC7C7C7)),
+                                  color: Colors.white,
+                                ),
+                                width: width_px > 600
+                                    ? width_px * 0.5 - 330
+                                    : width_px * 0.5 - 120,
+                                height: 30.0,
+                                child: Center(
+                                  child: TextField(
+                                      textAlign: TextAlign.center,
+                                      controller: myControllerCantidadCart,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (String str) {
+                                        if (str.isNotEmpty) {
+                                          OperationDB.updateCantidadFinal(
+                                              _cartProductos[index]['id_item'],
+                                              _value_automatico,
+                                              int.parse(myControllerCantidadCart
+                                                  .text
+                                                  .trim()));
+                                          myControllerCantidadCart.clear();
+                                          ObtieneCarrito();
+                                        }
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: cantidad.toString(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize: 15.0,
+                                            fontWeight: FontWeight.w700),
+                                        disabledBorder: UnderlineInputBorder(
+                                            borderSide: BorderSide(
+                                                width: 0.8,
+                                                color: Color(0xff707070))),
+                                      )),
+                                ),
+                              ),
+                              InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      if (cantidad >= 0) {
+                                        OperationDB.updateCantidad(
+                                            _cartProductos[index]['id_item'],
+                                            _value_automatico,
+                                            true);
+                                        ObtieneCarrito();
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 30.0,
+                                    height: 30.0,
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.only(
+                                            topRight: Radius.circular(15.0),
+                                            bottomRight:
+                                            Radius.circular(15.0))),
+                                    child: Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                    ),
+                                  ))
+                            ],
+                          ),
+                        )),
+                  ],
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+/*
+  //listado de carrito
+  Widget _ItemCategoryOrderCartOld(data, index) {
+    var cantidad = int.parse(data['cantidad'].toString());
+    double total = 0.0;
+    total = data['total'];
+    final descripcion = data['descripcion'];
+    final _size = MediaQuery.of(context).size;
+    double width_px = _size.width;
+    return Container(
+      width: width_px,
+      decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Color(0xffc7c7c7)),
+          borderRadius: BorderRadius.circular(5.0)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 0.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                GestureDetector(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 300.0, bottom: 0.0),
+                      child: Icon(
+                        Icons.do_disturb_on,
+                        color: Color(0xffCB1B1B),
+                        size: 20,
+                      ),
+                    ),
+                    onTap: () => {
                           _showDialog(context, index),
                         }),
               ],
@@ -6856,7 +7094,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+*/
   Widget _categoriasProduc(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Column(
@@ -7013,6 +7251,9 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               _cartProductos.removeAt(index);
                               totalPedido = valorTotal();
+                              _cartProductosSearch = [];
+                              _ShowCartSearch = false;
+                              myControllerBuscarProdCart.clear();
                             });
                             sendCarritoBD();
                             Navigator.pop(context);
@@ -7123,10 +7364,62 @@ class _HomePageState extends State<HomePage> {
   void removeCarrito() {
     OperationDB.deleteCarrito();
     _cartProductos = [];
+    _cartProductosSearch = [];
+    _ShowCartSearch = false;
+    myControllerBuscarProdCart.clear();
     totalPedido = '0.00';
     totalSubTotal = '0.00';
     totalDescuento = '0.00';
     _letras = '';
+  }
+
+  _updateProductoPedido(String idItem) async {
+    late double _precioNew = 0;
+     var data = await OperationDB.getPrecioProducto(
+         _nit, idItem, _value_itemsListPrecio);
+     if (data != false) {
+       setState(() {
+         _precioNew = double.parse(data[0]['precio']);
+       });
+     }
+     if(_precioNew > 0){
+
+    var result = _cartProductos.singleWhere((obj) => obj["id_item"] == idItem);
+
+   final cantidad = int.parse(result['cantidad'].toString());
+    final totalNew = double.parse(cantidad.toString()) * _precioNew;
+    final total_dcto = result['total_dcto'];
+    final dcto = result['dcto'];
+    final descripcion = result['descripcion'];
+
+    final cartNew = {
+      "descripcion":descripcion,
+      "id_item": idItem,
+      "precio": _precioNew,
+      "cantidad": cantidad,
+      "total_dcto":total_dcto,
+      "dcto": dcto,
+      "id_precio_item": _value_itemsListPrecio != '0'
+          ? _value_itemsListPrecio
+          : listaPrecioTercero,
+      "total":totalNew
+    };
+    _cartProductos.removeWhere((obj) => obj["id_item"] == idItem);
+    _cartProductos.add(cartNew);
+
+      setState(() {
+        totalPedido = valorTotal();
+        myControllerCantidad.clear();
+        myControllerDescuentos.clear();
+        myControllerDescuentos.text = '0';
+        myControllerCantidad.text = '1';
+        _value_itemsListPrecio = '';
+        _cantidadProducto = 1;
+        _precioNew = 0;
+        _precio = 0;
+        sendCarritoBD();
+      });
+     }
   }
 
   bool validExistCarrito(String idItem) {
@@ -7815,6 +8108,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget pay(BuildContext context, data) {
+    setState(() {
+      myControllerValorPagoRecibo.text =  data['DEBITO'].toString();
+    });
     final _size = MediaQuery.of(context).size;
     return Column(
       children: [
