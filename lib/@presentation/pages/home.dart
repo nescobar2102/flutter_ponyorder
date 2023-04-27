@@ -1659,6 +1659,7 @@ class _HomePageState extends State<HomePage> {
                               _clientShow = false;
                               _clientShowNoFound = false;
                               _formShow = false;
+                              myControllerBuscarCatego.clear();
                               searchClasificacionProductos();
                               _ShowCartSearch = false;
                               _cartProductosSearch = [];
