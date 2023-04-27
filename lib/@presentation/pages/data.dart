@@ -143,6 +143,7 @@ class _LoginPageState extends State<LoginPages> {
     if (response.statusCode == 200 && success) {
       var data = jsonResponse['data'];
       if (data.length > 0) {
+        await OperationDB.deletePedido();
         for (int i = 0; i < data.length; i++) {
           final pedido = Pedido(
               id_empresa: data[i]['id_empresa'],
@@ -963,7 +964,7 @@ class _LoginPageState extends State<LoginPages> {
   }
 
   void startSin() async {
-    print("empiza a recibir");
+    print("empieza a recibir");
     final val = await validateConexion.checkInternetConnection();
     setState(() {
       _isConnected = val!;

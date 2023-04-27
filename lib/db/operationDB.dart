@@ -841,7 +841,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
   static Future insertSincronizacion() async {
     Database database = await _openDB();
     await database
-        .rawInsert(" INSERT INTO sincronizacion( flag ) VALUES( 'QWERTY') ");
+        .rawInsert(" INSERT INTO sincronizacion( flag ) VALUES('QWERTY') ");
   }
 
   static Future getSincronizacion() async {
@@ -1211,17 +1211,18 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
   //insertar los tercero que viene de la api
   static Future<bool> insertTipoPago(TipoPago tipopago) async {
     var id_tipo_pago = tipopago.id_tipo_pago;
+    var nit = tipopago.nit;
     Database database = await _openDB();
     final res = await database.rawQuery(
-        "SELECT * FROM tipo_pago WHERE id_tipo_pago = '$id_tipo_pago' ");
+        "SELECT * FROM tipo_pago WHERE id_tipo_pago = '$id_tipo_pago' and nit = '$nit'");
     if (res.isEmpty) {
       await database.insert('tipo_pago', tipopago.toMap());
     } else {
       await database.update(
         'tipo_pago',
         tipopago.toMap(),
-        where: "id_tipo_pago = ?",
-        whereArgs: [id_tipo_pago],
+        where: "id_tipo_pago = ? and nit = ?",
+        whereArgs: [id_tipo_pago,nit],
       );
     }
     return true;
@@ -1235,10 +1236,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         await database.rawQuery("SELECT * FROM empresa WHERE nit = '$nit' ");
     if (res.isEmpty) {
       await database.insert('empresa', empresa.toMap());
-      return true;
     } else {
-      return false;
+      await database.update('empresa', empresa.toMap(),
+          where: "nit = ?", whereArgs: [nit]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1261,10 +1263,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         "SELECT * FROM pais WHERE id_pais = '$id_pais' and nit='$nit' ");
     if (res.isEmpty) {
       await database.insert('pais', pais.toMap());
-      return true;
+
     } else {
-      return false;
-    }
+      await database.update('pais', pais.toMap(),
+          where: "nit = ? and id_pais = ?", whereArgs: [nit,id_pais]);
+    }  return true;
   }
 
   //insertar las ciudad que viene de la api
@@ -1276,10 +1279,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         "SELECT * FROM ciudad WHERE id_ciudad = '$id_ciudad' and nit = '$nit'");
     if (res.isEmpty) {
       await database.insert('ciudad', ciudad.toMap());
-      return true;
     } else {
-      return false;
+      await database.update('ciudad', ciudad.toMap(),
+          where: "nit = ? and id_ciudad = ?", whereArgs: [nit,id_ciudad]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1318,15 +1322,17 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
   //insertar las zona> que viene de la api
   static Future<bool> insertZona(Zona zona) async {
     var id_zona = zona.id_zona;
+    var nit = zona.nit;
     Database database = await _openDB();
     final res = await database
-        .rawQuery("SELECT * FROM zona WHERE id_zona = '$id_zona' ");
+        .rawQuery("SELECT * FROM zona WHERE id_zona = '$id_zona' and nit = '$nit' ");
     if (res.isEmpty) {
       await database.insert('zona', zona.toMap());
-      return true;
     } else {
-      return false;
+      await database.update('zona', zona.toMap(),
+          where: "nit = ? and id_zona = ?", whereArgs: [nit,id_zona]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1354,15 +1360,17 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
   //insertar las zona> que viene de la api
   static Future<bool> insertMedioContacto(MedioContacto medio_contacto) async {
     var id_medio_contacto = medio_contacto.id_medio_contacto;
+    var nit = medio_contacto.nit;
     Database database = await _openDB();
     final res = await database.rawQuery(
-        "SELECT * FROM medio_contacto WHERE id_medio_contacto = '$id_medio_contacto' ");
+        "SELECT * FROM medio_contacto WHERE id_medio_contacto = '$id_medio_contacto' and  nit = $nit  ");
     if (res.isEmpty) {
       await database.insert('medio_contacto', medio_contacto.toMap());
-      return true;
     } else {
-      return false;
+      await database.update('medio_contacto', medio_contacto.toMap(),
+          where: "nit = ? and id_medio_contacto = ?", whereArgs: [nit,id_medio_contacto]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1396,10 +1404,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         "SELECT * FROM tipo_identificacion WHERE id_tipo_identificacion = '$id_tipo_identificacion' and nit = '$nit' ");
     if (res.isEmpty) {
       await database.insert('tipo_identificacion', tipoident.toMap());
-      return true;
     } else {
-      return false;
+      await database.update('tipo_identificacion', tipoident.toMap(),
+          where: "nit = ? and id_tipo_identificacion = ?", whereArgs: [nit,id_tipo_identificacion]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1435,8 +1444,10 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
       await database.insert('tipo_empresa', tipoempresa.toMap());
       return true;
     } else {
-      return false;
+      await database.update('tipo_empresa', tipoempresa.toMap(),
+          where: "nit = ? and id_tipo_empresa = ?", whereArgs: [nit,id_tipo_empresa]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1469,10 +1480,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         "SELECT * FROM barrio WHERE id_barrio = '$id_barrio' and nit = '$nit'");
     if (res.isEmpty) {
       await database.insert('barrio', barrio.toMap());
-      return true;
     } else {
-      return false;
+      await database.update('barrio', barrio.toMap(),
+          where: "nit = ? and id_barrio = ?", whereArgs: [nit,id_barrio]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1527,10 +1539,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         "SELECT * FROM depto WHERE id_depto = '$idDepto' and nit = '$nit'");
     if (res.isEmpty) {
       await database.insert('depto', depto.toMap());
-      return true;
     } else {
-      return false;
+      await database.update('depto', depto.toMap(),
+          where: "nit = ? and id_depto = ?", whereArgs: [nit,idDepto]);
     }
+    return true;
   }
 
   /// Simple query with sqflite helper
@@ -1705,9 +1718,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 
   //insertar las factura que viene de la api
   static Future<bool> insertPrecioItemDet(PrecioItemsDet precio) async {
-    var idPrecioItem = precio.id_precio_item;
-    var nit = precio.nit;
-    var idItem = precio.id_item;
     Database database = await _openDB();
     await database.insert('precio_item_det', precio.toMap());
     return true;
@@ -1727,8 +1737,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 
   //insertar las factura que viene de la api
   static Future<bool> inserItem(Items item) async {
-    var nit = item.nit;
-    var idItem = item.id_item;
     Database database = await _openDB();
     await database.insert('item', item.toMap());
     return true;
@@ -1806,6 +1814,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     }
     return true;
   }
+  static Future<void> deletePedido() async {
+    Database database = await _openDB();
+    await database.rawQuery("DELETE FROM pedido_det ");
+    await database.rawQuery("DELETE FROM pedido ");
+  }
 
   static Future<bool> insertPedido(Pedido pedido, bool origen) async {
     var numero = pedido.numero;
@@ -1825,7 +1838,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     } else {
       if (origen) {
         await database.update('pedido', pedido.toMap(),
-            where: "numero = ? and nit = ?", whereArgs: [numero, nit]);
+            where: "numero = ? and nit = ? and id_sucursal=? and id_tipo_doc =? and id_empresa=? ", whereArgs: [numero, nit,idSucursal,id_tipo_doc,idEmpresa]);
       }
     }
     return true;
@@ -1876,8 +1889,9 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     } else {
       if (origen) {
         await database.update('pedido_det', pedidodet.toMap(),
-            where: "numero = ? and id_item = ? and nit = ?",
-            whereArgs: [numero, idItem, nit]);
+         where: "id_empresa = ? and id_sucursal= ? and id_tipo_doc =? and numero = ? "
+             " and  id_item= ?  and nit = ? and consecutivo = ?  ",
+            whereArgs: [idEmpresa, idSucursal,id_tipo_doc, numero,idItem,nit,consecutivo]);
       }
     }
     return true;
@@ -2271,9 +2285,14 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     var cruce = cuentatercero.numero_cruce;
     Database database = await _openDB();
     final res = await database.rawQuery(
-        "SELECT * FROM cuentas_por_tercero WHERE tipo_doc='$tipoDoc' and  numero = '$numero' and cuota = '$cuota' and nit='$nit' and numero_cruce='$cruce'  ");
+        "SELECT * FROM cuentas_por_tercero WHERE tipo_doc='$tipoDoc' and  numero = '$numero'"
+            " and cuota = '$cuota' and nit='$nit' and numero_cruce='$cruce'");
     if (res.isEmpty) {
       await database.insert('cuentas_por_tercero', cuentatercero.toMap());
+    }else{
+      await database.update('cuentas_por_tercero', cuentatercero.toMap(),
+          where: "tipo_doc = ? and numero = ? and cuota = ? and nit = ? and numero_cruce = ?",
+          whereArgs: [tipoDoc,numero,cuota,nit,cruce]);
     }
     return true;
   }
@@ -2331,6 +2350,9 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         "SELECT * FROM banco WHERE id_banco = '$idBanco' and nit = '$nit'");
     if (res.isEmpty) {
       await database.insert('banco', banco.toMap());
+    }else{
+      await database.update('banco', banco.toMap(),
+          where: "id_banco = ? and nit = ?", whereArgs: [idBanco, nit]);
     }
     return true;
   }

@@ -558,7 +558,6 @@ class SendataSincronizacion {
         }
       }
     }
-
     await getBarrio();
   }
 

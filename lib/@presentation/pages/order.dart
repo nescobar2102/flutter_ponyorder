@@ -385,7 +385,7 @@ class _OrderPageState extends State<OrderPage> {
         }
       });
     } else {
-      _showBarMsg('ERROR SCP', false);
+      _showBarMsg('No se encontró la categoria', false);
     }
   }
 
@@ -447,7 +447,7 @@ class _OrderPageState extends State<OrderPage> {
         _datProductos = [];
         _countProductos = 0;
       });
-      _showBarMsg('No tiene productos', false);
+      _showBarMsg('No se encontró el producto', false);
     }
   }
 

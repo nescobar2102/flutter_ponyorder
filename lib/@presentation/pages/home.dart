@@ -758,7 +758,7 @@ class _HomePageState extends State<HomePage> {
         }
       });
     } else {
-      _showBarMsg('ERROR SCP', false);
+      _showBarMsg('No se encontró la categoria', false);
     }
   }
 
@@ -821,7 +821,7 @@ class _HomePageState extends State<HomePage> {
         _datProductos = [];
         _countProductos = 0;
       });
-      _showBarMsg('No tiene productos', false);
+      _showBarMsg('No se encontró el producto', false);
     }
   }
 
