@@ -6233,6 +6233,7 @@ class _HomePageState extends State<HomePage> {
                                           data['precio'].toString());
                                     }
                                     _itemSelect = data['id_item'];
+                                    myControllerCantidad.text = '1';
                                     _showAlert(
                                         i,
                                         data['id_item'],
@@ -6531,10 +6532,11 @@ class _HomePageState extends State<HomePage> {
                               ),
                           onPressed: () {
                             if (!validExistCarrito(idItem)) {
-                              _addProductoPedido(descripcion, idItem);
+                              _addProductoPedido(descripcion, idItem,cantidad);
                             }
+
                           }),
-                    )
+                    ),
                   ],
                 ),
               ],
@@ -7008,7 +7010,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _addProductoPedido(String descripcion, String idItem) {
+  _addProductoPedido(String descripcion, String idItem,unidad) {
     final cantidad = int.parse(myControllerCantidad.text.trim());
     final total = double.parse(cantidad.toString()) * _precio;
 
@@ -7035,7 +7037,11 @@ class _HomePageState extends State<HomePage> {
       sendCarritoBD();
     });
     Navigator.of(context).pop();
-    _showBarMsg('Has agregado estos productos a tu carrito', true);
+    if (!validCantidadDisp(unidad,cantidad)) {
+      _showBarMsg('¡Atención!, Supera la cantidad disponible! \n Has agregado estos productos a tu carrito', true);
+    }else{
+      _showBarMsg('Has agregado estos productos a tu carrito', true);
+    }
   }
 
   Future sendCarritoBD() async {
@@ -7170,6 +7176,14 @@ class _HomePageState extends State<HomePage> {
     }
     return flag;
   }
+    bool validCantidadDisp(unidad,cantidad) {
+    bool flag = true;
+      cantidad = int.parse(cantidad.toString());
+    if (cantidad >  int.parse(unidad.toString())) {
+      flag = false;
+    }
+    return flag;
+    }
 
   modalNuevoPedido(
     BuildContext context,
