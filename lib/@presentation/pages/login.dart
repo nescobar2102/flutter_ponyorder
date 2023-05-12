@@ -84,7 +84,9 @@ class _LoginPageState extends State<LoginPage> {
     _password.isEmpty ? _validatePass = false : _validatePass = true;
     if (_validate && _validatePass) {
       _submitDialog(context);
+      print("getLogin $_user");
       final user = await OperationDB.getLogin(_user.trim());
+      print("getLogin res $user");
       if (user != false) {
         final pass =
             await OperationDB.getLoginPassw(_user.trim(), _password.trim());
@@ -157,6 +159,7 @@ class _LoginPageState extends State<LoginPage> {
           await OperationDB.deleteDataUsuario();
           for (int i = 0; i < data.length; i++) {
             final user = Usuario(
+              correo_electronico : data[i]['correo_electronico'],
               usuario: data[i]['usuario'],
               clave: data[i]['clave'],
               nit: data[i]['nit'],

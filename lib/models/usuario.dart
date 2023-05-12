@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 //Clase del modelo de usuario
 
 class Usuario {
+  final String correo_electronico;
   final String usuario;
   final String clave;
   final String nit;
@@ -23,6 +24,7 @@ class Usuario {
   final String flag_mobile;
 
   const Usuario({
+    required this.correo_electronico,
     required this.usuario,
     required this.clave,
     required this.nit,
@@ -44,6 +46,7 @@ class Usuario {
   // columns in the database.
   Map<String, dynamic> toMap() {
     return {
+      'correo_electronico':correo_electronico,
       'usuario': usuario,
       'clave': clave,
       'nit': nit,
@@ -66,7 +69,7 @@ class Usuario {
   // each dog when using the print statement.
   @override
   String toString() {
-    return 'Usuario{ usuario: $usuario, clave: $clave,id_tipo_doc_pe: $id_tipo_doc_pe,id_tipo_doc_rc: $id_tipo_doc_rc,id_bodega: $id_bodega ,'
+    return 'Usuario{ correo_electronico:$correo_electronico, usuario: $usuario, clave: $clave,id_tipo_doc_pe: $id_tipo_doc_pe,id_tipo_doc_rc: $id_tipo_doc_rc,id_bodega: $id_bodega ,'
         ' flag_activo : $flag_activo, flag_cambia_fp : $flag_cambia_fp, flag_cambia_lp : $flag_cambia_lp, flag_edita_cliente : $flag_edita_cliente,'
         ' flag_edita_dcto : $flag_edita_dcto, edita_consecutivo_rc : $edita_consecutivo_rc, edita_fecha_rc : $edita_fecha_rc, id_tipo_doc_fac : $id_tipo_doc_fac,'
         ' flag_mobile : $flag_mobile }';

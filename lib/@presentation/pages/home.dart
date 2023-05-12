@@ -8656,7 +8656,7 @@ class _HomePageState extends State<HomePage> {
           tipo_doc: idReciboUser,
           numero: int.parse(_value_automatico),
           cuota: _documentosPagados[i]['cuota'],
-          dias: _documentosPagados[i]['dias'],
+          dias: _documentosPagados[i]['dias'] != null ? _documentosPagados[i]['dias'] : 0,
           id_tercero: id_tercero,
           id_vendedor: id_vendedor,
           id_sucursal_tercero: int.parse(id_sucursal_tercero),

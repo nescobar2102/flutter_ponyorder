@@ -856,10 +856,12 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
   }
 
   /// Simple query with sqflite helper
-  static Future getLogin(String usuario) async {
+  static Future getLogin(String correo_electronico) async {
     Database database = await _openDB();
+  /*  final res = await database
+        .rawQuery("SELECT * FROM usuario WHERE usuario = '$usuario' ");*/
     final res = await database
-        .rawQuery("SELECT * FROM usuario WHERE usuario = '$usuario' ");
+        .rawQuery("SELECT * FROM usuario WHERE correo_electronico = '$correo_electronico' ");
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -868,10 +870,10 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
   }
 
   /// Simple query with sqflite helper
-  static Future getLoginPassw(String usuario, String password) async {
+  static Future getLoginPassw(String correo_electronico, String password) async {
     Database database = await _openDB();
     final res = await database.rawQuery(
-        "SELECT * FROM usuario WHERE usuario = '$usuario' and clave = '$password'");
+        "SELECT * FROM usuario WHERE correo_electronico = '$correo_electronico' and clave = '$password'");
     if (res.isNotEmpty) {
       return true;
     } else {
@@ -923,7 +925,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         " select tercero.id_tercero , tercero.id_sucursal_tercero, tercero.id_forma_pago,"
         " id_precio_item, id_lista_precio,id_suc_vendedor from tercero INNER JOIN  tercero_cliente"
         " ON tercero.id_tercero=tercero_cliente.id_tercero"
-        " where usuario='$user' and tercero.nit='$nit'   AND vendedor ='SI' limit 1 ";
+        " where e_mail='$user' and tercero.nit='$nit'   AND vendedor ='SI' limit 1 ";
 
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
