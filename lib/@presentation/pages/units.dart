@@ -1955,9 +1955,7 @@ class _UnitsPageState extends State<UnitsPage> {
                       ),
                       onTap: () {
                         setState(() {
-                          _checked = i;
-                          /*idClasificacion =
-                              '${_datClasificacionProductos[i]['id_clasificacion']}';*/
+                          _checked = i;                      
                           idClasificacion =
                               '${_datClasificacionProductos[i]['id_padre']}';
                           searchProductos();

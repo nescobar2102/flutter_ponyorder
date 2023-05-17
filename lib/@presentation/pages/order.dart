@@ -380,8 +380,7 @@ class _OrderPageState extends State<OrderPage> {
           _formShowCategories = true;
           _formShowCategories
               ? _formCategories(context, _datClasificacionProductos)
-              : Container();
-        //  getListPrecio();
+              : Container(); 
         }
       });
     } else {
@@ -765,10 +764,9 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-  Widget itemOrder(data, i) {
-    final nombre = data['nombre_sucursal'].length > 24
-        ? data['nombre_sucursal'].substring(0, 23)
-        : data['nombre_sucursal'];
+  Widget itemOrder(data, i) { 
+    final nombre = data['nombre_sucursal'] ;
+        
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -787,38 +785,22 @@ class _OrderPageState extends State<OrderPage> {
                 color: Colors.blue),
             width: _size.width,
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            child: Row(
+            child:            
+          Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  nombre.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                GestureDetector(
-                    child: Row(
-                      children: [
-                        Text(
-                          'Ver detalles',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.w300,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 3.0),
-                        Icon(
-                          Icons.remove_red_eye,
-                          color: Colors.white,
-                          size: 15.0,
-                        )
-                      ],
-                    ),
-                    onTap: () => {
+                  Flexible(
+                    child:
+                    AutoSizeText( nombre.toUpperCase(),
+                    maxLines: 2,
+                    style: TextStyle(
+                                 color: Colors.white,
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                                )),
+              SizedBox(width: 10.0),
+                IconButton(
+                    onPressed: () {                     
                           setState(() {
                             if (_cartProductos.isNotEmpty &&
                                 data['id_tercero'] != id_tercero) {
@@ -840,10 +822,17 @@ class _OrderPageState extends State<OrderPage> {
                               nombre_tercero =
                                   '${data['nombre_sucursal'].toString()}';
                             }
-                          })
-                        }),
+                          });
+                        },
+                    
+                    icon: Icon(
+                      Icons.remove_red_eye,
+                      color:Colors.white,
+                      size: 15.0,
+                    )),
               ],
-            ),
+            )
+          
           ),
           SizedBox(height: 5.0),
           Padding(
@@ -951,9 +940,7 @@ class _OrderPageState extends State<OrderPage> {
     final subtotal = double.parse(data['cantidad'].toString()) *
         double.parse(data['precio'].toString());
     final total = subtotal - double.parse(data['total_dcto'].toString());
-    final descripcion = data['descripcion'].length >= 30
-        ? data['descripcion'].substring(0, 30) + '...'
-        : data['descripcion'];
+    final descripcion = data['descripcion'].toUpperCase();
     return Container(
       width: _size.width,
       decoration: BoxDecoration(
@@ -974,14 +961,15 @@ class _OrderPageState extends State<OrderPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  descripcion.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xff707070),
-                  ),
-                ),
+                  Flexible(
+                    child:
+                    AutoSizeText("$descripcion",maxLines: 2,
+                    style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                                )),
+             
                 IconButton(
                     onPressed: () {
                       _showDialog(context, i);
@@ -1205,7 +1193,7 @@ class _OrderPageState extends State<OrderPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
             child: AutoSizeText(
               maxLines: 2,
               '${data['descripcion']}',
@@ -1257,7 +1245,7 @@ class _OrderPageState extends State<OrderPage> {
                             'Precio unidad',
                             style: TextStyle(
                                 color: Color(0xff707070),
-                                fontSize: 15.0,
+                                fontSize: 14.0,
                                 fontWeight: FontWeight.w700),
                           ),
                         ],
@@ -1273,7 +1261,7 @@ class _OrderPageState extends State<OrderPage> {
                                       double.parse(data['precio'].toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
-                              fontSize: 15.0,
+                              fontSize: 14.0,
                               fontWeight: FontWeight.w600)),
                     ),
                   ],
@@ -1300,7 +1288,7 @@ class _OrderPageState extends State<OrderPage> {
                               'Unidades disponibles',
                               style: TextStyle(
                                   color: Color(0xff707070),
-                                  fontSize: 15.0,
+                                  fontSize: 14.0,
                                   fontWeight: FontWeight.w700),
                             ),
                           ),
@@ -1313,7 +1301,7 @@ class _OrderPageState extends State<OrderPage> {
                           expresionRegular(double.parse(saldo.toString())),
                           style: TextStyle(
                               color: Color(0xff707070),
-                              fontSize: 15.0,
+                              fontSize: 14.0,
                               fontWeight: FontWeight.w600)),
                     )
                   ],
@@ -2002,8 +1990,7 @@ class _OrderPageState extends State<OrderPage> {
                                                   ),
                                                 ),
                                                 onTap: () {
-                                                  Navigator.pop(context);
-                                                  //  Navigator.pushNamed(context, 'order');
+                                                  Navigator.pop(context); 
                                                 },
                                               ),
                                             ),
@@ -2110,84 +2097,68 @@ class _OrderPageState extends State<OrderPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Row(
                   children: [
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
+                   Icon(
                             Icons.label_important,
                             color: Color(0xff707070),
                             size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          Text(
-                            'Precio unidad',
-                            style: TextStyle(
+                          ), 
+                    Flexible(
+                    child:
+                    Text("Precio Unidad",maxLines: 1,
+                    style: TextStyle(
                                 color: Color(0xff707070),
                                 fontSize: 15.0,
                                 fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
+                                )), // ➜ This is the text.
+                     SizedBox(
+                      width: 5.0,
                     ),
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Text(
-                          '\$ ' +
-                              expresionRegular(
-                                  double.parse(data['precio'].toString())),
+                   Text(maxLines: 1,
+                       '\$ '+ _itemSelect != data['id_item']
+                      ?
+                     '\$ '+  expresionRegular(
+                      double.parse(data['precio'].toString()))
+                                     : '\$ '+
+                                expresionRegular(
+                                double.parse(_precio.toString())
+                                ), 
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
                               fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
+                     ],
+                  ),
                 SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Row(
                   children: [
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_box,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          SizedBox(
-                            width: width_px * 0.5 - 60,
-                            child: Text(
-                              'Total',
-                              style: TextStyle(
-                                  color: Color(0xff707070),
-                                  fontSize: 15.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
-                      ),
+                   Icon(
+                          Icons.check_box,
+                          color: Color(0xff707070),
+                          size: 15.0,
+                        ), 
+                    Flexible(
+                    child:
+                    Text('Total               ',
+                      maxLines: 1,
+                    style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                                 )), // ➜ This is the text.
+                   
+                    SizedBox(
+                      width: 10.0,
                     ),
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Text('\$ ' + expresionRegular(total),
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
-                SizedBox(height: 10.0),
+                    Text('\$ ' + expresionRegular(total),maxLines: 1,
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w600))
+                     ],
+                  ),     
+                 SizedBox(height: 10.0),  
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -2521,23 +2492,36 @@ class _OrderPageState extends State<OrderPage> {
     final _size = MediaQuery.of(context).size;
     final total_d = _cartProductos.length;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AutoSizeText(
-          maxLines: 1,
-          'Visualice los detalles del pedido',
-          style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff06538D)),
-        ),
-        SizedBox(height: 15.0),
-        AutoSizeText(
-          maxLines: 1,
-          '${_datPedido[_seePedido]['nombre_sucursal'].toUpperCase()}',
-          style: TextStyle(
-              fontSize: 17.0, fontWeight: FontWeight.bold, color: Colors.blue),
-        ),
+     crossAxisAlignment: CrossAxisAlignment.start,
+      children: [       
+       Row(
+        children: [ 
+          Flexible(
+                    child:
+                    AutoSizeText('Visualice los detalles del pedido',
+                    maxLines: 1,
+                    style: TextStyle(                                 
+                                fontSize: 18.0, 
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff06538D)),
+                                )),
+                                              ],
+                  ),
+                    SizedBox(height: 15.0),
+              Row(
+              children: [
+                Flexible(
+                          child:
+                          AutoSizeText('${_datPedido[_seePedido]['nombre_sucursal'].toUpperCase()}',
+                          maxLines: 2,
+                          style: TextStyle(                                 
+                                      fontSize: 17.0, 
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue),
+                                      )),
+                                        ],
+                        ),
+            
         SizedBox(
           height: 15.0,
         ),
@@ -3661,7 +3645,7 @@ class _OrderPageState extends State<OrderPage> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0))),
           child: Container(
-            height: 210.0,
+            height: 220.0,
             width: _size.width * 0.8,
             padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             child: Column(
@@ -3684,7 +3668,7 @@ class _OrderPageState extends State<OrderPage> {
                 ),
                 SizedBox(height: 20.0),
                 AutoSizeText(
-                  minFontSize: 15,
+                  minFontSize: 14,
                   maxLines: 2,
                   '¿Desea eliminar el siguiente item?',
                   textAlign: TextAlign.center,

@@ -1849,7 +1849,7 @@ class _HomePageState extends State<HomePage> {
                                 new Row(
                                   children: <Widget>[
                                     SizedBox(width: 50.0),
-                                    new Container(
+                                    new Flexible(
                                       child: Image(
                                         height: 250.0,
                                         width: 250.0,
@@ -2599,13 +2599,16 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Total de cartera',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w500),
-                ),
+                 Flexible(
+                    child:
+                    AutoSizeText( 'Total de cartera',
+                    maxLines: 2,
+                    style: TextStyle(
+                                color: Color(0xff06538D),
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w500),
+                                )),
+               
                 Text(
                   '\$ ' +
                       expresionRegular(double.parse(_saldoCartera.toString())),
@@ -2632,7 +2635,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AutoSizeText(
                   'Datos de Cartera',
                   style: TextStyle(
                       color: Color(0xff06538D),
@@ -2781,13 +2784,16 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Total de Pedido',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w500),
-                ),
+                  Flexible(
+                    child:
+                    AutoSizeText( 'Total de Pedido',
+                    maxLines: 2,
+                    style: TextStyle(
+                                color: Color(0xff06538D),
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w500),
+                                )),
+              
                 Text(
                   '\$ ' +
                       expresionRegular(
@@ -3119,13 +3125,16 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Total de recibo',
-                  style: TextStyle(
-                      color: Color(0xff06538D),
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w500),
-                ),
+                Flexible(
+                    child:
+                    AutoSizeText('Total de recibo',
+                    maxLines: 2,
+                    style: TextStyle(
+                                color: Color(0xff06538D),
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w500),
+                                )),
+             
                 Text(
                   '\$ ' +
                       expresionRegular(
@@ -3330,13 +3339,15 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 40,
                       child: Row(
                         children: [
-                          Text(
-                            'Documento - cruce',
-                            style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700),
-                          ),
+                             Flexible(
+                      child:
+                      AutoSizeText('Documento - cruce',maxLines: 2,
+                      style: TextStyle(
+                                  color: Color(0xff707070),
+                                  fontSize: 15.0,
+                                  fontWeight: FontWeight.w700),
+                                  )),
+                      
                         ],
                       ),
                     ),
@@ -3358,13 +3369,14 @@ class _HomePageState extends State<HomePage> {
                       width: _size.width * 0.5 - 40,
                       child: Row(
                         children: [
-                          Text(
-                            'Número - Cruce',
-                            style: TextStyle(
-                                color: Color(0xff707070),
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700),
-                          ),
+                                Flexible(
+                      child:
+                      AutoSizeText('Número - cruce',maxLines: 2,
+                      style: TextStyle(
+                                  color: Color(0xff707070),
+                                  fontSize: 15.0,
+                                  fontWeight: FontWeight.w700),
+                                  )),                     
                         ],
                       ),
                     ),
@@ -3466,13 +3478,14 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$nombre_tercero',
-                style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xff0091CE)),
-              ),
+              Flexible(
+                    child:
+                    AutoSizeText("$nombre_tercero",maxLines: 2,
+                    style: TextStyle(
+                                color: Color(0xff0091CE),
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w600),
+                                )),
               Container(
                   height: 35.0,
                   width: 35.0,
@@ -3698,13 +3711,15 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$nombre_tercero',
-                style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xff0091CE)),
-              ),
+                 Flexible(
+                    child:
+                    AutoSizeText("$nombre_tercero",maxLines: 2,
+                    style: TextStyle(
+                                color: Color(0xff0091CE),
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w600),
+                                )),
+         
               Container(
                   height: 35.0,
                   width: 35.0,
@@ -5779,20 +5794,22 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(
                             width: 5.0,
                           ),
-                          AutoSizeText(
-                            maxLines: 2,
+                      Flexible(
+                        child:
+                          Text(
                             'Límite credito',
                             style: TextStyle(
                                 color: Color(0xff707070),
                                 fontSize: 15.0,
                                 fontWeight: FontWeight.w700),
                           ),
+                      ),
                         ],
                       ),
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text('${data['limite_credito']}',
+                      child: AutoSizeText('${data['limite_credito']}',
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -6630,89 +6647,70 @@ class _HomePageState extends State<HomePage> {
             const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [              
+                   Row(
                   children: [
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
+                   Icon(
                             Icons.label_important,
                             color: Color(0xff707070),
                             size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          Text(
-                            'Precio unidad',
-                            style: TextStyle(
+                          ), 
+                    Flexible(
+                    child:
+                    Text("Precio Unidad",maxLines: 1,
+                    style: TextStyle(
                                 color: Color(0xff707070),
                                 fontSize: 15.0,
                                 fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
+                                )), // ➜ This is the text.
+                     SizedBox(
+                      width: 5.0,
                     ),
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Text(
-                      '\$ '+ _itemSelect != data['id_item']
+                   Text(maxLines: 1,
+                       '\$ '+ _itemSelect != data['id_item']
                       ?
-                      expresionRegular(
+                     '\$ '+  expresionRegular(
                       double.parse(data['precio'].toString()))
-                                     :
+                                     : '\$ '+
                                 expresionRegular(
                                 double.parse(_precio.toString())
-                                ),
+                                ), 
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
                               fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
+                     ],
+                  ),
                 SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Row(
                   children: [
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_box,
-                            color: Color(0xff707070),
-                            size: 15.0,
-                          ),
-                          SizedBox(
-                            width: 5.0,
-                          ),
-                          SizedBox(
-                            width: width_px * 0.5 - 60,
-                            child: Text(
-                              'Total',
-                              style: TextStyle(
-                                  color: Color(0xff707070),
-                                  fontSize: 15.0,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
-                      ),
+                   Icon(
+                          Icons.check_box,
+                          color: Color(0xff707070),
+                          size: 15.0,
+                        ), 
+                    Flexible(
+                    child:
+                    Text('Total               ',
+                      maxLines: 1,
+                    style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700),
+                                 )), // ➜ This is the text.
+                   
+                    SizedBox(
+                      width: 10.0,
                     ),
-                    Container(
-                      width: width_px * 0.5 - 40,
-                      child: Text('\$ ' + expresionRegular(total),
-                          style: TextStyle(
-                              color: Color(0xff707070),
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.w600)),
-                    )
-                  ],
-                ),
+                    Text('\$ ' + expresionRegular(total),maxLines: 1,
+                            style: TextStyle(
+                                color: Color(0xff707070),
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w600))
+                     ],
+                  ),     
+               
+             
                 SizedBox(height: 10.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
