@@ -3888,18 +3888,18 @@ class _OrderPageState extends State<OrderPage> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0))),
           child: Container(
-            height: 283.0,
+            height: 293.0,
             width: 283.0,
             padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             child: Column(
               children: [
-                SizedBox(height: 20.0),
+                SizedBox(height: 15.0),
                 Image(
                   height: 90.0,
                   image: AssetImage('assets/images/icon-check.png'),
                 ),
-                SizedBox(height: 20.0),
-                Text(
+                SizedBox(height: 15.0),
+                AutoSizeText(maxLines: 2,
                   'Edición de pedido exitoso',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -3907,7 +3907,7 @@ class _OrderPageState extends State<OrderPage> {
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 30.0),
+                SizedBox(height: 20.0),
                 Container(
                   width: 90,
                   height: 41.0,
@@ -3919,7 +3919,7 @@ class _OrderPageState extends State<OrderPage> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(5.0),
                       child: Center(
-                        child: Text(
+                        child:AutoSizeText(maxLines: 1,
                           'Aceptar',
                           style: TextStyle(
                               color: Colors.white,

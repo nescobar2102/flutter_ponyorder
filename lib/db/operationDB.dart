@@ -19,10 +19,11 @@ import '../models/zona.dart';
 import '../models/medio_contacto.dart';
 import '../models/pedido.dart';
 import '../models/recibo_caja.dart';
-
+import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:sqflite/sqlite_api.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
 class OperationDB {
   static Database? _database;
 
@@ -39,7 +40,7 @@ class OperationDB {
     const tableSincronizacion = """
     CREATE TABLE  sincronizacion  (
         id INTEGER,
-        create_at DATETIME DEFAULT CURRENT_TIMESTAMP ,
+        create_at TEXT ,
         flag TEXT,
         PRIMARY KEY("id" AUTOINCREMENT)
       )          
@@ -840,8 +841,16 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
 
   static Future insertSincronizacion() async {
     Database database = await _openDB();
+    initializeDateFormatting();
+
+    // Obtiene la hora actual en Bogotá
+    var now = DateTime.now().toUtc().add(Duration(hours: -5));
+    var format = DateFormat("dd-MM-yyyy").add_Hm();
+    var formattedDate = format.format(now);
+    print('Hora actual en Bogotá: $formattedDate');
+
     await database
-        .rawInsert(" INSERT INTO sincronizacion( flag ) VALUES('QWERTY') ");
+        .rawInsert("INSERT INTO sincronizacion( flag,create_at ) VALUES('QWERTY','$formattedDate') ");
   }
 
   static Future getSincronizacion() async {
@@ -858,8 +867,6 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
   /// Simple query with sqflite helper
   static Future getLogin(String correo_electronico) async {
     Database database = await _openDB();
-  /*  final res = await database
-        .rawQuery("SELECT * FROM usuario WHERE usuario = '$usuario' ");*/
     final res = await database
         .rawQuery("SELECT * FROM usuario WHERE correo_electronico = '$correo_electronico' ");
     if (res.isNotEmpty) {
@@ -1062,13 +1069,11 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         " from cuota_venta  where id_vendedor='$id_vendedor' "
         " union "
         " select sum(total) as total_ventas_dia,0,0,'DIA_PEDIDO' as tipo "
-        " from pedido where id_vendedor='$id_vendedor'  and nit='$nit'  and  fecha='$fecha' "
+        " from pedido where id_vendedor='$id_vendedor'  and nit='$nit'  and  date(FECHA)='$fecha' "
         " union "
         " select sum(credito) as total_ventas_dia, 0,0,'DIA_RECIBO'  as tipo "
-        " from cuentas_por_tercero where id_vendedor='$id_vendedor'  and nit='$nit' and  fecha='$fechaF'  ";
-
+        " from cuentas_por_tercero where id_vendedor='$id_vendedor'  and nit='$nit' and  fecha='$fechaF' ";
     final res = await database.rawQuery(sql);
-
     if (res.isNotEmpty) {
       return res;
     } else {
@@ -1608,7 +1613,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     Database database = await _openDB();
     final res = await database.rawQuery(
         "SELECT max(consecutivo) as consecutivo  from tipo_doc WHERE  nit = '$nit' and id_tipo_doc = '$id_tipo_doc' ");
-    if (res.isNotEmpty) {
+     if (res.isNotEmpty) {
       return res;
     } else {
       return false;
@@ -2256,7 +2261,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
       sql += ' AND descripcion LIKE  "%$search%" ';
     }
     sql += ' GROUP BY i.id_item  ORDER BY descripcion ASC  ';
-
+print("sqlll $sql");
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {
       return res;
@@ -2473,6 +2478,41 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
     }
   }
 
+
+  static Future getItemsAllUnit(String id_vendedor,
+      String nit, String idClasificacion, String fecha,String search) async {
+    Database database = await _openDB();
+
+    var sql = "SELECT i.id_item, i.descripcion, CASE WHEN pd.cantidad IS NULL THEN 0 ELSE pd.cantidad END AS cantidad "
+                " FROM item i"
+                " LEFT JOIN ("
+                " SELECT p.fecha, pd.id_item, CASE WHEN  SUM(pd.cantidad) IS NULL THEN 0 ELSE  SUM(pd.cantidad) END AS cantidad"
+                " FROM pedido p"
+                " JOIN pedido_det pd ON p.id_empresa = pd.id_empresa"
+                " AND p.id_sucursal = pd.id_sucursal"
+                " AND p.id_tipo_doc = pd.id_tipo_doc"
+                " AND p.numero = pd.numero"
+                " AND p.nit = pd.nit"
+                " AND date(p.fecha) ='$fecha' AND p.id_vendedor='$id_vendedor'"
+                " GROUP BY p.fecha, pd.id_item"
+                " ) pd ON i.id_item = pd.id_item"
+                " WHERE  i.nit='$nit' ";
+              if (search == '@') {
+                sql += " AND i.id_clasificacion='$idClasificacion' ";
+              } else {
+                sql += ' AND  descripcion LIKE  "%$search%" ';
+              }
+
+              sql +=  " ORDER BY i.descripcion ASC ";
+
+    final res = await database.rawQuery(sql);
+    await database.close();
+    if (res.isNotEmpty) {
+      return res;
+    } else {
+      return false;
+    }
+  }
   //INSERTAR CARRITO  CARRITO
   static Future<bool> insertCarrito(
       Carrito carrito, CarritoDet carritodet) async {
@@ -2582,7 +2622,7 @@ CREATE TABLE IF NOT EXISTS cartera_proveedores_det
         " tercero.nit , tercero.flag_persona_nat FROM tercero inner join tercero_cliente "
         " on tercero.id_tercero=tercero_cliente.id_tercero and tercero.nit=tercero_cliente.nit and tercero.flag_enviado='NO'  "
         " inner join tercero_direccion on tercero.id_tercero=tercero_direccion.id_tercero"
-        " and tercero.nit=tercero_direccion.nit and id_direccion='1'    ORDER BY TERCERO.FECHA_CREACION ASC ";
+        " and tercero.nit=tercero_direccion.nit and id_direccion='1' ORDER BY TERCERO.FECHA_CREACION ASC ";
 
     final res = await database.rawQuery(sql);
     if (res.isNotEmpty) {

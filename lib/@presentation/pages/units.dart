@@ -79,7 +79,7 @@ class _UnitsPageState extends State<UnitsPage> {
   final myControllerCantidad = TextEditingController(text: "1");
   final myControllerOrdenCompra = TextEditingController();
   final myControllerCantidadCart = TextEditingController();
-
+  late String _fecha = '';
   late DateTime _selectedDate = DateTime.now();
 
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
@@ -88,6 +88,7 @@ class _UnitsPageState extends State<UnitsPage> {
 
   @override
   void initState() {
+    _fecha = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
     super.initState();
     _loadDataUserLogin();
   }
@@ -190,10 +191,11 @@ class _UnitsPageState extends State<UnitsPage> {
         ? myControllerSearch.text.trim()
         : '@';
 
-    final data = await OperationDB.getItemsAll(_nit, idClasificacion, _search);
+    final data = await OperationDB.getItemsAllUnit(id_vendedor,_nit, idClasificacion, _fecha,_search);
     if (data != false) {
       _datProductos = data;
       _countProductos = _datProductos.length;
+
       setState(() {
         if (_datProductos.isNotEmpty) {
           _clientShow = true;
@@ -1808,10 +1810,8 @@ class _UnitsPageState extends State<UnitsPage> {
   }
 
   Widget itemUnits(BuildContext context, String idItem, String descripcion,
-      String inventario) {
-    final nombre = descripcion.length > 35
-        ? descripcion.substring(0, 33) + '...'
-        : descripcion;
+      String cantidad) {
+    final _cant = cantidad != null ? cantidad : '0';
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -1901,7 +1901,7 @@ class _UnitsPageState extends State<UnitsPage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text(inventario,
+                      child: Text(_cant,
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -1990,7 +1990,7 @@ class _UnitsPageState extends State<UnitsPage> {
                     context,
                     '${_datProductos[i]['id_item']}',
                     '${_datProductos[i]['descripcion']}',
-                    '${_datProductos[i]['saldo_inventario']} - ${_datProductos[i]['id_unidad_compra']} '),
+                    '${_datProductos[i]['cantidad']} '),
                 SizedBox(height: 5.0),
               ],
             ],

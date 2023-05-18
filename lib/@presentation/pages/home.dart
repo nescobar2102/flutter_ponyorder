@@ -258,14 +258,23 @@ class _HomePageState extends State<HomePage> {
                         fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 20.0),
-                  Text(
+                  Flexible(
+                      child:
+                      AutoSizeText( 'No se obtuvo información del vendedor. \n Sincronice los datos.',
+                        maxLines: 3,
+                        style: TextStyle(
+                            color: Color(0xff0894FD),
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold),
+                      )),
+                 /* Text(
                     'No se obtuvo información del vendedor. \n Sincronice los datos.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: Color(0xff0894FD),
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold),
-                  ),
+                  ),*/
                   SizedBox(height: 30.0),
                   Container(
                     width: 110,
@@ -278,7 +287,7 @@ class _HomePageState extends State<HomePage> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(5.0),
                         child: Center(
-                          child: Text(
+                          child: AutoSizeText( maxLines: 1,
                             'Entendido',
                             style: TextStyle(
                                 color: Colors.white,
@@ -1298,6 +1307,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _client(BuildContext context, data) {
     double height = MediaQuery.of(context).size.height;
+
     //listado de clientes en el home
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -7435,18 +7445,18 @@ class _HomePageState extends State<HomePage> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0))),
           child: Container(
-            height: 283.0,
+            height: 293.0,
             width: 283.0,
             padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             child: Column(
               children: [
-                SizedBox(height: 20.0),
+                SizedBox(height: 15.0),
                 Image(
                   height: 90.0,
                   image: AssetImage('assets/images/icon-check.png'),
                 ),
-                SizedBox(height: 20.0),
-                Text(
+                SizedBox(height: 15.0),
+                AutoSizeText(maxLines: 2,
                   'Creación de pedido exitoso',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -7454,7 +7464,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 30.0),
+                SizedBox(height: 20.0),
                 Container(
                   width: 90,
                   height: 41.0,
@@ -7466,7 +7476,7 @@ class _HomePageState extends State<HomePage> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(5.0),
                       child: Center(
-                        child: Text(
+                        child: AutoSizeText(maxLines: 1,
                           'Aceptar',
                           style: TextStyle(
                               color: Colors.white,
@@ -7497,18 +7507,18 @@ class _HomePageState extends State<HomePage> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0))),
           child: Container(
-            height: 283.0,
+            height: 293.0,
             width: 283.0,
             padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
             child: Column(
               children: [
-                SizedBox(height: 20.0),
+                SizedBox(height: 15.0),
                 Image(
                   height: 90.0,
                   image: AssetImage('assets/images/icon-check.png'),
                 ),
-                SizedBox(height: 20.0),
-                Text(
+                SizedBox(height: 15.0),
+                AutoSizeText(maxLines: 2,
                   'Creación de Recibo exitoso',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -7516,7 +7526,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 30.0),
+                SizedBox(height: 20.0),
                 Container(
                   width: 90,
                   height: 41.0,
@@ -7528,7 +7538,7 @@ class _HomePageState extends State<HomePage> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(5.0),
                       child: Center(
-                        child: Text(
+                        child: AutoSizeText(maxLines: 1,
                           'Aceptar',
                           style: TextStyle(
                               color: Colors.white,
