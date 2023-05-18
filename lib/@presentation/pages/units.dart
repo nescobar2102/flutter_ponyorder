@@ -1811,7 +1811,7 @@ class _UnitsPageState extends State<UnitsPage> {
 
   Widget itemUnits(BuildContext context, String idItem, String descripcion,
       String cantidad) {
-    final _cant = cantidad != null ? cantidad : '0';
+
     final _size = MediaQuery.of(context).size;
     return Container(
       width: _size.width,
@@ -1901,7 +1901,7 @@ class _UnitsPageState extends State<UnitsPage> {
                     ),
                     Container(
                       width: _size.width * 0.5 - 40,
-                      child: Text(_cant,
+                      child: Text(cantidad,
                           style: TextStyle(
                               color: Color(0xff707070),
                               fontSize: 15.0,
@@ -1990,7 +1990,7 @@ class _UnitsPageState extends State<UnitsPage> {
                     context,
                     '${_datProductos[i]['id_item']}',
                     '${_datProductos[i]['descripcion']}',
-                    '${_datProductos[i]['cantidad']} '),
+                    '${_datProductos[i]['cantidad']} - ${_datProductos[i]['id_unidad_compra']}'),
                 SizedBox(height: 5.0),
               ],
             ],

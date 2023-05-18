@@ -2483,7 +2483,7 @@ print("sqlll $sql");
       String nit, String idClasificacion, String fecha,String search) async {
     Database database = await _openDB();
 
-    var sql = "SELECT i.id_item, i.descripcion, CASE WHEN pd.cantidad IS NULL THEN 0 ELSE pd.cantidad END AS cantidad "
+    var sql = "SELECT i.id_item, i.descripcion, i.id_unidad_compra,CASE WHEN pd.cantidad IS NULL THEN 0 ELSE pd.cantidad END AS cantidad "
                 " FROM item i"
                 " LEFT JOIN ("
                 " SELECT p.fecha, pd.id_item, CASE WHEN  SUM(pd.cantidad) IS NULL THEN 0 ELSE  SUM(pd.cantidad) END AS cantidad"
