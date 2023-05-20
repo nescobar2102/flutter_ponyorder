@@ -1,23 +1,15 @@
 import 'package:pony_order/@presentation/components/inputCallback.dart';
-import 'package:pony_order/@presentation/components/itemCategoryOrderEdit.dart';
-import 'package:pony_order/@presentation/components/itemOrder.dart';
-import 'package:pony_order/@presentation/components/itemReceipts.dart';
 import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'dart:convert' as convert;
-import 'package:http/http.dart' as http;
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/safe_area_values.dart';
-import 'package:top_snackbar_flutter/tap_bounce_container.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../../db/operationDB.dart';
-import '../../models/recibo_caja.dart';
 
 class ReceiptsPage extends StatefulWidget {
   @override
@@ -26,7 +18,6 @@ class ReceiptsPage extends StatefulWidget {
 
 class _ReceiptsPageState extends State<ReceiptsPage> {
   bool _showItems = false;
-  bool _showItemsOrder = false;
 
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       new GlobalKey<ScaffoldState>();
@@ -126,7 +117,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       setState(() {
         if (_count > 0) {
           _showItems = true;
-          _showItemsOrder = false;
         }
       });
     } else {
@@ -301,7 +291,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                                 hintText: '$_range',
                                 iconCallback: Icons.search,
                                 callback: () {
-                                  print("calendario");
                                   showDialog<String>(
                                       context: context,
                                       builder: (BuildContext context) => Dialog(
@@ -324,7 +313,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                                 controller: null),
                             SizedBox(height: 15.0),
                             _showItems ? _items(context) : Container(),
-                            _showItemsOrder ? _itemsOrder(context) : Container()
+
                           ],
                         ),
                       ),
@@ -337,34 +326,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
         ));
   }
 
-  Widget _itemsOrder(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Se encontraron 6 resultados',
-            style: TextStyle(
-                color: Color(0xff0f538d),
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                fontStyle: FontStyle.italic)),
-        SizedBox(height: 10.0),
-        ItemOrder(callback: () => {}),
-        SizedBox(height: 10.0),
-        ItemOrder(callback: () => {}),
-        SizedBox(height: 10.0),
-        ItemOrder(callback: () => {}),
-        SizedBox(height: 10.0),
-        ItemOrder(callback: () => {}),
-        SizedBox(height: 10.0),
-        ItemOrder(callback: () => {}),
-        SizedBox(height: 10.0),
-        ItemOrder(callback: () => {}),
-        SizedBox(height: 10.0),
-        ItemOrder(callback: () => {}),
-        SizedBox(height: 10.0),
-      ],
-    );
-  }
 
   Widget _items(BuildContext context) {
     final _size = MediaQuery.of(context).size;
@@ -600,202 +561,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
             ),
           )
         ],
-      ),
-    );
-  }
-
-  Widget _shoppingCart(BuildContext context) {
-    final _size = MediaQuery.of(context).size;
-    return SafeArea(
-      child: Container(
-        width: _size.width,
-        height: _size.height,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-        ),
-        padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
-        child: ListView(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Carrito de compras',
-                      style: TextStyle(
-                          color: Color(0xff0f538d),
-                          fontSize: 24.0,
-                          fontWeight: FontWeight.w700),
-                    ),
-                    Icon(
-                      Icons.disabled_by_default_outlined,
-                      color: Color(0xff0f538d),
-                      size: 30.0,
-                    )
-                  ],
-                ),
-                SizedBox(height: 12.0),
-                Text('Juan Pablo Jimenez',
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w600)),
-                SizedBox(
-                  height: 12.0,
-                ),
-                Text(
-                  'Búsqueda de productos en el carrito',
-                  style: TextStyle(
-                      color: Color(0xff0f538d),
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w500),
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                InputCallback(
-                    hintText: 'Buscar producto',
-                    iconCallback: Icons.search,
-                    callback: () => {},
-                    controller: myControllerBuscarProd),
-                SizedBox(height: 15.0),
-                Container(
-                  width: 160.0,
-                  height: 45.0,
-                  decoration: BoxDecoration(
-                      color: Color(0xff06538D),
-                      borderRadius: BorderRadius.circular(5.0)),
-                  child: Material(
-                    borderRadius: BorderRadius.circular(5.0),
-                    color: Color(0xff06538D),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(5.0),
-                      onTap: () => {},
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: <Widget>[
-                            Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 5.0),
-                            Text(
-                              'Categorias',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18.0,
-                                  fontWeight: FontWeight.w700),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 15.0,
-                ),
-                SizedBox(
-                  height: 310.0,
-                  child: ListView(
-                    children: [
-                      ItemCategoryOrderEdit(),
-                      SizedBox(height: 10.0),
-                      ItemCategoryOrderEdit(),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 15.0),
-                Container(
-                  width: _size.width,
-                  height: 40.0,
-                  padding: EdgeInsets.symmetric(horizontal: 15.0),
-                  decoration: BoxDecoration(
-                      color: Color(0xffE8E8E8),
-                      borderRadius: BorderRadius.circular(5.0)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Total',
-                          style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff06538D))),
-                      Text(
-                        '\$ 0',
-                        style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff06538D)),
-                      )
-                    ],
-                  ),
-                ),
-                SizedBox(height: 15.0),
-                Row(
-                  children: [
-                    Container(
-                        width: _size.width * 0.5 - 30,
-                        child: Container(
-                          width: _size.width,
-                          height: 41.0,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5.0),
-                              color: Color(0xffCB1B1B)),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(5.0),
-                              child: Center(
-                                child: Text(
-                                  'Cancelar',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                              onTap: () {},
-                            ),
-                          ),
-                        )),
-                    SizedBox(width: 10.0),
-                    Container(
-                        width: _size.width * 0.5 - 30,
-                        child: Container(
-                          width: _size.width,
-                          height: 41.0,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5.0),
-                              color: Color(0xff0894FD)),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(5.0),
-                              child: Center(
-                                child: Text(
-                                  'Guardar',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                              onTap: () {},
-                            ),
-                          ),
-                        )),
-                  ],
-                )
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -4204,9 +4204,14 @@ class _OrderPageState extends State<OrderPage> {
       context,
       animationDuration: const Duration(seconds: 1),
       type
-          ? CustomSnackBar.info(
-              message: msg,
-            )
+          ?  CustomSnackBar.info(
+                message: msg,
+                icon:const Icon(
+                  Icons.sentiment_very_satisfied,
+                  color: const Color(0x15000000),
+                  size: 120,
+                ),
+              )
           : CustomSnackBar.error(
               message: msg,
             ),

@@ -2485,7 +2485,7 @@ print("sqlll $sql");
 
     var sql = "SELECT i.id_item, i.descripcion, i.id_unidad_compra,CASE WHEN pd.cantidad IS NULL THEN 0 ELSE pd.cantidad END AS cantidad "
                 " FROM item i"
-                " LEFT JOIN ("
+                " INNER JOIN ("
                 " SELECT p.fecha, pd.id_item, CASE WHEN  SUM(pd.cantidad) IS NULL THEN 0 ELSE  SUM(pd.cantidad) END AS cantidad"
                 " FROM pedido p"
                 " JOIN pedido_det pd ON p.id_empresa = pd.id_empresa"
@@ -2502,7 +2502,6 @@ print("sqlll $sql");
               } else {
                 sql += ' AND  descripcion LIKE  "%$search%" ';
               }
-
               sql +=  " ORDER BY i.descripcion ASC ";
 
     final res = await database.rawQuery(sql);

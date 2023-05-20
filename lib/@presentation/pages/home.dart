@@ -17,7 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../../db/operationDB.dart';
 import '../../httpConexion/validateConexion.dart';
-import '../../Common/Letras.dart';
+
 import '../../Common/Constant.dart';
 import '../../models/cliente.dart';
 import '../../models/pedido.dart';
@@ -4791,6 +4791,8 @@ class _HomePageState extends State<HomePage> {
               fontSize: 14.0,
               fontWeight: FontWeight.w600),
           decoration: InputDecoration(
+                  errorText: _value_itemsTypeDoc.isEmpty || _value_itemsTypeDoc == ''
+                      ? 'Es requerido':null,
               border: OutlineInputBorder(),
               suffixIcon: Icon(Icons.arrow_drop_down),
               hintStyle: TextStyle(
@@ -4798,9 +4800,9 @@ class _HomePageState extends State<HomePage> {
                   fontSize: 15.0,
                   fontWeight: FontWeight.w700),
               labelText: 'Tipo de documento'),
-          onSaved: (dynamic str) {
-            _value_itemsTypeDoc = str['value'];
-          },
+            onSaved: (dynamic str) {
+              _value_itemsTypeDoc = str['value'];
+            },
           onChanged: (dynamic str) => setState(() => {
                 _value_itemsTypeDoc = str['value'],
                 if (_value_itemsTypeDoc == '31')
@@ -4895,7 +4897,12 @@ class _HomePageState extends State<HomePage> {
           onChanged: (dynamic str) {
             _value_itemsClasification = str['value'];
           },
-          validator: (dynamic str) {},
+         // validator: (dynamic str) {},
+           validator: (dynamic value) {
+            if (value?.isEmpty ?? true) {
+              return 'Please enter a valid type of business';
+            }
+          },
           displayItemFn: (dynamic item) => Text(
             (item ?? {})['label'] ?? '',
             style: TextStyle(fontSize: 16),
@@ -8892,6 +8899,11 @@ class _HomePageState extends State<HomePage> {
       type
           ? CustomSnackBar.info(
               message: msg,
+            icon:const Icon(
+              Icons.sentiment_very_satisfied,
+              color: const Color(0x15000000),
+              size: 120,
+            ),
             )
           : CustomSnackBar.error(
               message: msg,

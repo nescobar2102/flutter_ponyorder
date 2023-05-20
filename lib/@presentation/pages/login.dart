@@ -84,9 +84,7 @@ class _LoginPageState extends State<LoginPage> {
     _password.isEmpty ? _validatePass = false : _validatePass = true;
     if (_validate && _validatePass) {
       _submitDialog(context);
-      print("getLogin $_user");
       final user = await OperationDB.getLogin(_user.trim());
-      print("getLogin res $user");
       if (user != false) {
         final pass =
             await OperationDB.getLoginPassw(_user.trim(), _password.trim());
